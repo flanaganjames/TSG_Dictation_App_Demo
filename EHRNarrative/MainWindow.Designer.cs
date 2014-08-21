@@ -31,8 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EHRNarrative));
             this.HealthRecordText = new System.Windows.Forms.RichTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.current_label = new System.Windows.Forms.Label();
             this.last_action_label = new System.Windows.Forms.Label();
+            this.current_label = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,15 +58,6 @@
             this.panel1.Size = new System.Drawing.Size(225, 160);
             this.panel1.TabIndex = 1;
             // 
-            // current_label
-            // 
-            this.current_label.AutoSize = true;
-            this.current_label.Location = new System.Drawing.Point(3, 12);
-            this.current_label.Name = "current_label";
-            this.current_label.Size = new System.Drawing.Size(93, 13);
-            this.current_label.TabIndex = 0;
-            this.current_label.Text = "Current Keywords:";
-            // 
             // last_action_label
             // 
             this.last_action_label.AutoSize = true;
@@ -75,6 +66,15 @@
             this.last_action_label.Size = new System.Drawing.Size(63, 13);
             this.last_action_label.TabIndex = 1;
             this.last_action_label.Text = "Last Action:";
+            // 
+            // current_label
+            // 
+            this.current_label.AutoSize = true;
+            this.current_label.Location = new System.Drawing.Point(3, 12);
+            this.current_label.Name = "current_label";
+            this.current_label.Size = new System.Drawing.Size(93, 13);
+            this.current_label.TabIndex = 0;
+            this.current_label.Text = "Current Keywords:";
             // 
             // EHRNarrative
             // 
@@ -86,6 +86,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "EHRNarrative";
             this.Text = "Electronic Health Record Narrative";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EHRNarrative_FormClosing);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);

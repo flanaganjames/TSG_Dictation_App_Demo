@@ -31,7 +31,7 @@ namespace EHRNarrative
         private static extern int RegisterWindowMessage(string lpString);
 
         [DllImport("User32.dll", EntryPoint = "FindWindow")]
-        public static extern Int32 FindWindow(String lpClassNAme, String lpWindowName);
+        public static extern Int32 FindWindow(String lpClassName, String lpWindowName);
 
         //For use with WM_COPYDATA and COPYDATASTRUCT
         [DllImport("User32.dll", EntryPoint = "SendMessage")]
@@ -93,6 +93,23 @@ namespace EHRNarrative
         public int getWindowId(string className, string windowName)
         {
             return FindWindow(className, windowName);
+        }
+
+        protected override void WndProc(ref Message msg)
+        {
+            switch (msg.Msg)
+            {
+                case WM_USER:
+                    MessageBox.Show("Message Received: " + msg.WParam + " - " + msg.LParam);
+                    break;
+                case WM_COPYDATA:
+                    COPYDATASTRUCT msgStr = new COPYDATASTRUCT();
+                    Type type = msgStr.GetType();
+                    msgStr = (COPYDATASTRUCT)msg.GetLParam(type);
+                    MessageBox.Show("String Message Received: " + msgStr.lpData + ", " + msgStr.dwData + ", " + msgStr.cbData);
+                    break;
+            }
+            base.WndProc(ref msg);
         }
 
         public EHRNarrative()

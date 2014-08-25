@@ -18,27 +18,13 @@ namespace EHRNarrative
     public partial class EHRNarrative : Form
     {
         private ArrayList keyword_list = null;
-        private Thread slc_thread = null;
-
-        private volatile bool stopping = false;
 
         public EHRNarrative()
         {
             InitializeComponent();
-
             keyword_list = new ArrayList();
 
-            slc_thread = new Thread(SLCServerThread);
-            slc_thread.Start();
-
-            System.Diagnostics.Process.Start("SLC.exe");
-
             HealthRecordText.SelectAll();
-        }
-
-        private void EHRNarrative_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            stopping = true;
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
@@ -90,37 +76,6 @@ namespace EHRNarrative
             {
                 current_label.Text += keyword + "\n";
             }
-        }
-
-        private static void SLCServerThread(object data)
-        {
-            NamedPipeServerStream slc_server = new NamedPipeServerStream("mu_slc_pipe", PipeDirection.InOut, 2);
-
-            int threadId = Thread.CurrentThread.ManagedThreadId;
-
-            // Wait for a client to connect
-            slc_server.WaitForConnection();
-
-            Console.WriteLine("Client connected.");
-            try
-            {
-                StreamString ss = new StreamString(slc_server);
-
-                ss.WriteString("I am the one True Server!");
-
-                string response = ss.ReadString();
-
-                if (response == "Hello True Server.")
-                {
-                    ss.WriteString("Greetings, young SLC.");
-                }
-            }
-            catch (IOException e)
-            {
-                Console.WriteLine("Error: {0}", e.Message);
-            }
-            slc_server.Close();
-            Console.WriteLine("Client disconnected.");
         }
     }
 

@@ -18,17 +18,18 @@ namespace EHRNarrative
 {
     public partial class EHRNarrative : Form
     {
-        //Used for WM_COPYDATA for string messages
+        //Used with WM_COPYDATA for string messages
         public struct COPYDATASTRUCT
         {
-            public IntPtr dwData;
+            //ULONG_PTR The data to be passed to the receiving application
+            public int dwData;
+            //DWORD The size, in bytes, of the data pointed to by the lpData member
             public int cbData;
+            //PVOID (void pointer) The data to be passed to the receiving application. This member can be NULL
+            //However, we are using it differently to just store a string.
             [MarshalAs(UnmanagedType.LPStr)]
             public string lpData;
         }
-
-        [DllImport("User32.dll")]
-        private static extern int RegisterWindowMessage(string lpString);
 
         [DllImport("User32.dll", EntryPoint = "FindWindow")]
         public static extern Int32 FindWindow(String lpClassName, String lpWindowName);
@@ -37,15 +38,9 @@ namespace EHRNarrative
         [DllImport("User32.dll", EntryPoint = "SendMessage")]
         public static extern int SendMessage(int hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
 
-        //For use with WM_COPYDATA and COPYDATASTRUCT
-        [DllImport("User32.dll", EntryPoint = "PostMessage")]
-        public static extern int PostMessage(int hWnd, int Msg, int wParam, ref COPYDATASTRUCT lParam);
-
+        //For use with Window Messages
         [DllImport("User32.dll", EntryPoint = "SendMessage")]
         public static extern int SendMessage(int hWnd, int Msg, int wParam, int lParam);
-
-        [DllImport("User32.dll", EntryPoint = "PostMessage")]
-        public static extern int PostMessage(int hWnd, int Msg, int wParam, int lParam);
 
         [DllImport("User32.dll", EntryPoint = "SetForegroundWindow")]
         public static extern bool SetForegroundWindow(int hWnd);
@@ -60,18 +55,18 @@ namespace EHRNarrative
             return SetForegroundWindow(hWnd);
         }
 
-        public int sendWindowsStringMessage(int hWnd, int wParam, string msg)
+        public int sendCustomMessage(int hWnd, int wParam, string msg)
         {
             int result = 0;
 
             if (hWnd > 0)
             {
-                byte[] sarr = System.Text.Encoding.Default.GetBytes(msg);
-                int len = sarr.Length;
+                byte[] msgArray = System.Text.Encoding.Default.GetBytes(msg);
+                int len = msgArray.Length;
                 COPYDATASTRUCT cds;
-                cds.dwData = (IntPtr)100;
-                cds.lpData = msg;
+                cds.dwData = 0;
                 cds.cbData = len + 1;
+                cds.lpData = msg;
                 result = SendMessage(hWnd, WM_COPYDATA, wParam, ref cds);
             }
 

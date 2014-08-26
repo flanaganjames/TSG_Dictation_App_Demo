@@ -18,6 +18,7 @@ namespace EHRNarrative
 {
     public partial class EHRNarrative : Form
     {
+        #region Windows Framework Imports
         //Used with WM_COPYDATA for string messages
         public struct COPYDATASTRUCT
         {
@@ -47,9 +48,11 @@ namespace EHRNarrative
 
         public const int WM_USER = 0x400;
         public const int WM_COPYDATA = 0x4A;
+        #endregion
 
         private ArrayList keyword_list = null;
 
+        #region Window Messaging Helpers
         public bool bringAppToFront(int hWnd)
         {
             return SetForegroundWindow(hWnd);
@@ -89,19 +92,28 @@ namespace EHRNarrative
         {
             return FindWindow(className, windowName);
         }
+        #endregion
 
+        /// <summary>
+        /// Parse incoming messages to this Window
+        /// </summary>
+        /// <param name="msg">Reference to a Windows Message object</param>
         protected override void WndProc(ref Message msg)
         {
             switch (msg.Msg)
             {
                 case WM_USER:
-                    MessageBox.Show("Message Received: " + msg.WParam + " - " + msg.LParam);
+                    MessageBox.Show("Message received from external program: " + msg.WParam + " - " + msg.LParam);
                     break;
                 case WM_COPYDATA:
-                    COPYDATASTRUCT msgStr = new COPYDATASTRUCT();
-                    Type type = msgStr.GetType();
-                    msgStr = (COPYDATASTRUCT)msg.GetLParam(type);
-                    MessageBox.Show("String Message Received: " + msgStr.lpData + ", " + msgStr.dwData + ", " + msgStr.cbData);
+                    COPYDATASTRUCT msgCarrier = new COPYDATASTRUCT();
+                    Type type = msgCarrier.GetType();
+                    msgCarrier = (COPYDATASTRUCT)msg.GetLParam(type);
+                    //MessageBox.Show("String Message Received: " + msgCarrier.lpData + ", " + msgCarrier.dwData + ", " + msgCarrier.cbData);
+                    String msgString = msgCarrier.lpData;
+
+                    ParseVBACommand(msgString);
+
                     break;
             }
             base.WndProc(ref msg);
@@ -112,10 +124,81 @@ namespace EHRNarrative
             InitializeComponent();
             keyword_list = new ArrayList();
 
-            HealthRecordText.SelectAll();
+            //HealthRecordText.SelectAll();
+            CheckKeywords(false);
+        }
+
+        private void ParseVBACommand(String commandStr)
+        {
+            String[] initializer = new String[] { ":%s" };
+            String[] separator = new String[] { "/" };
+
+            String[] commands = commandStr.Split(initializer, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (String command in commands)
+            {
+                String[] parts = command.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length == 3)
+                {
+                    //Do Insert
+                    int position = 0;
+                    int len = 0;
+
+                    if (parts[0].Contains("%SELECTED"))
+                    {
+                        position = HealthRecordText.Text.IndexOf(HealthRecordText.SelectedText);
+                        len = HealthRecordText.SelectedText.Length;
+                    }
+                    else
+                    {
+                        position = HealthRecordText.Text.IndexOf(parts[0]);
+                        len = parts[0].Length;
+                    }
+
+                    if (parts[2].ToLower().Contains("before"))
+                    {
+                        HealthRecordText.Text = HealthRecordText.Text.Insert(position, parts[1] + " ");
+                    }
+                    else if (parts[2].ToLower().Contains("after"))
+                    {
+                        HealthRecordText.Text = HealthRecordText.Text.Insert(position + len, " " + parts[1]);
+                    }
+                    else
+                    {
+                        //Do Error!
+                    }
+                }
+                else if (parts.Length == 2)
+                {
+                    //Do Replace
+                    if (parts[0].Contains("%SELECTED"))
+                    {
+                        HealthRecordText.SelectedText = parts[1];
+                    }
+                    else
+                    {
+                        HealthRecordText.Text = HealthRecordText.Text.Replace(parts[0], parts[1]);
+                    }
+                }
+                else
+                {
+                    //Do Error!!!
+                }
+            }
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
+        {
+            CheckKeywords();
+        }
+
+        private void CheckKeywords()
+        {
+            CheckKeywords(true);
+        }
+
+        private void CheckKeywords(bool notifyOfAdditions)
         {
             string pattern = @"\[([^]]*)\]";
             Regex rgx = new Regex(pattern);
@@ -138,8 +221,11 @@ namespace EHRNarrative
                 {
                     command_string += " ! ";
                 }
-                //System.Diagnostics.Process.Start("SLC.exe", "add " + keyword);
-                //command_string += "add " + keyword;
+                if (notifyOfAdditions)
+                {
+                    //System.Diagnostics.Process.Start("SLC.exe", "add " + keyword);
+                    //command_string += "add " + keyword;
+                }
             }
             foreach (string keyword in removed_keywords)
             {
@@ -156,6 +242,11 @@ namespace EHRNarrative
             }
 
             keyword_list = new_keyword_list;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ParseVBACommand(textBox1.Text);
         }
     }
 }

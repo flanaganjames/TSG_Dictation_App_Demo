@@ -131,11 +131,9 @@ namespace EHRNarrative
             IEnumerable removed_keywords = keyword_list.ToArray().Except(new_keyword_list.ToArray());
             IEnumerable added_keywords = new_keyword_list.ToArray().Except(keyword_list.ToArray());
 
-            last_action_label.Text = "Last Action:\n";
             string command_string = "";
             foreach (string keyword in added_keywords)
             {
-                last_action_label.Text += "Added " + keyword + "\n";
                 if (command_string != "")
                 {
                     command_string += " ! ";
@@ -145,7 +143,6 @@ namespace EHRNarrative
             }
             foreach (string keyword in removed_keywords)
             {
-                last_action_label.Text += "Removed " + keyword + "\n";
                 if (command_string != "")
                 {
                     command_string += " ! ";
@@ -159,11 +156,6 @@ namespace EHRNarrative
             }
 
             keyword_list = new_keyword_list;
-            current_label.Text = "Current Keywords:\n";
-            foreach (string keyword in keyword_list)
-            {
-                current_label.Text += keyword + "\n";
-            }
         }
     }
 }

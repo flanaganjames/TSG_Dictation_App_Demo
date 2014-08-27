@@ -51,6 +51,7 @@ namespace EHRNarrative
         #endregion
 
         private ArrayList keyword_list = null;
+        System.EventHandler hrTextChanged = null;
 
         #region Window Messaging Helpers
         public bool bringAppToFront(int hWnd)
@@ -122,20 +123,27 @@ namespace EHRNarrative
         public EHRNarrative()
         {
             InitializeComponent();
+
+            hrTextChanged = new System.EventHandler(this.HealthRecordText_TextChanged);
+
             keyword_list = new ArrayList();
 
             //HealthRecordText.SelectAll();
             HealthRecordText.Rtf = "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}{\\f1\\fnil\\fcharset0 Microsoft Sans Serif;}}{\\colortbl ;\\red0\\green176\\blue80;\\red192\\green80\\blue77;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\cf1\\lang9\\f0\\fs22 Hello, my name is \\ul [name]\\cf0\\ulnone\\par\\i The\\i0  \\cf2 brown \\cf0 fox \\b jumps \\b0 the \\i lazy dog\\i0 .\\lang1033\\f1\\fs17\\par}";
-            CheckKeywords(false);
+            this.HealthRecordText.TextChanged += hrTextChanged;
+            CheckKeywords(false, false);
         }
 
         private void ParseVBACommand(String commandStr)
         {
+            this.HealthRecordText.TextChanged -= hrTextChanged;
+
             String[] initializer = new String[] { ":%s" };
             String[] separator = new String[] { "/" };
 
             String[] commands = commandStr.Split(initializer, StringSplitOptions.RemoveEmptyEntries);
 
+            string command_str = "";
             foreach (String command in commands)
             {
                 String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
@@ -175,10 +183,46 @@ namespace EHRNarrative
                     //Do Replace
                     if (parts[0].Contains("%SELECTED"))
                     {
+                        if (HealthRecordText.SelectedText.Trim().StartsWith("[") && HealthRecordText.SelectedText.Trim().EndsWith("]"))
+                        {
+                            if (command_str != "")
+                            {
+                                command_str += " ! ";
+                            }
+
+                            if (parts[1].Trim() != "")
+                            {
+                                //Send data command
+                                command_str += "data " + HealthRecordText.SelectedText.Trim();
+                            }
+                            else
+                            {
+                                command_str += "del " + HealthRecordText.SelectedText.Trim();
+                            }
+                        }
+
                         HealthRecordText.SelectedRtf = parts[1];
                     }
                     else
                     {
+                        if (parts[0].Trim().StartsWith("[") && parts[0].Trim().EndsWith("]"))
+                        {
+                            if (command_str != "")
+                            {
+                                command_str += " ! ";
+                            }
+
+                            if (parts[1].Trim() != "")
+                            {
+                                //Send data command
+                                command_str += "data " + parts[0].Trim();
+                            }
+                            else
+                            {
+                                command_str += "del " + parts[0].Trim();
+                            }
+                        }
+
                         HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(parts[0], parts[1]);
                     }
                 }
@@ -187,6 +231,14 @@ namespace EHRNarrative
                     //Do Error!!!
                 }
             }
+
+            if (command_str != "")
+            {
+                System.Diagnostics.Process.Start("SLC.exe", command_str);
+            }
+            CheckKeywords(true, false);
+
+            this.HealthRecordText.TextChanged += hrTextChanged;
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
@@ -196,10 +248,10 @@ namespace EHRNarrative
 
         private void CheckKeywords()
         {
-            CheckKeywords(true);
+            CheckKeywords(true, true);
         }
 
-        private void CheckKeywords(bool notifyOfAdditions)
+        private void CheckKeywords(bool notifyOfAdditions, bool notifyOfRemovals)
         {
             string pattern = @"\[([^]]*)\]";
             Regex rgx = new Regex(pattern);
@@ -225,7 +277,7 @@ namespace EHRNarrative
                 if (notifyOfAdditions)
                 {
                     //System.Diagnostics.Process.Start("SLC.exe", "add " + keyword);
-                    //command_string += "add " + keyword;
+                    command_string += "add " + keyword;
                 }
             }
             foreach (string keyword in removed_keywords)
@@ -234,8 +286,11 @@ namespace EHRNarrative
                 {
                     command_string += " ! ";
                 }
-                //System.Diagnostics.Process.Start("SLC.exe", "del " + keyword);
-                command_string += "data " + keyword;
+                if (notifyOfRemovals)
+                {
+                    //System.Diagnostics.Process.Start("SLC.exe", "del " + keyword);
+                    command_string += "del " + keyword;
+                }
             }
             if (command_string != "")
             {

@@ -125,6 +125,7 @@ namespace EHRNarrative
             keyword_list = new ArrayList();
 
             //HealthRecordText.SelectAll();
+            HealthRecordText.Rtf = "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}{\\f1\\fnil\\fcharset0 Microsoft Sans Serif;}}{\\colortbl ;\\red0\\green176\\blue80;\\red192\\green80\\blue77;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\cf1\\lang9\\f0\\fs22 Hello, my name is \\ul [name]\\cf0\\ulnone\\par\\i The\\i0  \\cf2 brown \\cf0 fox \\b jumps \\b0 the \\i lazy dog\\i0 .\\lang1033\\f1\\fs17\\par}";
             CheckKeywords(false);
         }
 
@@ -137,7 +138,7 @@ namespace EHRNarrative
 
             foreach (String command in commands)
             {
-                String[] parts = command.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
                 if (parts.Length == 3)
                 {
@@ -147,22 +148,22 @@ namespace EHRNarrative
 
                     if (parts[0].Contains("%SELECTED"))
                     {
-                        position = HealthRecordText.Text.IndexOf(HealthRecordText.SelectedText);
-                        len = HealthRecordText.SelectedText.Length;
+                        position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText);
+                        len = HealthRecordText.SelectedRtf.Length;
                     }
                     else
                     {
-                        position = HealthRecordText.Text.IndexOf(parts[0]);
+                        position = HealthRecordText.Rtf.IndexOf(parts[0]);
                         len = parts[0].Length;
                     }
 
                     if (parts[2].ToLower().Contains("before"))
                     {
-                        HealthRecordText.Text = HealthRecordText.Text.Insert(position, parts[1] + " ");
+                        HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position, parts[1] + " ");
                     }
                     else if (parts[2].ToLower().Contains("after"))
                     {
-                        HealthRecordText.Text = HealthRecordText.Text.Insert(position + len, " " + parts[1]);
+                        HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position + len, " " + parts[1]);
                     }
                     else
                     {
@@ -174,11 +175,11 @@ namespace EHRNarrative
                     //Do Replace
                     if (parts[0].Contains("%SELECTED"))
                     {
-                        HealthRecordText.SelectedText = parts[1];
+                        HealthRecordText.SelectedRtf = parts[1];
                     }
                     else
                     {
-                        HealthRecordText.Text = HealthRecordText.Text.Replace(parts[0], parts[1]);
+                        HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(parts[0], parts[1]);
                     }
                 }
                 else

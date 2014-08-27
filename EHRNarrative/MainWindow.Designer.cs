@@ -44,7 +44,7 @@
             this.HealthRecordText.Name = "HealthRecordText";
             this.HealthRecordText.Size = new System.Drawing.Size(760, 538);
             this.HealthRecordText.TabIndex = 0;
-            this.HealthRecordText.Text = "Hello, my name is [name]. \nThe brown fox jumps the laxy dog.\n";
+            this.HealthRecordText.Text = "";
             this.HealthRecordText.TextChanged += new System.EventHandler(this.HealthRecordText_TextChanged);
             // 
             // button1

@@ -205,7 +205,7 @@ namespace EHRNarrative
                     }
                     else
                     {
-                        if (parts[0].Trim().StartsWith("[") && parts[0].Trim().EndsWith("]"))
+                        if (parts[0].Trim().StartsWith("[") && parts[0].Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(parts[0]))
                         {
                             if (command_str != "")
                             {

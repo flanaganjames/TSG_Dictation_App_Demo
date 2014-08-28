@@ -147,7 +147,7 @@ namespace EHRNarrative
             foreach (String command in commands)
             {
                 String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                parts[0] = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
+                string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
 
                 if (parts.Length == 3)
                 {
@@ -162,8 +162,8 @@ namespace EHRNarrative
                     }
                     else
                     {
-                        position = HealthRecordText.Rtf.IndexOf(parts[0]);
-                        len = parts[0].Length;
+                        position = HealthRecordText.Rtf.IndexOf(lookup);
+                        len = lookup.Length;
                     }
 
                     if (parts[2].ToLower().Contains("before"))
@@ -206,7 +206,7 @@ namespace EHRNarrative
                     }
                     else
                     {
-                        if (parts[0].Trim().StartsWith("[") && parts[0].Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(parts[0]))
+                        if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
                         {
                             if (command_str != "")
                             {
@@ -224,7 +224,7 @@ namespace EHRNarrative
                             }
                         }
 
-                        HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(parts[0], parts[1]);
+                        HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, parts[1]);
                     }
                 }
                 else

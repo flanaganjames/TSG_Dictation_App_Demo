@@ -157,7 +157,7 @@ namespace EHRNarrative
                     if (parts[0].Contains("%SELECTED"))
                     {
                         position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText);
-                        len = HealthRecordText.SelectedRtf.Length;
+                        len = HealthRecordText.SelectedText.Length;
                     }
                     else
                     {
@@ -201,7 +201,7 @@ namespace EHRNarrative
                             }
                         }
 
-                        HealthRecordText.SelectedRtf = parts[1];
+                        HealthRecordText.SelectedText = parts[1];
                     }
                     else
                     {

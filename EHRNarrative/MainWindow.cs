@@ -289,7 +289,7 @@ namespace EHRNarrative
                 if (notifyOfRemovals)
                 {
                     //System.Diagnostics.Process.Start("SLC.exe", "del " + keyword);
-                    command_string += "del " + keyword;
+                    command_string += "data " + keyword;  //TODO: Should be del, not data!!
                 }
             }
             if (command_string != "")

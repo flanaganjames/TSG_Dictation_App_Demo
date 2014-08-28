@@ -147,6 +147,7 @@ namespace EHRNarrative
             foreach (String command in commands)
             {
                 String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                parts[0] = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
 
                 if (parts.Length == 3)
                 {

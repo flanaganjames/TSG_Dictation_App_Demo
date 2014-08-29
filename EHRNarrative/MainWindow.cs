@@ -9,6 +9,7 @@ using System.Windows.Forms;
 
 using System.Collections;
 using System.Text.RegularExpressions;
+using System.IO;
 
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.InteropServices;
@@ -51,7 +52,8 @@ namespace EHRNarrative
         #endregion
 
         private ArrayList keyword_list = null;
-        System.EventHandler hrTextChanged = null;
+        private Dictionary<String, String> labelToKeywords = null;
+        private System.EventHandler hrTextChanged = null;
 
         #region Window Messaging Helpers
         public bool bringAppToFront(int hWnd)
@@ -136,6 +138,10 @@ namespace EHRNarrative
 
         private void ParseVBACommand(String commandStr)
         {
+            if (commandStr.Contains("%PARSE_LABELS"))
+            {
+                ParseLabels();
+            }
             this.HealthRecordText.TextChanged -= hrTextChanged;
 
             String[] initializer = new String[] { ":%s" };
@@ -240,6 +246,21 @@ namespace EHRNarrative
             CheckKeywords(true, false);
 
             this.HealthRecordText.TextChanged += hrTextChanged;
+        }
+
+        private void ParseLabels()
+        {
+            labelToKeywords.Clear();
+
+            foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
+            {
+                if (line.Contains(':'))
+                {
+                    string[] sides = line.Split(':');
+                    labelToKeywords.Add(sides[0].Trim(), sides[1].Trim());
+                    //TODO: Probably some error checking/handling
+                }
+            }
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)

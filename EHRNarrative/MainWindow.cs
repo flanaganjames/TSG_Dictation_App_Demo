@@ -51,8 +51,7 @@ namespace EHRNarrative
         public const int WM_COPYDATA = 0x4A;
         #endregion
 
-        private ArrayList keyword_list = null;
-        private Dictionary<String, String> labelToKeywords = null;
+        private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
 
         #region Window Messaging Helpers
@@ -128,12 +127,10 @@ namespace EHRNarrative
 
             hrTextChanged = new System.EventHandler(this.HealthRecordText_TextChanged);
 
-            keyword_list = new ArrayList();
+            topLevelLines = new List<EHRLine>();
 
-            //HealthRecordText.SelectAll();
-            HealthRecordText.Rtf = "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Calibri;}{\\f1\\fnil\\fcharset0 Microsoft Sans Serif;}}{\\colortbl ;\\red0\\green176\\blue80;\\red192\\green80\\blue77;}\\viewkind4\\uc1\\pard\\sl240\\slmult1\\cf1\\lang9\\f0\\fs22 Hello, my name is \\ul [name]\\cf0\\ulnone\\par\\i The\\i0  \\cf2 brown \\cf0 fox \\b jumps \\b0 the \\i lazy dog\\i0 .\\lang1033\\f1\\fs17\\par}";
-            this.HealthRecordText.TextChanged += hrTextChanged;
-            CheckKeywords(false, false);
+            ParseLabels();
+            HealthRecordText.TextChanged += hrTextChanged;
         }
 
         private void ParseVBACommand(String commandStr)
@@ -243,24 +240,51 @@ namespace EHRNarrative
             {
                 System.Diagnostics.Process.Start("SLC.exe", command_str);
             }
-            CheckKeywords(true, false);
 
             this.HealthRecordText.TextChanged += hrTextChanged;
         }
 
         private void ParseLabels()
         {
-            labelToKeywords.Clear();
+            topLevelLines.Clear();
 
+            topLevelLines = FindEHRLines();
+        }
+
+        private String matchLabelToKeyword(string label)
+        {
+            foreach (EHRLine line in topLevelLines)
+            {
+                if (line.label.Equals(label))
+                {
+                    return line.keyword;
+                }
+            }
+            return "";
+        }
+
+        private List<EHRLine> FindEHRLines()
+        {
+            List<EHRLine> list = new List<EHRLine>();
             foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
             {
                 if (line.Contains(':'))
                 {
                     string[] sides = line.Split(':');
-                    labelToKeywords.Add(sides[0].Trim(), sides[1].Trim());
-                    //TODO: Probably some error checking/handling
+                    string pattern = @"\[([^]]*)\]";
+                    Regex rgx = new Regex(pattern);
+                    Match m = rgx.Match(sides[1]);
+                    if (m.Success)
+                    {
+                        list.Add(new EHRLine(sides[0].Trim(), m.Value, ""));
+                    }
+                    else 
+                    {
+                        list.Add(new EHRLine(sides[0].Trim(), matchLabelToKeyword(sides[0].Trim()), sides[1].Trim()));
+                    }
                 }
             }
+            return list;
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
@@ -268,65 +292,38 @@ namespace EHRNarrative
             if (HealthRecordText.Text.Trim() == "")
             {
                 System.Diagnostics.Process.Start("SLC.exe", "reset");
-                keyword_list.Clear();
+                topLevelLines.Clear();
                 return;
             }
 
-            CheckKeywords();
+            CheckEHRLineStatus();
         }
 
-        private void CheckKeywords()
+        private void CheckEHRLineStatus()
         {
-            CheckKeywords(true, true);
-        }
+            List<EHRLine> lines = FindEHRLines();
 
-        private void CheckKeywords(bool notifyOfAdditions, bool notifyOfRemovals)
-        {
-            string pattern = @"\[([^]]*)\]";
-            Regex rgx = new Regex(pattern);
-
-            ArrayList new_keyword_list = new ArrayList();
-            foreach (Match match in rgx.Matches(HealthRecordText.Text))
-            {
-                string match_str = match.Value;
-
-                new_keyword_list.Add(match_str);
-            }
-
-            IEnumerable removed_keywords = keyword_list.ToArray().Except(new_keyword_list.ToArray());
-            IEnumerable added_keywords = new_keyword_list.ToArray().Except(keyword_list.ToArray());
+            IEnumerable<string> keyword_list = topLevelLines.Select(x => x.keyword);
+            IEnumerable<string> current_keywords = lines.Select(x => x.keyword);
+            current_keywords = current_keywords.Where(x => x.Any()).ToList();
+            IEnumerable<string> added_keywords = current_keywords.ToArray().Except(keyword_list.ToArray());
 
             string command_string = "";
-            foreach (string keyword in added_keywords)
+           
+            if (added_keywords.Any())
             {
-                if (command_string != "")
-                {
-                    command_string += " ! ";
-                }
-                if (notifyOfAdditions)
-                {
-                    //System.Diagnostics.Process.Start("SLC.exe", "add " + keyword);
-                    command_string += "add " + keyword;
-                }
+                command_string += "add " + String.Join(" ! add ", added_keywords);
             }
-            foreach (string keyword in removed_keywords)
-            {
-                if (command_string != "")
-                {
-                    command_string += " ! ";
-                }
-                if (notifyOfRemovals)
-                {
-                    //System.Diagnostics.Process.Start("SLC.exe", "del " + keyword);
-                    command_string += "data " + keyword;  //TODO: Should be del, not data!!
-                }
-            }
+
+            //TODO: Check for removed labels (del)
+            //Removing a label removes the requirement in the SLC
+            
             if (command_string != "")
             {
                 System.Diagnostics.Process.Start("SLC.exe", command_string);
             }
 
-            keyword_list = new_keyword_list;
+            topLevelLines = lines;
         }
 
         private void HealthRecordText_KeyUp(object sender, KeyEventArgs e)

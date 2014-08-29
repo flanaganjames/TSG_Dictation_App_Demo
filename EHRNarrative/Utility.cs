@@ -97,4 +97,20 @@ namespace EHRNarrative
             return GetEnumerator();
         }
     }
+
+    public class EHRLine
+    {
+        public String label;
+        public String keyword;
+        public String text;
+        public List<EHRLine> children;
+
+        public EHRLine(String label, string keyword, string text)
+        {
+            this.label = label;
+            this.keyword = keyword;
+            this.text = text;
+            children = new List<EHRLine>();
+        }
+    }
 }

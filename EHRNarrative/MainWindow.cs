@@ -244,6 +244,13 @@ namespace EHRNarrative
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
         {
+            if (HealthRecordText.Text.Trim() == "")
+            {
+                System.Diagnostics.Process.Start("SLC.exe", "reset");
+                keyword_list.Clear();
+                return;
+            }
+
             CheckKeywords();
         }
 
@@ -301,9 +308,28 @@ namespace EHRNarrative
             keyword_list = new_keyword_list;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void HealthRecordText_KeyUp(object sender, KeyEventArgs e)
         {
-            ParseVBACommand(textBox1.Text);
+            if (e.KeyCode == Keys.Tab)
+            {
+                int current = HealthRecordText.SelectionStart + HealthRecordText.SelectionLength;
+
+                int next = HealthRecordText.Text.IndexOf('[', current);
+                if (next == -1)
+                {
+                    HealthRecordText.Select(0, 0);
+                    return;
+                }
+
+                int close = HealthRecordText.Text.IndexOf(']', next);
+                if (close == -1)
+                {
+                    HealthRecordText.Select(0, 0);
+                    return;
+                }
+
+                HealthRecordText.Select(next, close - next + 1);
+            }
         }
     }
 }

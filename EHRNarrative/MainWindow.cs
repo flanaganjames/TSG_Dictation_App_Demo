@@ -251,7 +251,7 @@ namespace EHRNarrative
             topLevelLines = FindEHRLines();
         }
 
-        private String matchLabelToKeyword(string label)
+        private String GetKeywordFromLabel(string label)
         {
             foreach (EHRLine line in topLevelLines)
             {
@@ -260,7 +260,19 @@ namespace EHRNarrative
                     return line.keyword;
                 }
             }
-            return "";
+            return null;
+        }
+
+        private String GetTextFromLabel(string label)
+        {
+            foreach (EHRLine line in topLevelLines)
+            {
+                if (line.label.Equals(label))
+                {
+                    return line.text;
+                }
+            }
+            return null;
         }
 
         private List<EHRLine> FindEHRLines()
@@ -271,16 +283,16 @@ namespace EHRNarrative
                 if (line.Contains(':'))
                 {
                     string[] sides = line.Split(':');
-                    string pattern = @"\[([^]]*)\]";
+                    string pattern = @"(\[[^]]*\])(.*)";
                     Regex rgx = new Regex(pattern);
                     Match m = rgx.Match(sides[1]);
                     if (m.Success)
                     {
-                        list.Add(new EHRLine(sides[0].Trim(), m.Value, ""));
+                        list.Add(new EHRLine(sides[0].Trim(), m.Groups[1].Value, m.Groups[2].Value));
                     }
-                    else 
+                    else if (GetKeywordFromLabel(sides[0].Trim()) != null)
                     {
-                        list.Add(new EHRLine(sides[0].Trim(), matchLabelToKeyword(sides[0].Trim()), sides[1].Trim()));
+                        list.Add(new EHRLine(sides[0].Trim(), GetKeywordFromLabel(sides[0].Trim()), sides[1].Trim()));
                     }
                 }
             }
@@ -308,18 +320,29 @@ namespace EHRNarrative
             current_keywords = current_keywords.Where(x => x.Any()).ToList();
             IEnumerable<string> added_keywords = current_keywords.ToArray().Except(keyword_list.ToArray());
 
-            string command_string = "";
+            List<String> command_strings = new List<String>();
            
             if (added_keywords.Any())
             {
-                command_string += "add " + String.Join(" ! add ", added_keywords);
+                command_strings.Add("add " + String.Join(" ! add ", added_keywords));
+            }
+
+            //TODO: skipping if adding keyword and value at same time
+            IEnumerable<string> blank_labels = topLevelLines.Where(x => x.text == "").Select(x => x.label);
+            foreach (EHRLine line in lines)
+            {
+                if (blank_labels.Contains(line.label) && line.text != "")
+                {
+                    command_strings.Add("data " + line.keyword);
+                }
             }
 
             //TODO: Check for removed labels (del)
             //Removing a label removes the requirement in the SLC
             
-            if (command_string != "")
+            if (command_strings.Any())
             {
+                string command_string = String.Join(" ! ", command_strings);
                 System.Diagnostics.Process.Start("SLC.exe", command_string);
             }
 

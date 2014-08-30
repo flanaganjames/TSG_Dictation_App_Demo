@@ -141,7 +141,7 @@ namespace EHRNarrative
             }
             else if (commandStr.Contains("%NEXT_FIELD"))
             {
-
+                NextField();
             }
             else
             {

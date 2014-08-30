@@ -135,113 +135,120 @@ namespace EHRNarrative
 
         private void ParseVBACommand(String commandStr)
         {
-            if (commandStr.Contains("%PARSE_LABELS"))
+            if (commandStr.Contains("%START"))
             {
                 ParseLabels();
             }
-            this.HealthRecordText.TextChanged -= hrTextChanged;
-
-            String[] initializer = new String[] { ":%s" };
-            String[] separator = new String[] { "/" };
-
-            String[] commands = commandStr.Split(initializer, StringSplitOptions.RemoveEmptyEntries);
-
-            string command_str = "";
-            foreach (String command in commands)
+            else if (commandStr.Contains("%NEXT_FIELD"))
             {
-                String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
 
-                if (parts.Length == 3)
+            }
+            else
+            {
+                this.HealthRecordText.TextChanged -= hrTextChanged;
+
+                String[] initializer = new String[] { ":%s" };
+                String[] separator = new String[] { "/" };
+
+                String[] commands = commandStr.Split(initializer, StringSplitOptions.RemoveEmptyEntries);
+
+                string command_str = "";
+                foreach (String command in commands)
                 {
-                    //Do Insert
-                    int position = 0;
-                    int len = 0;
+                    String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
 
-                    if (parts[0].Contains("%SELECTED"))
+                    if (parts.Length == 3)
                     {
-                        position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText);
-                        len = HealthRecordText.SelectedText.Length;
-                    }
-                    else
-                    {
-                        position = HealthRecordText.Rtf.IndexOf(lookup);
-                        len = lookup.Length;
-                    }
+                        //Do Insert
+                        int position = 0;
+                        int len = 0;
 
-                    if (parts[2].ToLower().Contains("before"))
-                    {
-                        HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position, parts[1] + " ");
-                    }
-                    else if (parts[2].ToLower().Contains("after"))
-                    {
-                        HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position + len, " " + parts[1]);
-                    }
-                    else
-                    {
-                        //Do Error!
-                    }
-                }
-                else if (parts.Length == 2)
-                {
-                    //Do Replace
-                    if (parts[0].Contains("%SELECTED"))
-                    {
-                        if (HealthRecordText.SelectedText.Trim().StartsWith("[") && HealthRecordText.SelectedText.Trim().EndsWith("]"))
+                        if (parts[0].Contains("%SELECTED"))
                         {
-                            if (command_str != "")
-                            {
-                                command_str += " ! ";
-                            }
-
-                            if (parts[1].Trim() != "")
-                            {
-                                //Send data command
-                                command_str += "data " + HealthRecordText.SelectedText.Trim();
-                            }
-                            else
-                            {
-                                command_str += "del " + HealthRecordText.SelectedText.Trim();
-                            }
+                            position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText);
+                            len = HealthRecordText.SelectedText.Length;
+                        }
+                        else
+                        {
+                            position = HealthRecordText.Rtf.IndexOf(lookup);
+                            len = lookup.Length;
                         }
 
-                        HealthRecordText.SelectedText = parts[1];
+                        if (parts[2].ToLower().Contains("before"))
+                        {
+                            HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position, parts[1] + " ");
+                        }
+                        else if (parts[2].ToLower().Contains("after"))
+                        {
+                            HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position + len, " " + parts[1]);
+                        }
+                        else
+                        {
+                            //Do Error!
+                        }
+                    }
+                    else if (parts.Length == 2)
+                    {
+                        //Do Replace
+                        if (parts[0].Contains("%SELECTED"))
+                        {
+                            if (HealthRecordText.SelectedText.Trim().StartsWith("[") && HealthRecordText.SelectedText.Trim().EndsWith("]"))
+                            {
+                                if (command_str != "")
+                                {
+                                    command_str += " ! ";
+                                }
+
+                                if (parts[1].Trim() != "")
+                                {
+                                    //Send data command
+                                    command_str += "data " + HealthRecordText.SelectedText.Trim();
+                                }
+                                else
+                                {
+                                    command_str += "del " + HealthRecordText.SelectedText.Trim();
+                                }
+                            }
+
+                            HealthRecordText.SelectedText = parts[1];
+                        }
+                        else
+                        {
+                            if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
+                            {
+                                if (command_str != "")
+                                {
+                                    command_str += " ! ";
+                                }
+
+                                if (parts[1].Trim() != "")
+                                {
+                                    //Send data command
+                                    command_str += "data " + parts[0].Trim();
+                                }
+                                else
+                                {
+                                    command_str += "del " + parts[0].Trim();
+                                }
+                            }
+
+                            HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, parts[1]);
+                        }
                     }
                     else
                     {
-                        if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
-                        {
-                            if (command_str != "")
-                            {
-                                command_str += " ! ";
-                            }
-
-                            if (parts[1].Trim() != "")
-                            {
-                                //Send data command
-                                command_str += "data " + parts[0].Trim();
-                            }
-                            else
-                            {
-                                command_str += "del " + parts[0].Trim();
-                            }
-                        }
-
-                        HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, parts[1]);
+                        //Do Error!!!
                     }
                 }
-                else
+
+                if (command_str != "")
                 {
-                    //Do Error!!!
+                    System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
-            }
 
-            if (command_str != "")
-            {
-                System.Diagnostics.Process.Start("SLC.exe", command_str);
+                this.HealthRecordText.TextChanged += hrTextChanged;
             }
-
-            this.HealthRecordText.TextChanged += hrTextChanged;
         }
 
         private void ParseLabels()
@@ -339,6 +346,18 @@ namespace EHRNarrative
 
             //TODO: Check for removed labels (del)
             //Removing a label removes the requirement in the SLC
+            IEnumerable<string> label_list = topLevelLines.Select(x => x.label);
+            IEnumerable<string> current_labels = lines.Select(x => x.label);
+            IEnumerable<string> removed_labels = label_list.ToArray().Except(current_labels.ToArray());
+            foreach (string label in removed_labels)
+            {
+                string keyword = GetKeywordFromLabel(label);
+
+                if (keyword != null && keyword != "")
+                {
+                    command_strings.Add("del " + keyword);
+                }
+            }
             
             if (command_strings.Any())
             {
@@ -353,24 +372,29 @@ namespace EHRNarrative
         {
             if (e.KeyCode == Keys.Tab)
             {
-                int current = HealthRecordText.SelectionStart + HealthRecordText.SelectionLength;
-
-                int next = HealthRecordText.Text.IndexOf('[', current);
-                if (next == -1)
-                {
-                    HealthRecordText.Select(0, 0);
-                    return;
-                }
-
-                int close = HealthRecordText.Text.IndexOf(']', next);
-                if (close == -1)
-                {
-                    HealthRecordText.Select(0, 0);
-                    return;
-                }
-
-                HealthRecordText.Select(next, close - next + 1);
+                NextField();
             }
+        }
+
+        private void NextField()
+        {
+            int current = HealthRecordText.SelectionStart + HealthRecordText.SelectionLength;
+
+            int next = HealthRecordText.Text.IndexOf('[', current);
+            if (next == -1)
+            {
+                HealthRecordText.Select(0, 0);
+                return;
+            }
+
+            int close = HealthRecordText.Text.IndexOf(']', next);
+            if (close == -1)
+            {
+                HealthRecordText.Select(0, 0);
+                return;
+            }
+
+            HealthRecordText.Select(next, close - next + 1);
         }
     }
 }

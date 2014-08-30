@@ -344,6 +344,17 @@ namespace EHRNarrative
                 }
             }
 
+            //Detects places where a field text has been deleted
+            IEnumerable<string> new_blanks = lines.Where(x => x.text == "").Select(x => x.label);
+            foreach (EHRLine old_line in topLevelLines)
+            {
+                if (new_blanks.Contains(old_line.label) && old_line.text != "")
+                {
+                    command_strings.Add("delete " + old_line.keyword);
+                }
+            }
+
+
             //TODO: Check for removed labels (del)
             //Removing a label removes the requirement in the SLC
             IEnumerable<string> label_list = topLevelLines.Select(x => x.label);

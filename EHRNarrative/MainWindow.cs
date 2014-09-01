@@ -242,12 +242,25 @@ namespace EHRNarrative
                     }
                 }
 
-                if (command_str != "")
-                {
-                    System.Diagnostics.Process.Start("SLC.exe", command_str);
-                }
+                NotifySLC(command_str);
 
                 this.HealthRecordText.TextChanged += hrTextChanged;
+            }
+        }
+
+        private static void NotifySLC(string command_str)
+        {
+            if (command_str != "")
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start("SLC.exe", command_str);
+                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                }
+                catch
+                {
+                    MessageBox.Show("There was an error when trying to call the SLC!");
+                }
             }
         }
 
@@ -310,7 +323,7 @@ namespace EHRNarrative
         {
             if (HealthRecordText.Text.Trim() == "")
             {
-                System.Diagnostics.Process.Start("SLC.exe", "reset");
+                NotifySLC("reset");
                 topLevelLines.Clear();
                 return;
             }
@@ -373,7 +386,7 @@ namespace EHRNarrative
             if (command_strings.Any())
             {
                 string command_string = String.Join(" ! ", command_strings);
-                System.Diagnostics.Process.Start("SLC.exe", command_string);
+                NotifySLC(command_string);
             }
 
             topLevelLines = lines;

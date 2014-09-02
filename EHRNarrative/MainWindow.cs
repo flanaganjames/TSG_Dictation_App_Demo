@@ -402,23 +402,28 @@ namespace EHRNarrative
 
         private void NextField()
         {
-            int current = HealthRecordText.SelectionStart + HealthRecordText.SelectionLength;
-
-            int next = HealthRecordText.Text.IndexOf('[', current);
-            if (next == -1)
+            if (HealthRecordText.Text.Contains('[') && HealthRecordText.Text.Contains(']'))
             {
-                HealthRecordText.Select(0, 0);
-                return;
-            }
+                int current = HealthRecordText.SelectionStart + HealthRecordText.SelectionLength;
 
-            int close = HealthRecordText.Text.IndexOf(']', next);
-            if (close == -1)
-            {
-                HealthRecordText.Select(0, 0);
-                return;
-            }
+                int next = HealthRecordText.Text.IndexOf('[', current);
+                if (next == -1)
+                {
+                    HealthRecordText.Select(0, 0);
+                    NextField();
+                    return;
+                }
 
-            HealthRecordText.Select(next, close - next + 1);
+                int close = HealthRecordText.Text.IndexOf(']', next);
+                if (close == -1)
+                {
+                    HealthRecordText.Select(0, 0);
+                    NextField();
+                    return;
+                }
+
+                HealthRecordText.Select(next, close - next + 1);
+            }
         }
     }
 }

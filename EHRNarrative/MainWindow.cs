@@ -66,6 +66,7 @@ namespace EHRNarrative
                 ShowWindow(hWnd, 9);  // 9 is SW_RESTORE
                 System.Threading.Thread.Sleep(1000);
                 this.Activate();
+                dashboard_launched = true;
             }
             else
             {

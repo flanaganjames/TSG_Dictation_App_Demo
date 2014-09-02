@@ -28,8 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EHRNarrative));
             this.HealthRecordText = new System.Windows.Forms.RichTextBox();
+            this.dashboardTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // HealthRecordText
@@ -43,6 +45,12 @@
             this.HealthRecordText.TabIndex = 0;
             this.HealthRecordText.Text = "";
             this.HealthRecordText.KeyUp += new System.Windows.Forms.KeyEventHandler(this.HealthRecordText_KeyUp);
+            // 
+            // dashboardTimer
+            // 
+            this.dashboardTimer.Enabled = true;
+            this.dashboardTimer.Interval = 2000;
+            this.dashboardTimer.Tick += new System.EventHandler(this.dashboardTimer_Tick);
             // 
             // EHRNarrative
             // 
@@ -60,6 +68,7 @@
         #endregion
 
         private System.Windows.Forms.RichTextBox HealthRecordText;
+        private System.Windows.Forms.Timer dashboardTimer;
     }
 }
 

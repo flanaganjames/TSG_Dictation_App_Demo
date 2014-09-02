@@ -47,17 +47,30 @@ namespace EHRNarrative
         [DllImport("User32.dll", EntryPoint = "SetForegroundWindow")]
         public static extern bool SetForegroundWindow(int hWnd);
 
+        [DllImport("User32.dll", EntryPoint = "ShowWindow")]
+        public static extern bool ShowWindow(int hWnd, int command);
+
         public const int WM_USER = 0x400;
         public const int WM_COPYDATA = 0x4A;
         #endregion
 
         private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
+        private bool dashboard_launched = false;
 
         #region Window Messaging Helpers
-        public bool bringAppToFront(int hWnd)
+        public void bringAppToFront(int hWnd)
         {
-            return SetForegroundWindow(hWnd);
+            if (!dashboard_launched)
+            {
+                ShowWindow(hWnd, 9);  // 9 is SW_RESTORE
+                System.Threading.Thread.Sleep(1000);
+                this.Activate();
+            }
+            else
+            {
+                SetForegroundWindow(hWnd);
+            }
         }
 
         public int sendCustomMessage(int hWnd, int wParam, string msg)
@@ -125,11 +138,14 @@ namespace EHRNarrative
         {
             InitializeComponent();
 
-            hrTextChanged = new System.EventHandler(this.HealthRecordText_TextChanged);
+            dashboardTimer.Stop();
 
+            hrTextChanged = new System.EventHandler(this.HealthRecordText_TextChanged);
             topLevelLines = new List<EHRLine>();
+            dashboard_launched = false;
 
             ParseLabels();
+
             HealthRecordText.TextChanged += hrTextChanged;
         }
 
@@ -248,19 +264,21 @@ namespace EHRNarrative
             }
         }
 
-        private static void NotifySLC(string command_str)
+        private void NotifySLC(string command_str)
         {
             if (command_str != "")
             {
                 try
                 {
                     System.Diagnostics.Process.Start("SLC.exe", command_str);
-                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
                 }
                 catch
                 {
                     MessageBox.Show("There was an error when trying to call the SLC!");
                 }
+
+                dashboardTimer.Start();
             }
         }
 
@@ -423,6 +441,23 @@ namespace EHRNarrative
                 }
 
                 HealthRecordText.Select(next, close - next + 1);
+            }
+        }
+
+        private void dashboardTimer_Tick(object sender, EventArgs e)
+        {
+            int dashboardHWnd = 0;
+            int tries = 0;
+            while (dashboardHWnd == 0 && tries < 5)
+            {
+                dashboardHWnd = getWindowId(null, "The Sullivan Group dashboard");
+                tries += 1;
+            }
+
+            if (dashboardHWnd != 0)
+            {
+                dashboardTimer.Stop();
+                bringAppToFront(dashboardHWnd);
             }
         }
     }

@@ -162,7 +162,7 @@ namespace EHRNarrative
             string command_str = "";
             foreach (String command in commands)
             {
-                switch (command.Trim())
+                switch (command.Trim().Split(' ')[0])
                 {
                     case "START":
                         ParseLabels();
@@ -170,8 +170,12 @@ namespace EHRNarrative
                     case "NEXT_FIELD":
                         NextField();
                         break;
+                    case "LOAD_TEMPLATE":
+                        char[] separator = new char[] { ' ' };
+                        LoadTemplate(command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1]);
+                        break;
                     default:
-                        command_str += ParseReplaceCommand(command_str, command);
+                        ParseReplaceCommand(ref command_str, command);
                         break;
                 }
             }
@@ -181,9 +185,22 @@ namespace EHRNarrative
             this.HealthRecordText.TextChanged += hrTextChanged;
         }
 
-        private string ParseReplaceCommand(string command_str, String command)
+        private void LoadTemplate(string template)
         {
-            String[] separator = new String[] { "/" };
+            string home = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string templates = System.IO.Path.Combine(home, "templates");
+            template = template.Trim() + ".rtf";
+            template = System.IO.Path.Combine(templates, template);
+
+            HealthRecordText.Clear();
+            HealthRecordText.LoadFile(template);
+
+            dashboardTimer.Start();
+        }
+
+        private string ParseReplaceCommand(ref string command_str, String command)
+        {
+            char[] separator = new char[] { '/' };
             String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
             string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
 
@@ -278,8 +295,8 @@ namespace EHRNarrative
             {
                 try
                 {
-                    System.Diagnostics.Process.Start("SLC.exe", command_str);
                     //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
                 catch
                 {

@@ -307,6 +307,15 @@ namespace EHRNarrative
             }
         }
 
+        private void NotifySLC(List<String> command_list)
+        {
+            if (command_list.Any())
+            {
+                string command_string = String.Join(" ! ", command_list);
+                NotifySLC(command_string);
+            }
+        }
+
         private void ParseLabels()
         {
             topLevelLines.Clear();
@@ -340,6 +349,7 @@ namespace EHRNarrative
 
         private List<EHRLine> FindEHRLines()
         {
+            List<String> command_strings = new List<String>();
             List<EHRLine> list = new List<EHRLine>();
             foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
             {
@@ -360,6 +370,25 @@ namespace EHRNarrative
                 }
             }
             return list;
+        }
+
+        private List<String> CheckForVitals()
+        {
+            List<String> commands = new List<String>();
+            foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
+            {
+                Regex pulse = new Regex(@"\b(Pulse|P|Heart Rate|HR)\b ?(\w+ )?(?<value>\d{2,3})\b( bpm\b| per minute\b| beats per minute\b)?");
+                Match pulse_match = pulse.Match(line);
+                while (pulse_match.Success)
+                {
+                    if (Convert.ToInt32(pulse_match.Groups["value"].Value) >= 30)
+                    {
+                        commands.Add("VS p " + pulse_match.Groups["value"]);
+                    }
+                    pulse_match = pulse_match.NextMatch();
+                }
+            }
+            return commands;
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
@@ -425,12 +454,11 @@ namespace EHRNarrative
                     command_strings.Add("del " + keyword);
                 }
             }
-            
-            if (command_strings.Any())
-            {
-                string command_string = String.Join(" ! ", command_strings);
-                NotifySLC(command_string);
-            }
+
+            //check for vitals
+            //command_strings.AddRange(CheckForVitals());
+
+            NotifySLC(command_strings);
 
             topLevelLines = lines;
         }
@@ -488,7 +516,10 @@ namespace EHRNarrative
 
         private void check_button_Click(object sender, EventArgs e)
         {
-            NotifySLC("validate");
+            List<String> commands = CheckForVitals();
+            commands.Add("validate");
+            NotifySLC(commands);
+            //NotifySLC("validate");
         }
     }
 }

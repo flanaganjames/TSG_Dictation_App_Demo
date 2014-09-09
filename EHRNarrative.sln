@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EHRNarrative", "EHRNarrativ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockSLC", "MockSLC\MockSLC.csproj", "{5A46FB1A-56DF-40A9-9668-E7F6A6B280C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard", "Dashboard\Dashboard.csproj", "{85D6C067-2819-4EE8-81B7-2891764A4F88}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWindowsMessage", "TestWindowsMessage\TestWindowsMessage.csproj", "{E6C4C02F-ECC8-4709-80E3-A9F63D0EE7AC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard", "Dashboard\CS-WF-dashboard\Dashboard.csproj", "{C62DF4F2-E834-467F-880F-57BD5592A688}"
@@ -39,6 +41,16 @@ Global
 		{5A46FB1A-56DF-40A9-9668-E7F6A6B280C8}.Release|Mixed Platforms.Build.0 = Release|x86
 		{5A46FB1A-56DF-40A9-9668-E7F6A6B280C8}.Release|x86.ActiveCfg = Release|x86
 		{5A46FB1A-56DF-40A9-9668-E7F6A6B280C8}.Release|x86.Build.0 = Release|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Debug|x86.ActiveCfg = Debug|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Debug|x86.Build.0 = Debug|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Release|Any CPU.ActiveCfg = Release|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Release|Mixed Platforms.Build.0 = Release|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Release|x86.ActiveCfg = Release|x86
+		{85D6C067-2819-4EE8-81B7-2891764A4F88}.Release|x86.Build.0 = Release|x86
 		{E6C4C02F-ECC8-4709-80E3-A9F63D0EE7AC}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{E6C4C02F-ECC8-4709-80E3-A9F63D0EE7AC}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{E6C4C02F-ECC8-4709-80E3-A9F63D0EE7AC}.Debug|Mixed Platforms.Build.0 = Debug|x86

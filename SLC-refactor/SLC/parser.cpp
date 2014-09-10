@@ -72,27 +72,35 @@ void S_reset(void)
 }
 
 
+	// allocate a copy of the string
+char *scopy(char *s)
+{
+	char *t = (char *) malloc(strlen(s)+1);
+	strncpy(t, s, strlen(s)+1);
+	return t;
+}
+
+
 	// is the given string in the list?
 	// return location if so
-list<char *>::iterator *findword(
-	list<char *> L, list<char *>::iterator i, char *s)
+static list<char *>::iterator i;
+list<char *>::iterator findword(list<char *> &L, char *s)
 {
 	for (i = L.begin();  i != L.end();  i++)
 	{
-		if (stricmp(s, *i) == 0)
-			return &i;
+		if (_stricmp(s, *i) == 0)
+			return i;
 	}
-	return NULL;
+	return L.end();
 }
 
 
 	// given list class instance and a string containing a list of words, 
 	// split the string at commas, and add the words that aren't already
 	// in the list to the list
-void addWords(list<char *> in, char *add)
+void addWords(list<char *> &in, char *add)
 {
 	char *s, *t;
-	list<char *>::iterator i;
 
 		// we need to strip the decorations
 		// do this in a quick-and-dirty way by copying
@@ -121,21 +129,26 @@ void addWords(list<char *> in, char *add)
 		int l; 
 			// peel off the next word
 		if (t = strchr(s, ','))
+		{
 			l = t - s;
+			*t = '\0';
+		}
 		else
 			l = strlen(s);
-
+		
 			// add if it's not a duplicate
-		if (findword(in, i, s) == NULL)
-			in.push_back(s);
+		// list<char *>::iterator f = findword(in, s); //
+		// if (in.empty() || findword(in, s) == in.end())
+		if (findword(in, s) == in.end())
+			in.push_back(scopy(s));
 		
 			// skip blanks & commas to the next word beginning
+		s += l;
+		if (t)  s = ++t;
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
 	}
 	free(ss);
-	return n;
 }
-
 
 
 	// strip off the line-ending characters & trailing blanks
@@ -147,6 +160,10 @@ void chomp(char *s)
 	while (t && *t == ' ')  *t-- = '\0';
 }
 
+bool no_complaint(void)
+{
+	return _complaint.empty();
+}
 
 void S_parseStatus(void)
 {
@@ -206,7 +223,7 @@ void S_parseStatus(void)
 			//        but ignore all but the first
 			if (! _complaint.empty())  break;
 			clobberState();
-			_complaint.push_back(s);
+			_complaint.push_back(scopy(s));
 			break;			
 		case complaint_t:
 			// if it's a new complaint command, clobber the old one
@@ -215,7 +232,7 @@ void S_parseStatus(void)
 			//       but each new complaint resets and overrides
 			//       the existing one
 			clobberState();
-			_complaint.push_back(s);
+			_complaint.push_back(scopy(s));
 			break;
 		case diff_t:
 			if (differential)
@@ -242,7 +259,7 @@ void S_parseStatus(void)
 			break;
 		case rec_exam_t:
 		case recc_exam_t:
-			addWords(_req_exam, s);
+			addWords(_rec_exam, s);
 			break;
 		case data_hpi_t:
 		case data_exam_t:
@@ -307,31 +324,31 @@ void S_sortStatus(void)
 	for (i = _all_complete.begin();  i != _all_complete.end();  i++)
 	{
 		s = *i;
-		if ((ii = findword(_req_hpi, ii, s)) != NULL)
+		if ((ii = findword(_req_hpi, s)) != _req_hpi.end())
 		{
 			_req_hpi.erase(ii);
-			_comp_req.push_front(s);
+			_comp_req.push_front(scopy(s));
 		}
-		if ((ii = findword(_req_exam, ii, s)) != NULL)
+		if ((ii = findword(_req_exam, s)) != _req_exam.end())
 		{
 			_req_exam.erase(ii);
-			_comp_req.push_front(s);
+			_comp_req.push_front(scopy(s));
 		}
-		if ((ii = findword(_assess, ii, s)) != NULL)
+		if ((ii = findword(_assess, s)) != _assess.end())
 		{
 			_assess.erase(ii);
-			_comp_req.push_front(s);
+			_comp_req.push_front(scopy(s));
 		}
 			// now the recommended ones...
-		if ((ii = findword(_rec_hpi, ii, s)) != NULL)
+		if ((ii = findword(_rec_hpi, s)) != _rec_hpi.end())
 		{
 			_rec_hpi.erase(ii);
-			_comp_rec.push_front(s);
+			_comp_rec.push_front(scopy(s));
 		}
-		if ((ii = findword(_rec_exam, ii, s)) != NULL)
+		if ((ii = findword(_rec_exam, s)) != _rec_exam.end())
 		{
 			_rec_exam.erase(ii);
-			_comp_rec.push_front(s);
+			_comp_rec.push_front(scopy(s));
 		}
 	}
 

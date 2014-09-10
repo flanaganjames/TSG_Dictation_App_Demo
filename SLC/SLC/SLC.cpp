@@ -25,38 +25,17 @@ int _tmain(int argc, _TCHAR* argv[])
 		S_parseStatus();
 		S_generateDash();
 	} else {
-		if (argc == 2 && finished(argv[1]))
-		{
-			S_finishStatus();
-		} else if (argc == 2 && reset(argv[1]))
-		{
-			S_reset();
-		} else {
-			S_multiStatus(argc, argv);
-			// temporarily removed these to make sure we've got a selection
-			// in the status file -- we'll only parse when we have no args
-			S_parseStatus();
-			S_generateDash();
-		}
+			// we used to do special processing for finished & reset here
+			// now we handle those like all other commands
+		S_multiStatus(argc, argv);
+		S_parseStatus();
+		S_generateDash();
 	}
 
 	return 0;
 }
 
 
-#define FINISHED L"end_of_script"
-#define FINISHED_S L"end"
-#define RESET L"reset"
 
-BOOL finished(_TCHAR *s)
-{
-	return (_tcscmp(s, FINISHED) == 0
-		|| _tcscmp(s, FINISHED_S) == 0);
-}
-
-BOOL reset(_TCHAR *s)
-{
-	return (_tcscmp(s, RESET) == 0);
-}
 
 

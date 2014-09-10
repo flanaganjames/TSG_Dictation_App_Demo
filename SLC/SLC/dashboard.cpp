@@ -11,7 +11,7 @@ The main entry point is S_generatedash.
 #include "sullivan.h"
 #include "parser.h"
 
-static char *icon_data[] = {  // nominal 24x24 icon data, actually smaller
+static char *icon_data[] = {  // nominal 24x24 icon data
 	"010009000003aa0300000000810300000000040000000301080005000000",
 	"0b0200000000050000000c0219001900030000001e000400000007010400",
 	"040000000701040081030000410b2000cc00180018000000000018001800",
@@ -86,13 +86,18 @@ const int ps_title = 11*2;
 const int ps_exam = 8*2;
 const int ps_heading = 11*2;
 const int ps_link = 10*2;
-FILE *dash;
+const int ps_warning = 12*2;
+
+	// current file to which we're outputting
+	//  it's global to this module for convenience
+static FILE *outf = NULL;  
+
 
 enum colors_t { 
 	c_ignore = 0, c_black=1, c_white, c_gray, 
 	c_hyperlink, c_highlight_req, c_highlight_comp, 
 	c_foreground_req, c_foreground_comp, c_background,
-	c_sepbar_a, c_sepbar_b, c_heading, 
+	c_sepbar_a, c_sepbar_b, c_heading, c_warning,
 	/*
 		IMPORTANT: These next two colors need to always
 		end the enumeration.  c_bar_inc is the gray
@@ -110,8 +115,8 @@ int rgb_colors[][3] = {
 		// c_hyperlink, c_highlight_req, c_highlight_comp
 	{0,0,0}, {160, 160, 160}, {241,217,198},
 		// c_foreground_req, c_foreground_comp, c_background
-	{192, 192, 192}, {160, 160, 160}, {127,127,127},
-		// sepbar_a = gray50, sepbar_b = gray60, header
+	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {255,0,0},
+		// sepbar_a = gray50, sepbar_b = gray60, heading, warning
 };
 int bar_colors[][3] = {
 	// now the list of the colors for the progress bar
@@ -140,50 +145,53 @@ const int bar_count = (sizeof(bar_colors)/sizeof(bar_colors[0]));
 
 void R_prolog(void)
 {
-	fprintf(dash, "{\\rtf1\\ansi\\ansicpg1252\\lang1033\\deff0");
-	fprintf(dash, "\\fs%d\\sl24\\slmult0\\viewbksp1\\margr%d\n", 
+	fprintf(outf, "{\\rtf1\\ansi\\ansicpg1252\\lang1033\\deff0");
+	fprintf(outf, "\\fs%d\\sl24\\slmult0\\viewbksp1\\margr%d\n", 
 		ps_def, T_width + 2*T_space);
 		// font table
-	fprintf(dash, "{\\fonttbl{\\f0\\fswiss Verdana;}");
-	fprintf(dash, "{\\f1\\froman Times New Roman;}}\n");
+	fprintf(outf, "{\\fonttbl{\\f0\\fswiss Verdana;}");
+	fprintf(outf, "{\\f1\\froman Times New Roman;}}\n");
 		// color table
-	fprintf(dash, "{\\colortbl;");
+	fprintf(outf, "{\\colortbl;");
 	for (int i = 1;  i < color_count;  i++)
 	{
-		fprintf(dash, "\\red%d\\green%d\\blue%d;", 
+		fprintf(outf, "\\red%d\\green%d\\blue%d;", 
 			rgb_colors[i][c_red], rgb_colors[i][c_green], rgb_colors[i][c_blue]);
-		if ((i%3)==0)  fprintf(dash,"\n");
+		if ((i%3)==0)  fprintf(outf,"\n");
 	}
-	if ((color_count%3) == 0)  fprintf(dash, "\n");
+	if ((color_count%3) == 0)  fprintf(outf, "\n");
 	for (int i = 0;  i < bar_count; i++)
 	{
-		fprintf(dash, "\\red%d\\green%d\\blue%d;", 
+		fprintf(outf, "\\red%d\\green%d\\blue%d;", 
 			bar_colors[i][c_red], bar_colors[i][c_green], bar_colors[i][c_blue]);
-		if ((i%3)==2)  fprintf(dash,"\n");
+		if ((i%3)==2)  fprintf(outf,"\n");
 	}
-	fprintf(dash, "}\n");
+	fprintf(outf, "}\n");
 }
 
 void R_icon(void)
 {
-	fprintf(dash, 
-		"{\\pict\\wmetafile8\\picw423\\pich397\\picwgoal240\\pichgoal225\n");
+	// int wid = 240, ht = 225;
+	int wid = 288, ht = 270; 
+	fprintf(outf, 
+		"{\\pict\\wmetafile8\\picw423\\pich397\\picwgoal%d\\pichgoal%d\n",
+		wid, ht);
 	for (int i = 0;  i < icon_length;  i++)
-		fprintf(dash, "%s\n", icon_data[i]);
-	fprintf(dash, "}");
+		fprintf(outf, "%s\n", icon_data[i]);
+	fprintf(outf, "}");
 }
 
 void R_title(void)
 {
-	fprintf(dash, "{\\pard\\fs%d\n", ps_title);
+	fprintf(outf, "{\\pard\\fs%d\n", ps_title);
 	R_icon();
-	fprintf(dash, "{ }\\b RSQ{\\super \\'a9} Guidance\\sa200\\par}");
-	fprintf(dash, "\\fs%d\n", ps_def);
+	fprintf(outf, "{ }\\b RSQ{\\super \\'a9} Guidance\\sa200\\par}");
+	fprintf(outf, "\\fs%d\n", ps_def);
 }
 
-void R_epilog(void)
+void R_epilog()
 {
-	fprintf(dash, "}\n");
+	fprintf(outf, "}\n");
 }
 
 void R_separator(int color)
@@ -192,10 +200,10 @@ void R_separator(int color)
 	// {\pard\fs10\sl20{ }\par}
 	// {\pard\fs5\tx5240\highlight4{}\tab\par}
 	// {\pard\fs10\sl20{ }\par}
-	fprintf(dash, "{\\pard\\fs10\\sl20{ }\\par}\n");
-	fprintf(dash, "{\\pard\\fs5\\tx%d\\highlight%d{}\\tab\\par}\n", 
+	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}\n");
+	fprintf(outf, "{\\pard\\fs5\\tx%d\\highlight%d{}\\tab\\par}\n", 
 		T_width+2*T_space, color);
-	fprintf(dash, "{\\pard\\fs10\\sl20{ }\\par}");
+	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
 void R_hyperlinks(void)
@@ -205,28 +213,28 @@ void R_hyperlinks(void)
 	{
 			// do we need to prepend "www."?
 		char *www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
-		fprintf(dash, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
+		fprintf(outf, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
 			T_space, www, *i);
-		fprintf(dash, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
+		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
 			ps_link, c_hyperlink, www, *i);
 	}
 }
 
 void R_heading(char *head, int color)
 {
-	fprintf(dash, "\\pard\\s0{\\fs%d\\cf%d\\b %s}\\par\n", 
+	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b %s}\\par\n", 
 		ps_heading, color, head);
 }
 
 void R_line(void)
 {
-	// fprintf(dash, "\\line");
+	// fprintf(outf, "\\line");
 }
 
 	// provide a little vertical space
 void R_vertspace(int points)
 {
-	fprintf(dash, "{\\pard\\fs%d\\sl0\\sa0\\par}\n", points*2);
+	fprintf(outf, "{\\pard\\fs%d\\sl0\\sa0\\par}\n", points*2);
 }
 
 
@@ -240,7 +248,7 @@ void R_group(char *hdr, list<char *> L, int color)
 	list<char *>::iterator i;
 	for (i = L.begin();  i != L.end();  i++)
 	{
-		fprintf(dash, "{\\pard\\fs%d\\cf%d { }%s\\par}\n",
+		fprintf(outf, "{\\pard\\fs%d\\cf%d { }%s\\par}\n",
 			ps_exam, color, *i);
 	}
 }
@@ -251,12 +259,12 @@ void R_complaints(void)
 	list<char *>::iterator i;
 	for (i = _complaint.begin();  i != _complaint.end();  i++)
 	{
-		fprintf(dash, "{\\pard\\li%d {%s}\\sa60\\par}\n", 
+		fprintf(outf, "{\\pard\\li%d {%s}\\sa60\\par}\n", 
 			T_space, *i);
 	}
 	if (_complaint.size() == 0)
 	{
-		fprintf(dash, "{\\pard\\li%d {%s}\\sa60\\par}\n", 
+		fprintf(outf, "{\\pard\\li%d {%s}\\sa60\\par}\n", 
 			T_space, "(no presenting complaint)");
 	}	
 }
@@ -283,18 +291,18 @@ void R_progressbar(char *title, int documented, int needed)
 		R_heading(title, c_heading);
 	}
 	if (percent == 0)  barused = barstop;
-	// fprintf(dash, "{\\tx%d\\tx%d\\tx%d\\tx%d\n", 
+	// fprintf(outf, "{\\tx%d\\tx%d\\tx%d\\tx%d\n", 
 		// barused, barlength, barlength+barstop, T_width);
 	if (percent < 100)
 	{
-		fprintf(dash, "{\\tx%d\\tx%d\\tx%d\n", barused, barlength, T_width);
-		fprintf(dash, "\\highlight%d{}\\tab\\highlight%d{}\\tab", 
+		fprintf(outf, "{\\tx%d\\tx%d\\tx%d\n", barused, barlength, T_width);
+		fprintf(outf, "\\highlight%d{}\\tab\\highlight%d{}\\tab", 
 			barcolor, c_bar_inc);
 	} else {
-		fprintf(dash, "{\\tx%d\\tx%d\n", barlength, T_width);
-		fprintf(dash, "\\highlight%d\\tab", barcolor);
+		fprintf(outf, "{\\tx%d\\tx%d\n", barlength, T_width);
+		fprintf(outf, "\\highlight%d\\tab", barcolor);
 	}
-	fprintf(dash, "\\highlight%d{ %d%%}\\tab\\par}\n", c_ignore, percent);
+	fprintf(outf, "\\highlight%d{ %d%%}\\tab\\par}\n", c_ignore, percent);
 	R_vertspace(5);
 }
 
@@ -306,8 +314,8 @@ void S_testColorBars(void)
 	const int blanks = 2;
 
 	for (int i = 0;  i < blanks;  i++)  
-		fprintf(dash, (i && (i%10)==0) ? "\\line\n" : "\\line");
-	fprintf(dash, "\n");
+		fprintf(outf, (i && (i%10)==0) ? "\\line\n" : "\\line");
+	fprintf(outf, "\n");
 
 	R_separator(c_black);
 	R_heading("Progress bar color samples....", c_black);
@@ -322,9 +330,13 @@ void S_generateDash(void)
 	S_sortStatus();
 
 	// open the dashboard
-	FILE *dashboard_file = fopen(DASHBOARD_PATH, "w");
-	dash = dashboard_file;   // shorthand alias for longer variable name
-	if (dash == NULL)
+	if (outf != NULL)
+	{		// already open!?!?
+		fprintf(stderr, "already have an output file!!!!!\n");
+		exit(1);
+	}
+	outf = fopen(DASHBOARD_PATH, "w");
+	if (outf == NULL)
 	{
 		fprintf(stderr, "cannot open dashboard file!!!!!\n");
 		exit(1);
@@ -374,12 +386,12 @@ void S_generateDash(void)
 		// differential diagnoses
 	if (differential)
 	{
-		fprintf(dash, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}", 
+		fprintf(outf, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}", 
 			differential);
 #if 0	// say nothing if there's no differential diagnosis
 	} else
 	{
-		fprintf(dash, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}",
+		fprintf(outf, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}",
 			"no differential diagnosis");
 #endif
 	}
@@ -388,7 +400,36 @@ void S_generateDash(void)
 
 		// finish
 	R_epilog();
-	fclose(dash);
+	fclose(outf);
+	outf = NULL;
+}
+
+
+	/*
+	 * generate an extra RTF box containing a warning
+	 * (with the specified text) to be added to the bottom
+	 * of the dashboard
+	 */
+void S_generateWarn(char *warn)
+{
+	if (outf != NULL)
+	{		// already open!?!?
+		fprintf(stderr, "already have an output file!!!!!\n");
+		exit(1);
+	}
+	outf = fopen(WARN_PATH, "w");
+	if (outf == NULL)
+	{
+		fprintf(stderr, "cannot open warning file!!!!!");
+		exit(1);
+	}
+	R_prolog();
+	R_vertspace(20);
+	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b\\i %s}\\par\n",
+		ps_warning, c_warning, warn);
+	R_epilog();
+	fclose(outf);
+	outf = NULL;
 }
 
 

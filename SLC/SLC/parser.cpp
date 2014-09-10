@@ -33,13 +33,15 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	data_hpi_t, data_exam_t, // unused - should be removed
 	data_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t,
+	validate_t,
 	unknown_t};
 char *commands_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	"data hpi", "data exam", // unused - should be removed
 	"data", "link", "delete", "del",
-	"end", "end_of_script",	"reset"
+	"end", "end_of_script",	"reset",
+	"validate"
 };
 const int command_count = (sizeof(commands_names)/sizeof(commands_names[0]));
 
@@ -61,6 +63,9 @@ void clobberState(void)
 	_links.clear();
 	free(differential);
 	differential = NULL;
+		// don't bother to check if it exists before
+		// deleting: the unlink failure is benign
+	_unlink(WARN_PATH);
 }
 
 
@@ -204,6 +209,7 @@ void S_parseStatus(void)
 				break;
 			}
 		}
+	
 		if (s == line) // we didn't recognize the command: assume unknown
 		{	
 #ifdef TESTING
@@ -280,6 +286,9 @@ void S_parseStatus(void)
 		case reset_t:
 			S_reset();
 			break;
+		case validate_t:
+			S_validate();
+			break;
 		default:
 			break;
 		}
@@ -291,14 +300,12 @@ void S_parseStatus(void)
 
 
 #ifdef TESTING
-void printlist(char *title, char **s, int n)
+void printlist(char *title, list<char *> L)
 {
 	printf("... %s: ", title);
-	for (int i = 0;  i < n;  i++)
-		if (strlen(s[i]))
-			printf("%s%s", s[i], ((i+1)==n) ? "" : ", ");
-		else
-			printf(".. ");	
+	list<char *>::iterator ii;
+	for (i = L.begin();  i != L.end();  i++)
+		printf("%s, ", *i);	
 	printf("\n");
 }
 #endif

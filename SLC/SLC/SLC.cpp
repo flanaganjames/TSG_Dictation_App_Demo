@@ -14,7 +14,6 @@ BOOL reset(_TCHAR *);
 
 
 FILE *status_file = NULL;
-FILE *dashboard_file = NULL;
 
 // int __stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR cmdline, int nCmdShow)
 int _tmain(int argc, _TCHAR* argv[])

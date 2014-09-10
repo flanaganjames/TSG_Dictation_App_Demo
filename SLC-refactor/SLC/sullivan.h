@@ -13,6 +13,7 @@ void S_parseStatus(void);
 void S_sortStatus(void);
 void S_generateDash(void);
 void S_reset(void);
+bool no_complaint(void);
 
 // globals in the SLC
 extern FILE *status_file;

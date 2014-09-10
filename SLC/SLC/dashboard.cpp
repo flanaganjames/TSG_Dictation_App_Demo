@@ -333,10 +333,9 @@ void S_generateDash(void)
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");
-		exit(1);
+		exit(2);
 	}
-	outf = fopen(DASHBOARD_PATH, "w");
-	if (outf == NULL)
+	if ((outf = fopen(DASHBOARD_PATH, "w")) == NULL)
 	{
 		fprintf(stderr, "cannot open dashboard file!!!!!\n");
 		exit(1);
@@ -415,10 +414,9 @@ void S_generateWarn(char *warn)
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");
-		exit(1);
+		exit(2);
 	}
-	outf = fopen(WARN_PATH, "w");
-	if (outf == NULL)
+	if ((outf = fopen(WARN_PATH, "w")) == NULL)
 	{
 		fprintf(stderr, "cannot open warning file!!!!!");
 		exit(1);

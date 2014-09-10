@@ -29,15 +29,24 @@ namespace Dashboard
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        private System.Drawing.Size dsize = new System.Drawing.Size(255, 550);
+        private const int dashht = 550;
+        private const int warnht = 250;
+        private const int dashwid = 255;
+        private System.Drawing.Size dsize = new System.Drawing.Size(dashwid, dashht);
+        private System.Drawing.Size wsize = new System.Drawing.Size(dashwid, warnht);
+        private System.Drawing.Size tsize = new System.Drawing.Size(dashwid, dashht+warnht);
+        private System.Drawing.Point wpos = new System.Drawing.Point(0, dashht);
+        private System.Drawing.Point dpos = new System.Drawing.Point(0, 0);
         public String dashpath = @"C:/TEMP/Sullivan/dashboard.rtf";
+        public String warnpath = @"C:/TEMP/Sullivan/dashwarn.rtf";
         public String rtfmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
         public WindowsFormsApplication1.Form1 dash;
-        public RichTextBox dashrtf;
+        public RichTextBox dashrtf, warnrtf;
         public String rtfcontents;
         private bool DASHfail = false;
         private int dashboards_running = 0;
         private int updates = 0;
+        private bool showing_warning = false;
 
         // Damn .Net:  there are two distinct RichTextBox classes,
         // with subtly different properties and methods.
@@ -45,16 +54,25 @@ namespace Dashboard
  
         public Dashboard()
         {
+                // the overall dashboard window 
             dash = new WindowsFormsApplication1.Form1(); // dash = new Form();
-            dashrtf = new RichTextBox(); 
             dash.Size = dsize;
-            dash.Controls.Add(dashrtf);
             dash.Visible = true; // does this also steal focus?
             dash.Text = "The Sullivan Group Dashboard";
+                // the dashboard RTF control
+            dashrtf = new RichTextBox();
             dashrtf.Size = dsize;
-            dashrtf.Location = new System.Drawing.Point(0, 0);
+            dashrtf.Location = dpos;
             dashrtf.ReadOnly = true;
             dashrtf.DetectUrls = true;
+            dashrtf.BackColor = Color.White;
+            dash.Controls.Add(dashrtf);
+                // basic parameters for the warning box RTF control
+            warnrtf = new RichTextBox();
+            warnrtf.Size = wsize;
+            warnrtf.Location = wpos;
+            warnrtf.ReadOnly = true;
+            warnrtf.BackColor = Color.LightPink;
         }
 
             // we can invoke failnote if we're already running,
@@ -85,17 +103,41 @@ namespace Dashboard
             }
             if (DASHfail)  rtfcontents = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
 
-            //    // flash the background so we know the update loop is running
-            //    // for test purposes
+            //// flash the background so we know the update loop is running
+            //// for test purposes
             //this.dash.Refresh();
             //this.dashrtf.BackColor = Color.LightGray;
             //this.dashrtf.Clear(); this.dashrtf.Refresh(); this.dash.Refresh();
             //Thread.Sleep(100);
-                // now update with the real contents
-            this.dashrtf.Rtf = rtfcontents;
-            this.dashrtf.BackColor = Color.White;
-            this.dashrtf.Refresh(); this.dash.Refresh();
-            
+                // now update with the real contents of the main dashboard
+            this.dashrtf.Rtf = RTFcontents();
+
+            this.dashrtf.Refresh();
+                // are we showing the warning box, but shouldn't?
+            if (showing_warning && !File.Exists(warnpath))
+            {
+                    // remove warning box and resize the dashboard
+                this.dash.Size = dsize;
+                this.dash.Controls.Remove(warnrtf);
+                showing_warning = false;
+            }
+                // are we not showing the warning box, but should?
+            if (!showing_warning && File.Exists(warnpath))
+            {
+                    // expand the dashboard and add the warning box
+                this.dash.Size = tsize;
+                this.dash.Controls.Add(warnrtf);
+                showing_warning = true;
+            }
+                // update the warning box contents if necessary
+            if (File.Exists(warnpath))
+            {
+                this.warnrtf.Rtf = File.ReadAllText(this.warnpath);
+                this.warnrtf.Refresh();
+            }
+                // now do the refresh of the whole window
+            this.dash.Refresh();
+     
             updates++;  // number of times we've updated
             //    // this following stuff is to ensure focus & foregrounding
             //    //  .... now handled by the MU pulling the window into the foreground

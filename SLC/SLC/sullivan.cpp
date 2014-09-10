@@ -45,7 +45,7 @@ int S_addStatus(int argc, _TCHAR** argv)
 	int i;
 	
 	if (_wcsicmp(argv[1], L"complaint") == 0
-		|| (_wcsicmp(argv[1], L"state") == 0  &&  complaint == NULL))
+		|| (_wcsicmp(argv[1], L"state") == 0  && no_complaint()) )
 	{
 		// reset the status file if we have an initial complaint
 		S_initStatus();

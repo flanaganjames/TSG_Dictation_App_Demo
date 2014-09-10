@@ -198,14 +198,18 @@ void R_separator(int color)
 	fprintf(dash, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void R_hyperlink(char *link, int indent)
+void R_hyperlinks(void)
 {
-		// do we need to prepend "www."?
-	char *www = (strncmp(link, "www.", 4) == 0) ? "" : "www.";
-	fprintf(dash, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
-		indent*T_space, www, link);
-	fprintf(dash, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
-		ps_link, c_hyperlink, www, link);
+	list<char *>::iterator i;
+	for (i = _links.begin();  i != _links.end();  i++)
+	{
+			// do we need to prepend "www."?
+		char *www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
+		fprintf(dash, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
+			T_space, www, *i);
+		fprintf(dash, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
+			ps_link, c_hyperlink, www, *i);
+	}
 }
 
 void R_heading(char *head, int color)
@@ -226,35 +230,35 @@ void R_vertspace(int points)
 }
 
 
-void R_group(char *hdr, char **list, int count, int color)
+void R_group(char *hdr, list<char *> L, int color)
 {
 	// example:
 	// {\pard\fs16\sl0\sa0\par}
 	// {\pard\cf0 { }Movement\par}
 	// {\pard\cf0 { }TAD Risk Factors\par}
 	//.... note no group hdr is shown in this version
-	for (int i = 0;  i < count;  i++)
+	list<char *>::iterator i;
+	for (i = L.begin();  i != L.end();  i++)
 	{
-		if (list[i]  &&  strlen(list[i]))
-		{
-			fprintf(dash, "{\\pard\\fs%d\\cf%d { }%s\\par}\n", 
-				ps_exam, color, list[i]);
-		}
+		fprintf(dash, "{\\pard\\fs%d\\cf%d { }%s\\par}\n",
+			ps_exam, color, *i);
 	}
 }
 
-	// the same as above, but walk the list backwards,
-	// so the most recently added item is shown first
-void R_group_rev(char *hdr, char **list, int count, int color)
+
+void R_complaints(void)
 {
-	for (int i = count - 1;  i >= 0;  i--)
+	list<char *>::iterator i;
+	for (i = _complaint.begin();  i != _complaint.end();  i++)
 	{
-		if (list[i]  &&  strlen(list[i]))
-		{
-			fprintf(dash, "{\\pard\\fs%d\\cf%d { }%s\\par}\n", 
-				ps_exam, color, list[i]);
-		}
+		fprintf(dash, "{\\pard\\li%d {%s}\\sa60\\par}\n", 
+			T_space, *i);
 	}
+	if (_complaint.size() == 0)
+	{
+		fprintf(dash, "{\\pard\\li%d {%s}\\sa60\\par}\n", 
+			T_space, "(no presenting complaint)");
+	}	
 }
 
 
@@ -329,35 +333,31 @@ void S_generateDash(void)
 	R_prolog();
 		// header
 	R_title();
-		// presenting complaint
-	// fprintf(dash, "{\\pard\\qc {%s}\\sa60\\par}\n", complaint);
-	fprintf(dash, "{\\pard\\li%d {%s}\\sa60\\par}\n", T_space, 
-		complaint ? complaint : "(no presenting complaint)");
+		// presenting complaint(s)
+	R_complaints();
+
 	R_line();
 
 		// resource links
-	for (int i = 0;  i < n_links;  i++)
-	{
-		R_hyperlink(links[i], 1);
-	}
+	R_hyperlinks();
 	R_line();
 	R_separator(c_sepbar_b);
 
 		// required components
-	R_progressbar("Required",
-		(n_c_req_hpi + n_c_req_exam + n_c_assess), 
-		(n_req_hpi + n_req_exam + n_assess));
+	int n_req_still_need = _req_hpi.size() + _req_exam.size() + _assess.size();
+	R_progressbar("Required", _comp_req.size(),
+		n_req_still_need + _comp_req.size());
 	R_heading("Incomplete", c_heading);
 	R_vertspace(5);
-	R_group("HPI", list_req_hpi, n_req_hpi, c_foreground_req);
-	R_group("Exam", list_req_exam, n_req_exam, c_foreground_req);
-	R_group("Assessment", list_assess, n_assess, c_foreground_req);
+	R_group("HPI", _req_hpi, c_foreground_req);
+	R_group("Exam", _req_exam, c_foreground_req);
+	R_group("Assessment", _assess, c_foreground_req);
 	R_vertspace(2);
 	R_line();
 	R_separator(c_sepbar_a);
 	R_heading("Completed", c_heading);
 	R_vertspace(5);
-	R_group_rev("", comp_req, n_comp_req, c_foreground_comp);
+	R_group("", _comp_req, c_foreground_comp);
 	// R_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
 	// R_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);
 	// R_group("Assessment", comp_assess, n_c_assess, c_foreground_comp);
@@ -366,8 +366,9 @@ void S_generateDash(void)
 	R_separator(c_sepbar_b);
 
 		// recommended components -- only a progress bar
+	int n_rec_still_need = _rec_hpi.size() + _rec_exam.size();
 	R_progressbar("Recommended",
-		(n_c_rec_hpi + n_c_rec_exam), (n_rec_hpi + n_rec_exam));
+		_comp_rec.size(), n_rec_still_need + _comp_rec.size());
 	R_line();
 
 		// differential diagnoses

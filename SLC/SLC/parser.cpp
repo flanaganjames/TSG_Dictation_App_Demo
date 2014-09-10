@@ -10,38 +10,23 @@
 #include "sullivan.h"
 #include "parser.h"
 
+// ********************************************************
 // data we need to collect
-char *complaint = NULL;
-char *differential = NULL;
-
-#if 0
-	NOTES:  the following lists of words need to really
-	be handled by a class for word lists
-		A sketch of the data would be:	
-// data as arrays of words
-struct word_array {
-	char **list;
-	int count;
-};
-#endif
+list<char *> _complaint;
+	// incomplete required items
+list<char *> _req_hpi, _req_exam, _assess;
+	// incomplete recommended items
+list<char *> _rec_hpi, _rec_exam;
+	// items completed
+list<char *> _all_complete, _comp_req, _comp_rec;
+	// resource links
+list<char *> _links;
+	// possible information on differential diagnosis
+char *differential;
 
 
-
-
-char **list_req_hpi;	int n_req_hpi = 0;
-char **list_req_exam;	int n_req_exam = 0;
-char **list_assess;		int n_assess = 0;
-char **list_rec_hpi;	int n_rec_hpi = 0;
-char **list_rec_exam;	int n_rec_exam = 0;
-char **complete;		int n_complete = 0;
-char **comp_req;		int n_comp_req = 0;
-char **comp_req_hpi;	int n_c_req_hpi = 0;
-char **comp_req_exam;	int n_c_req_exam = 0;
-char **comp_assess;		int n_c_assess = 0;
-char **comp_rec_hpi;	int n_c_rec_hpi = 0;
-char **comp_rec_exam;	int n_c_rec_exam = 0;
-char **links;			int n_links = 0;
-
+// ********************************************************
+// constants for the parser
 enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	req_hpi_t, req_exam_t, assess_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
@@ -59,40 +44,24 @@ char *commands_names[] = { "complaint", "state", "diff", "add",
 const int command_count = (sizeof(commands_names)/sizeof(commands_names[0]));
 
 
-char **freeList(char **list, int *count)
-{
-	int i;
-	for( i = 0;  i < *count; i++)
-	{
-		free(list[i]);
-	}
-	free(list);
-	*count = 0;
-	return list;
-}
+// ********************************************************
 
-
+	// delete all the existing data
 void clobberState(void)
 {
-	free(complaint);
-	complaint = NULL;
+	_complaint.clear();
+	_req_hpi.clear();
+	_req_exam.clear();
+	_assess.clear();
+	_rec_hpi.clear();
+	_rec_exam.clear();
+	_all_complete.clear();
+	_comp_req.clear();
+	_comp_rec.clear();
+	_links.clear();
 	free(differential);
 	differential = NULL;
-	list_req_hpi	= freeList(list_req_hpi, &n_req_hpi);
-	list_req_exam	= freeList(list_req_exam, &n_req_exam);
-	list_assess		= freeList(list_assess, &n_assess);
-	list_rec_hpi	= freeList(list_rec_hpi, &n_rec_hpi);
-	list_rec_exam	= freeList(list_rec_exam, &n_rec_exam);
-	complete		= freeList(complete, &n_complete);
-	comp_req		= freeList(comp_req, &n_comp_req);
-	comp_req_hpi	= freeList(comp_req_hpi, &n_c_req_hpi);
-	comp_req_exam	= freeList(comp_req_exam, &n_c_req_exam);
-	comp_assess		= freeList(comp_assess, &n_c_assess);
-	comp_rec_hpi	= freeList(comp_rec_hpi, &n_c_rec_hpi);
-	comp_rec_exam	= freeList(comp_rec_exam, &n_c_rec_exam);
-	links			= freeList(links, &n_links);
 }
-
 
 
 void S_reset(void)
@@ -102,13 +71,34 @@ void S_reset(void)
 	S_generateDash();
 }
 
-	
-	// take an array of words and a string
-	// add the words from the string to the end of
-	// the array, splitting at commas
-	// don't add duplicates, 
-	// return the final size of the list
-int addwords(char **in, int n, char *add)
+
+	// allocate a copy of the string
+char *scopy(char *s)
+{
+	char *t = (char *) malloc(strlen(s)+1);
+	strncpy(t, s, strlen(s)+1);
+	return t;
+}
+
+
+	// is the given string in the list?
+	// return location if so
+static list<char *>::iterator i;
+list<char *>::iterator findword(list<char *> &L, char *s)
+{
+	for (i = L.begin();  i != L.end();  i++)
+	{
+		if (_stricmp(s, *i) == 0)
+			return i;
+	}
+	return L.end();
+}
+
+
+	// given list class instance and a string containing a list of words, 
+	// split the string at commas, and add the words that aren't already
+	// in the list to the list
+void addWords(list<char *> &in, char *add)
 {
 	char *s, *t;
 
@@ -137,75 +127,29 @@ int addwords(char **in, int n, char *add)
 	while (s && *s)
 	{
 		int l; 
-			// peel off the word
+			// peel off the next word
 		if (t = strchr(s, ','))
+		{
 			l = t - s;
+			*t = '\0';
+		}
 		else
 			l = strlen(s);
 		
-			// make sure we aren't adding a duplicate
-		BOOL match = FALSE;
-		for (int i = 0;  i < n;  i++)
-		{
-			if (strcmp(s, in[i]) == 0)
-			{
-				match = TRUE;
-				break;
-			}
-		}
+			// add if it's not a duplicate
+		// list<char *>::iterator f = findword(in, s); //
+		// if (in.empty() || findword(in, s) == in.end())
+		if (findword(in, s) == in.end())
+			in.push_back(scopy(s));
 		
-			// now add it if it's a non-duplicate
-		if (!match)
-		{
-			in[n] = (char *) malloc(l+1);
-			strncpy(in[n], s, l);
-			*(in[n]+l) = '\0';
-			n++;
-		}
-		s += l;
 			// skip blanks & commas to the next word beginning
+		s += l;
+		if (t)  s = ++t;
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
-
 	}
-	return n;
+	free(ss);
 }
 
-
-	// how many comma-separated words in this string
-int wordcount(char *s)
-{
-	int n = 0;
-	while (*s) 
-	{
-		n++;
-		if ((s = strchr(s, ',')) == NULL) // done
-			break;
-		s++; // skip this comma
-		// don't need to explicitly skip blanks if comma
-		// is the only separator
-		// while (*s && *s == ' ') s++;
-	}
-	return n;
-}
-
-	// append the given string s to the input string, returning
-	// the reallocated full string
-char **addString(char **in, int *n, char *s)
-{
-	int m = wordcount(s);
-	int nn = *n;
-
-	if (in == NULL)
-	{
-		in = (char **) malloc(sizeof(char **) * m);
-		nn = addwords(in, 0, s);
-	} else {
-		in = (char **) realloc(in, sizeof(char **) * (nn+m));
-		nn = addwords(in, nn, s);
-	}
-	*n = nn;
-	return in;
-}
 
 	// strip off the line-ending characters & trailing blanks
 void chomp(char *s)
@@ -216,6 +160,10 @@ void chomp(char *s)
 	while (t && *t == ' ')  *t-- = '\0';
 }
 
+bool no_complaint(void)
+{
+	return _complaint.empty();
+}
 
 void S_parseStatus(void)
 {
@@ -265,22 +213,26 @@ void S_parseStatus(void)
 		}
 
 			// log the command and the arguments
+			// in alphabetical order by enum of the command
 		switch (i) {
 		case state_t:
 			// it's a new state:  assume a new complaint, too,
 			// but don't update the saved complaint name if
 			// we already have one
-			if (complaint != NULL)  break;
+			// ..... note that we have a list for complaints,
+			//        but ignore all but the first
+			if (! _complaint.empty())  break;
 			clobberState();
-			complaint = (char *) malloc(strlen(s)+1);
-			strcpy(complaint, s);
+			_complaint.push_back(scopy(s));
 			break;			
 		case complaint_t:
-			// if it's a new complaint, clobber the old one
+			// if it's a new complaint command, clobber the old one
 			// and start a new parsed tree
+			// ..... note that we ignore a second state,
+			//       but each new complaint resets and overrides
+			//       the existing one
 			clobberState();
-			complaint = (char *) malloc(strlen(s)+1);
-			strcpy(complaint, s);
+			_complaint.push_back(scopy(s));
 			break;
 		case diff_t:
 			if (differential)
@@ -291,32 +243,31 @@ void S_parseStatus(void)
 		case add_t:
 			// this keyword comes from the MU, not the VB script,
 			// so ignore for the moment
-			// list_req_hpi = addString(list_req_hpi, &n_req_hpi, s);
 			break;
 		case req_hpi_t:
-			list_req_hpi = addString(list_req_hpi, &n_req_hpi, s);
+			addWords(_req_hpi, s);
 			break;
 		case req_exam_t:
-			list_req_exam = addString(list_req_exam, &n_req_exam, s);
+			addWords(_req_exam, s);
 			break;
 		case assess_t:
-			list_assess = addString(list_assess, &n_assess, s);
+			addWords(_assess, s);
 			break;
 		case rec_hpi_t:
 		case recc_hpi_t:
-			list_rec_hpi = addString(list_rec_hpi, &n_rec_hpi, s);
+			addWords(_rec_hpi, s);
 			break;
 		case rec_exam_t:
 		case recc_exam_t:
-			list_rec_exam = addString(list_rec_exam, &n_rec_exam, s);
+			addWords(_rec_exam, s);
 			break;
 		case data_hpi_t:
 		case data_exam_t:
 		case data_t:
-			complete = addString(complete, &n_complete, s);
+			addWords(_all_complete, s);
 			break;
 		case link_t:
-			links = addString(links, &n_links, s);
+			addWords(_links, s);
 			break;
 		case delete_t:
 		case del_t:
@@ -354,84 +305,52 @@ void printlist(char *title, char **s, int n)
 
 
 
-
-
-char *findword(char *word, char **list, int n)
-{
-	for (int i = 0;  i < n;  i++)
-	{
-		if (_stricmp(list[i], word) == 0)
-			return list[i];
-	}
-	return NULL;
-}
-
-
 void S_sortStatus(void)
 {
-	int i;
+	list<char *>::iterator i, ii;
 	char *s;
-	
-#ifdef TESTING
-	// debug print of the lists before we sort
-	printlist("list_req_hpi", list_req_hpi, n_req_hpi);
-	printlist("list_req_exam", list_req_exam, n_req_exam);
-#endif
 
-		// run through the list of complete exams & hpis, and split them
-		// up into the completed list corresponding to the required &
-		// recommended lists
-		// (don't forget the list of assessments)
-		// also, for the required items, populate a combined list, comp_req,
-		// in the order we got completion notification
-	for (i = 0; i < n_complete; i++)
+		// run through the combined list of completed exams --
+		//  this assumes we are keeping only a combined list
+		//  from the input commands -- and splits them up into
+		//  the sublists corresponding to the originally specified
+		//  required and recommended lists, removing them from
+		//  the incomplete exam lists
+		// the completed sublists are created as stacks -- LIFO --
+		//  so we can present the completed lists with the 
+		//  most-recently completed item at the top
+		// we don't bother to split the completed lists up by 
+		//  hpi, exam, and assessment at this point
+	for (i = _all_complete.begin();  i != _all_complete.end();  i++)
 	{
-		if ((s = findword(complete[i], list_req_hpi, n_req_hpi)) != NULL)
+		s = *i;
+		if ((ii = findword(_req_hpi, s)) != _req_hpi.end())
 		{
-			comp_req_hpi = addString(comp_req_hpi, &n_c_req_hpi, complete[i]);
-			comp_req = addString(comp_req, &n_comp_req, complete[i]);
-			*s = '\0';
+			_req_hpi.erase(ii);
+			_comp_req.push_front(scopy(s));
 		}
-		if ((s = findword(complete[i], list_req_exam, n_req_exam)) != NULL)
+		if ((ii = findword(_req_exam, s)) != _req_exam.end())
 		{
-			comp_req_exam = addString(comp_req_exam, &n_c_req_exam, complete[i]);
-			comp_req = addString(comp_req, &n_comp_req, complete[i]);
-			*s = '\0';
+			_req_exam.erase(ii);
+			_comp_req.push_front(scopy(s));
 		}
-		if ((s = findword(complete[i], list_assess, n_assess)) != NULL)
+		if ((ii = findword(_assess, s)) != _assess.end())
 		{
-			comp_assess = addString(comp_assess, &n_assess, complete[i]);
-			comp_req = addString(comp_req, &n_comp_req, complete[i]);
-			*s = '\0';
+			_assess.erase(ii);
+			_comp_req.push_front(scopy(s));
 		}
-		if ((s = findword(complete[i], list_rec_hpi, n_rec_hpi)) != NULL)
+			// now the recommended ones...
+		if ((ii = findword(_rec_hpi, s)) != _rec_hpi.end())
 		{
-			comp_rec_hpi = addString(comp_rec_hpi, &n_c_rec_hpi, complete[i]);
-			*s = '\0';
+			_rec_hpi.erase(ii);
+			_comp_rec.push_front(scopy(s));
 		}
-		if ((s = findword(complete[i], list_rec_exam, n_rec_exam)) != NULL)
+		if ((ii = findword(_rec_exam, s)) != _rec_exam.end())
 		{
-			comp_rec_exam = addString(comp_rec_exam, &n_c_rec_exam, complete[i]);
-			*s = '\0';
+			_rec_exam.erase(ii);
+			_comp_rec.push_front(scopy(s));
 		}
-
 	}
-	
-#ifdef TESTING
-	// debug print of the lists after we've sorted them
-	printlist("list_req_hpi", list_req_hpi, n_req_hpi);
-	printlist("list_req_exam", list_req_exam, n_req_exam);
-	printlist("list_assess", list_assess, n_assess);
-	printlist("rec_hpi", list_rec_hpi, n_rec_hpi);
-	printlist("rec_exam", list_rec_exam, n_rec_exam);
-	printlist("full complete", complete, n_complete);
-	printlist("comp_req_hpi", comp_req_hpi, n_c_req_hpi);
-	printlist("comp_req_exam", comp_req_exam, n_c_req_exam);
-	printlist("comp_assess", comp_assess, n_c_assess);
-	printlist("comp_rec_hpi", comp_rec_hpi, n_c_rec_hpi);
-	printlist("comp_rec_exam", comp_rec_exam, n_c_rec_exam);
-	printlist("links", links, n_links);
-#endif
 }
 
 

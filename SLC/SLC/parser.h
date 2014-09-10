@@ -2,19 +2,17 @@
  * common data between parser and dashboard
  */
 
-extern char *complaint;
-extern char *differential;
+#include <list>
+using namespace std;
 
-extern char **list_req_hpi;		extern int n_req_hpi;
-extern char **list_req_exam;	extern int n_req_exam;
-extern char **list_assess;		extern int n_assess;
-extern char **list_rec_hpi;		extern int n_rec_hpi;
-extern char **list_rec_exam;	extern int n_rec_exam;
-extern char **complete;			extern int n_complete;
-extern char **comp_req;			extern int n_comp_req;
-extern char **comp_req_hpi;		extern int n_c_req_hpi;
-extern char **comp_req_exam;	extern int n_c_req_exam;
-extern char **comp_assess;		extern int n_c_assess;
-extern char **comp_rec_hpi;		extern int n_c_rec_hpi;
-extern char **comp_rec_exam;	extern int n_c_rec_exam;
-extern char **links;			extern int n_links;
+extern list<char *> _complaint;
+	// incomplete required items
+extern list<char *> _req_hpi, _req_exam, _assess;
+	// incomplete recommended items
+extern list<char *> _rec_hpi, _rec_exam;
+	// items completed
+extern list<char *> _all_complete, _comp_req, _comp_rec;
+	// resource links
+extern list<char *> _links;
+	// possible information on differential diagnosis
+extern char *differential;

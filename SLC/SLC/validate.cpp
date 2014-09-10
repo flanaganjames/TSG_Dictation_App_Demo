@@ -31,6 +31,6 @@ bool S_validate(void)
 	   if false, unlink WARN_PATH
 	 */
 	// for test purposes at the moment we always throw a warning
-	S_generateWarn("test warning");
+	S_generateWarn("test warning test warning test warning, test warning!!!");
 	return true;
 }

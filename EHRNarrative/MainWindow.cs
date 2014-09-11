@@ -122,6 +122,9 @@ namespace EHRNarrative
                 case WM_USER:
                     MessageBox.Show("Message received from external program: " + msg.WParam + " - " + msg.LParam);
                     break;
+                case (WM_USER + 0x1):
+                    save_EHR();
+                    break;
                 case WM_COPYDATA:
                     COPYDATASTRUCT msgCarrier = new COPYDATASTRUCT();
                     Type type = msgCarrier.GetType();
@@ -467,6 +470,18 @@ namespace EHRNarrative
 
                 HealthRecordText.Select(next, close - next + 1);
             }
+        }
+
+        private void save_EHR()
+        {
+            MessageBox.Show("Record Saved");
+            HealthRecordText.Clear();
+
+        }
+
+        private void warnings_found()
+        {
+            // ???
         }
 
         private void dashboardTimer_Tick(object sender, EventArgs e)

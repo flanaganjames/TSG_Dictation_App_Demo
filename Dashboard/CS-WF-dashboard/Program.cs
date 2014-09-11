@@ -57,7 +57,7 @@ namespace Dashboard
                 // the overall dashboard window 
             dash = new WindowsFormsApplication1.Form1(); // dash = new Form();
             dash.Size = dsize;
-            dash.Visible = true; // does this also steal focus?
+            // dash.Visible = true; //  this appears to steal focus
             dash.Text = "The Sullivan Group Dashboard";
                 // the dashboard RTF control
             dashrtf = new RichTextBox();
@@ -93,25 +93,15 @@ namespace Dashboard
 
         public void RefreshDash()
         {
-            if (File.Exists(this.dashpath))  // we should only be reading the file if it's been updated
-            {
-                rtfcontents = File.ReadAllText(this.dashpath);
-            }
-            else
-            {
-                rtfcontents = this.rtfmissing;
-            }
-            if (DASHfail)  rtfcontents = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
-
+            ////  .... for test purposes ....
             //// flash the background so we know the update loop is running
-            //// for test purposes
             //this.dash.Refresh();
             //this.dashrtf.BackColor = Color.LightGray;
             //this.dashrtf.Clear(); this.dashrtf.Refresh(); this.dash.Refresh();
             //Thread.Sleep(100);
-                // now update with the real contents of the main dashboard
-            this.dashrtf.Rtf = RTFcontents();
 
+                // update with the real contents of the main dashboard
+            this.dashrtf.Rtf = RTFcontents();
             this.dashrtf.Refresh();
                 // are we showing the warning box, but shouldn't?
             if (showing_warning && !File.Exists(warnpath))
@@ -155,6 +145,15 @@ namespace Dashboard
 
         public string RTFcontents()
         {
+            if (File.Exists(this.dashpath))  // we should only be reading the file if it's been updated
+            {
+                rtfcontents = File.ReadAllText(this.dashpath);
+            }
+            else
+            {
+                rtfcontents = this.rtfmissing;
+            }
+            if (DASHfail) rtfcontents = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
             return rtfcontents;
         }
     }

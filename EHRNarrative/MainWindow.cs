@@ -349,7 +349,7 @@ namespace EHRNarrative
                 if (line.Contains(':'))
                 {
                     string[] sides = line.Split(':');
-                    string pattern = @"(\[[^]]*\])(.*)";
+                    string pattern = @"(\[[^]]*\])";
                     Regex rgx = new Regex(pattern);
                     Match m = rgx.Match(sides[1]);
                     if (m.Success)

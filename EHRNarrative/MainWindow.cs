@@ -485,5 +485,10 @@ namespace EHRNarrative
                 bringAppToFront(dashboardHWnd);
             }
         }
+
+        private void check_button_Click(object sender, EventArgs e)
+        {
+            NotifySLC("validate");
+        }
     }
 }

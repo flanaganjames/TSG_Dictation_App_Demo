@@ -23,6 +23,12 @@ list<char *> _all_complete, _comp_req, _comp_rec;
 list<char *> _links;
 	// possible information on differential diagnosis
 char *differential;
+	/*
+	 * we really need to have lists of a class containing
+	 * a string, since we're making copies of strings all
+	 * over the place, and leaking memory like a sieve;
+	 * the constructors & destructors would handle memory
+	 */
 
 
 // ********************************************************
@@ -142,8 +148,6 @@ void addWords(list<char *> &in, char *add)
 			l = strlen(s);
 		
 			// add if it's not a duplicate
-		// list<char *>::iterator f = findword(in, s); //
-		// if (in.empty() || findword(in, s) == in.end())
 		if (findword(in, s) == in.end())
 			in.push_back(scopy(s));
 		

@@ -328,8 +328,8 @@ void S_testColorBars(void)
 void S_generateDash(void)
 {
 	S_sortStatus();
-
-	// open the dashboard
+	
+		// open the dashboard
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");

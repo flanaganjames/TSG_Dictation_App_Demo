@@ -83,20 +83,26 @@ char *vitalSigns(void)
 	if (VVS_t > 70.0) // assume F, convert to C
 		VVS_t = (VVS_t - 32) * 5 / 9;
 
+	char *warntext = NULL;
 	static char foobar[200];
-	_snprintf(foobar, 200, "p %d, r %d, t %.1f, bp %d/%d",
-		VVS_p, VVS_r, VVS_t, VVS_sbp, VVS_dbp);
+	
 
 		// we're only going to write code for pulse
 		// this should be wrapped into an external routine
 	if (VVS_p >= R_pulse[v_low] && VVS_p < R_pulse[v_normal])
-		strcat(foobar, " pulse low!");
+		warntext = "pulse low!";
 	else if (VVS_p >= R_pulse[v_high] && VVS_p <= R_pulse[v_vhigh])
-		strcat(foobar, " pulse high!");
+		warntext = "pulse high!";
 	else if (VVS_p > R_pulse[v_vhigh])
-		strcat(foobar, " pulse very high!");
-	
-	return foobar;
+		warntext = "pulse very high!";
+	if (warntext != NULL)
+	{
+		_snprintf(foobar, 200, 
+			"%s: vital signs are p %d, r %d, t %.1f, bp %d/%d",
+			warntext, VVS_p, VVS_r, VVS_t, VVS_sbp, VVS_dbp);
+		return foobar;
+	} else
+		return NULL;
 }
 
 
@@ -116,6 +122,10 @@ bool Validate(void)
 	char *badVS = NULL;
 	char *missingExam = NULL;
 
+		// we need to know what we've completed before
+		// checking for warnings
+	S_sortStatus();
+
 		// clean up from last time, if needed
 	if (warningmsg)
 	{
@@ -128,12 +138,12 @@ bool Validate(void)
 	warning = (warning) || (badVS != NULL);
 
 		// are we missing required elements?
-	if (_req_exam.size() > 0 && _req_hpi.size() > 0)
+	int aa = _comp_req.size();
+	int bb = _req_exam.size();
+	int cc = _req_hpi.size();
+	int dd = _assess.size();
+	if (_comp_req.size() < (_req_exam.size() + _req_hpi.size() + _assess.size()))
 		missingExam = "Incomplete required exam & HPI elements!";
-	else if (_req_hpi.size() > 0)
-		missingExam = "Incomplete required HPI elements!";
-	else if (_req_exam.size() > 0)
-		missingExam = "Incomplete required exam elements!";
 	warning = (warning) || (missingExam != NULL);
 
 		// if we have no warnings, it's the easy case

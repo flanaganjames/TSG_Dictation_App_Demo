@@ -33,13 +33,15 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	data_hpi_t, data_exam_t, // unused - should be removed
 	data_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t,
+	validate_t,
 	unknown_t};
 char *commands_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	"data hpi", "data exam", // unused - should be removed
 	"data", "link", "delete", "del",
-	"end", "end_of_script",	"reset"
+	"end", "end_of_script",	"reset",
+	"validate"
 };
 const int command_count = (sizeof(commands_names)/sizeof(commands_names[0]));
 
@@ -61,6 +63,9 @@ void clobberState(void)
 	_links.clear();
 	free(differential);
 	differential = NULL;
+		// don't bother to check if it exists before
+		// deleting: the unlink failure is benign
+	_unlink(WARN_PATH);
 }
 
 
@@ -204,6 +209,7 @@ void S_parseStatus(void)
 				break;
 			}
 		}
+	
 		if (s == line) // we didn't recognize the command: assume unknown
 		{	
 #ifdef TESTING
@@ -280,6 +286,9 @@ void S_parseStatus(void)
 		case reset_t:
 			S_reset();
 			break;
+		case validate_t:
+			S_validate();
+			break;
 		default:
 			break;
 		}
@@ -291,14 +300,12 @@ void S_parseStatus(void)
 
 
 #ifdef TESTING
-void printlist(char *title, char **s, int n)
+void printlist(char *title, list<char *> L)
 {
 	printf("... %s: ", title);
-	for (int i = 0;  i < n;  i++)
-		if (strlen(s[i]))
-			printf("%s%s", s[i], ((i+1)==n) ? "" : ", ");
-		else
-			printf(".. ");	
+	list<char *>::iterator ii;
+	for (i = L.begin();  i != L.end();  i++)
+		printf("%s, ", *i);	
 	printf("\n");
 }
 #endif
@@ -317,8 +324,8 @@ void S_sortStatus(void)
 		//  required and recommended lists, removing them from
 		//  the incomplete exam lists
 		// the completed sublists are created as stacks -- LIFO --
-		//  so we can present the completed lists so the 
-		//  most-recently completed item is at the top
+		//  so we can present the completed lists with the 
+		//  most-recently completed item at the top
 		// we don't bother to split the completed lists up by 
 		//  hpi, exam, and assessment at this point
 	for (i = _all_complete.begin();  i != _all_complete.end();  i++)
@@ -351,26 +358,6 @@ void S_sortStatus(void)
 			_comp_rec.push_front(scopy(s));
 		}
 	}
-
-		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		///////////////////  continue editing from here XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-#ifdef TESTING
-	// debug print of the lists after we've sorted them
-	printlist("list_req_hpi", list_req_hpi, n_req_hpi);
-	printlist("list_req_exam", list_req_exam, n_req_exam);
-	printlist("list_assess", list_assess, n_assess);
-	printlist("rec_hpi", list_rec_hpi, n_rec_hpi);
-	printlist("rec_exam", list_rec_exam, n_rec_exam);
-	printlist("full complete", complete, n_complete);
-	printlist("comp_req_hpi", comp_req_hpi, n_c_req_hpi);
-	printlist("comp_req_exam", comp_req_exam, n_c_req_exam);
-	printlist("comp_assess", comp_assess, n_c_assess);
-	printlist("comp_rec_hpi", comp_rec_hpi, n_c_rec_hpi);
-	printlist("comp_rec_exam", comp_rec_exam, n_c_rec_exam);
-	printlist("links", links, n_links);
-#endif
 }
 
 

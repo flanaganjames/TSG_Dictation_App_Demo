@@ -123,17 +123,12 @@ int bar_colors[][3] = {
 	//  ... but no explicit enum names for any past c_bar_0,
 	//  ... so these must stay at the end of the colortbl
 	{229,229,229},  // c_bar_inc == gray90
-	{0,0,0}, // c_bar_0 == 0% done == black
-	{115,115,115}, {127,127,127}, {140,140,140}, {153,153,153}, 
-		// 10%, 20%, 30%, 40% = gray45, gray50, gray55, gray60
-	{166,166,166}, {179,179,179}, {191,191,191}, 
-		// 50%, 60%, 70% = gray65, gray70, gray75,
-	{0,139,0}, {0,170,0},  // 80%, 90% == green4, arbitrary
-	// {193,255,193}, {84,255,159},
-		// 80%, 90% == DarkSeaGreen, SeaGreen
-	// {0,139,0}, {152,251,152},
-		// 80%, 90% = green4, green3
-	{0,255,0}	// 100% = green1
+		// the colors are a progression through HSL space
+		// of (h, 100%, 50%) for (h=0; h<=120; h+=12),
+		// but with a deeper green for 100%
+	{255,0,0}, {255,50,0}, {255,102,0}, {255,153,0},
+	{255,204,0}, {255,255,0}, {204,255,0}, {153,255,0},
+	{101,255,0}, {50,255,0}, {0,170,0},
 };
 
 	// RTF encoding for the background color

@@ -349,7 +349,6 @@ namespace EHRNarrative
 
         private List<EHRLine> FindEHRLines()
         {
-            List<String> command_strings = new List<String>();
             List<EHRLine> list = new List<EHRLine>();
             foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
             {

@@ -11,7 +11,7 @@ The main entry point is S_generatedash.
 #include "sullivan.h"
 #include "parser.h"
 
-static char *icon_data[] = {  // nominal 24x24 icon data
+static char *tsg_icon[] = {  // nominal 24x24 icon data
 	"010009000003aa0300000000810300000000040000000301080005000000",
 	"0b0200000000050000000c0219001900030000001e000400000007010400",
 	"040000000701040081030000410b2000cc00180018000000000018001800",
@@ -76,7 +76,7 @@ static char *icon_data[] = {  // nominal 24x24 icon data
 	"7321947b29947b29947b29947321947b29947b29947b29947321947b2994",
 	"7321040000002701ffff030000000000",
 };
-const int icon_length = (sizeof(icon_data)/sizeof(icon_data[0]));
+const int icon_length = (sizeof(tsg_icon)/sizeof(tsg_icon[0]));
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
 const int T_space = 5 * 20;  // 5pt space in twips
@@ -177,7 +177,7 @@ void R_icon(void)
 		"{\\pict\\wmetafile8\\picw423\\pich397\\picwgoal%d\\pichgoal%d\n",
 		wid, ht);
 	for (int i = 0;  i < icon_length;  i++)
-		fprintf(outf, "%s\n", icon_data[i]);
+		fprintf(outf, "%s\n", tsg_icon[i]);
 	fprintf(outf, "}");
 }
 
@@ -328,8 +328,8 @@ void S_testColorBars(void)
 void S_generateDash(void)
 {
 	S_sortStatus();
-
-	// open the dashboard
+	
+		// open the dashboard
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");

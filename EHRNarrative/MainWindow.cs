@@ -57,6 +57,7 @@ namespace EHRNarrative
         private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
+        private bool listen_for_warning_msg = false;
 
         #region Window Messaging Helpers
         public void bringAppToFront(int hWnd)
@@ -120,16 +121,23 @@ namespace EHRNarrative
             switch (msg.Msg)
             {
                 case WM_USER:
-                    MessageBox.Show("Message received from external program: " + msg.WParam + " - " + msg.LParam);
+                    if (listen_for_warning_msg)
+                    {
+                        enableIgnoreWarnings();
+                        listen_for_warning_msg = false;
+                    }
                     break;
                 case (WM_USER + 0x1):
-                    save_EHR();
+                    if (listen_for_warning_msg)
+                    {
+                        HealthRecordText.Clear();
+                        listen_for_warning_msg = false;
+                    }
                     break;
                 case WM_COPYDATA:
                     COPYDATASTRUCT msgCarrier = new COPYDATASTRUCT();
                     Type type = msgCarrier.GetType();
                     msgCarrier = (COPYDATASTRUCT)msg.GetLParam(type);
-                    //MessageBox.Show("String Message Received: " + msgCarrier.lpData + ", " + msgCarrier.dwData + ", " + msgCarrier.cbData);
                     String msgString = msgCarrier.lpData;
 
                     ParseVBACommand(msgString);
@@ -395,6 +403,8 @@ namespace EHRNarrative
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
         {
+            disableIgnoreWarnings();
+
             if (HealthRecordText.Text.Trim() == "")
             {
                 NotifySLC("reset");
@@ -499,16 +509,14 @@ namespace EHRNarrative
             }
         }
 
-        private void save_EHR()
+        private void enableIgnoreWarnings()
         {
-            MessageBox.Show("Record Saved");
-            HealthRecordText.Clear();
-
+            ignore_warnings.Visible = true;
         }
 
-        private void warnings_found()
+        private void disableIgnoreWarnings()
         {
-            // ???
+            ignore_warnings.Visible = false;
         }
 
         private void dashboardTimer_Tick(object sender, EventArgs e)
@@ -530,10 +538,16 @@ namespace EHRNarrative
 
         private void check_button_Click(object sender, EventArgs e)
         {
+            listen_for_warning_msg = true;
             List<String> commands = CheckForVitals();
             commands.Add("validate");
             NotifySLC(commands);
             //NotifySLC("validate");
+        }
+
+        private void ignore_warnings_Click(object sender, EventArgs e)
+        {
+            HealthRecordText.Clear();
         }
     }
 }

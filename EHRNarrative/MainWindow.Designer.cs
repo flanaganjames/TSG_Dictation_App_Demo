@@ -33,6 +33,7 @@
             this.HealthRecordText = new System.Windows.Forms.RichTextBox();
             this.dashboardTimer = new System.Windows.Forms.Timer(this.components);
             this.check_button = new System.Windows.Forms.Button();
+            this.ignore_warnings = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // HealthRecordText
@@ -64,11 +65,24 @@
             this.check_button.UseVisualStyleBackColor = true;
             this.check_button.Click += new System.EventHandler(this.check_button_Click);
             // 
+            // ignore_warnings
+            // 
+            this.ignore_warnings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.ignore_warnings.Location = new System.Drawing.Point(652, 523);
+            this.ignore_warnings.Name = "ignore_warnings";
+            this.ignore_warnings.Size = new System.Drawing.Size(120, 30);
+            this.ignore_warnings.TabIndex = 2;
+            this.ignore_warnings.Text = "Ignore warnings";
+            this.ignore_warnings.UseVisualStyleBackColor = true;
+            this.ignore_warnings.Visible = false;
+            this.ignore_warnings.Click += new System.EventHandler(this.ignore_warnings_Click);
+            // 
             // EHRNarrative
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 562);
+            this.Controls.Add(this.ignore_warnings);
             this.Controls.Add(this.check_button);
             this.Controls.Add(this.HealthRecordText);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -83,6 +97,7 @@
         private System.Windows.Forms.RichTextBox HealthRecordText;
         private System.Windows.Forms.Timer dashboardTimer;
         private System.Windows.Forms.Button check_button;
+        private System.Windows.Forms.Button ignore_warnings;
     }
 }
 

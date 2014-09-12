@@ -306,8 +306,8 @@ namespace EHRNarrative
             {
                 try
                 {
-                    //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
-                    System.Diagnostics.Process.Start("SLC.exe", command_str);
+                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    //System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
                 catch
                 {
@@ -387,7 +387,7 @@ namespace EHRNarrative
             List<String> commands = new List<String>();
             foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
             {
-                Regex pulse = new Regex(@"\b(Pulse|P|Heart Rate|HR)\b ?(\w+ )?(?<value>\d{2,3})\b( bpm\b| per minute\b| beats per minute\b)?");
+                Regex pulse = new Regex(@"\b(Pulse|P|Heart Rate|HR)\b ?(\w+ )?(?<value>\d{2,3})\b( bpm\b| per minute\b| beats per minute\b)?", RegexOptions.IgnoreCase);
                 Match pulse_match = pulse.Match(line);
                 while (pulse_match.Success)
                 {

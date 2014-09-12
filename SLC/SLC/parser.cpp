@@ -28,6 +28,8 @@ int VVS_p, VVS_r, VVS_sbp, VVS_dbp;
 float VVS_t;
 	// possible information on differential diagnosis
 char *differential;
+	// do we need validation?
+bool validation_required = false;
 	/*
 	 * we really need to have lists of a class containing
 	 * a string, since we're making copies of strings all
@@ -317,7 +319,7 @@ void S_parseStatus(void)
 			VS_t = scopy(s);
 			break;
 		case validate_t:
-			Validate();
+			validation_required = true;
 			break;
 		default:
 			break;

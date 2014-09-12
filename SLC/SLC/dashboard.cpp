@@ -328,7 +328,7 @@ void S_testColorBars(void)
 void S_generateDash(void)
 {
 	S_sortStatus();
-	
+
 		// open the dashboard
 	if (outf != NULL)
 	{		// already open!?!?
@@ -401,6 +401,12 @@ void S_generateDash(void)
 	R_epilog();
 	fclose(outf);
 	outf = NULL;
+
+		// once we've finished generating the dashboard,
+		// check if we've got a validation request from the EHR;
+		// Validate() generates a warning box, if necessary
+	if (validation_required)
+		Validate();
 }
 
 

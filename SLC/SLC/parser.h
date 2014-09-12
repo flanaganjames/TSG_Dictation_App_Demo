@@ -21,3 +21,5 @@ extern int VVS_p, VVS_r, VVS_sbp, VVS_dbp;
 extern float VVS_t;
 	// possible information on differential diagnosis
 extern char *differential;
+	// do we need validation?
+extern bool validation_required;

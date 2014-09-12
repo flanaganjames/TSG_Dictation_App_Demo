@@ -306,8 +306,8 @@ namespace EHRNarrative
             {
                 try
                 {
-                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
-                    //System.Diagnostics.Process.Start("SLC.exe", command_str);
+                    //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
                 catch
                 {

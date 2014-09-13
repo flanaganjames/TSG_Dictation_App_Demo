@@ -10,73 +10,7 @@ The main entry point is S_generatedash.
 
 #include "sullivan.h"
 #include "parser.h"
-
-static char *tsg_icon[] = {  // nominal 24x24 icon data
-	"010009000003aa0300000000810300000000040000000301080005000000",
-	"0b0200000000050000000c0219001900030000001e000400000007010400",
-	"040000000701040081030000410b2000cc00180018000000000018001800",
-	"000000002800000018000000180000000100180000000000c00600000000",
-	"0000000000000000000000000000ad9c6bb5ad84ad9c73b5ad84ad9c6bb5",
-	"a584ad9c73b5ad84ad9c73b5a584ad9c73b5ad84ad9c73b5ad84ad9c73b5",
-	"ad84ad9c73b5ad84ad9c73b5ad84ad9c73b5ad84ad9c73b5ad84b5a573b5",
-	"ad8cb5a57bb5ad8cb5a57bb5ad84b5a57bb5ad8cb5a57bb5ad8cb5a57bb5",
-	"ad8cb5a57bb5ad8cb5a57bb5ad8cb5a57bb5ad8cb5a57bb5ad8cb5a57bb5",
-	"ad8cb5a57bb5ad8c9c8442a58c529c8442a58c529c8442a58c529c8442a5",
-	"8c529c8442a58c529c8442a58c529c8442a58c529c8442a58c529c8442a5",
-	"8c529c8442a58c529c8442a58c529c8442a58c529c7b29947321947b2994",
-	"7321947b29947b21947b29947321947b29947321947b29947321947b2994",
-	"7321947b29947321947b29947321947b29947321947b29947321947b2194",
-	"7321947321947b29947329947b29947321947b29947321947b2994732194",
-	"7b299473219c7b29947321947b29947321947b29947b21947b2994732194",
-	"7b29947b21947b29947321947b29947b29947b219c7b29947b29947b2994",
-	"73219c7b29947b29947b299473219c7b29947b299c7b29947321947b2994",
-	"7b299c7b29947b299c7b29947b29947b29947b299c7b29947b2994732994",
-	"7b29947321947b29947329947b29947321947b29947321947b2994732194",
-	"7b29947321947b29947321947b29947321947b29947321947b2994732194",
-	"7b29947321947b299c7b29947b29947b29947b299c7b29947b29947b2994",
-	"73219c7b29947b299c7b29947321947b29947b299c7b29947b29947b2994",
-	"7b299c7b29947b29947b299473299c7b29947b29947321947b2994732194",
-	"7b29947321947b298c7321947b29947318947b29947329947b2994731894",
-	"7b29947b29947b29947318947b29947329947b29947318947b2994732994",
-	"7b29947b298c73299c7b2184844a5a9cbd5a94b584845a9473217b8c735a",
-	"94b552a5d65a94bd7b8c6b947329947b298c7b29738c7b5a94bd52a5d65a",
-	"94ad84845a947321947b29947329846b218c73298c6b18737b6331adff39",
-	"adff6b84738c6b184a9cd639adff39a5ff39adff39adff6b847b846b185a",
-	"94bd39adff39adff39a5ff39adff39a5ff6b8c848c6b18847329846b2984",
-	"6b218c6b18737b5a42adff42a5ff6b84738c63107384736b847b73846b4a",
-	"9ce739b5ff5294b573847339a5ff42adff5a8ca56b84734a9cd642adff42",
-	"9ce7847339846b21846b21846b29846b18737b6339a5ff42adff6b7b738c",
-	"6b1873734a529cc642a5f739adff31adff638c945a8c9439adff42a5ef7b",
-	"73425294b539adff31adff39adff6b7b638c6b18846b29846b218c6b2173",
-	"7b5a39adff39a5ff6b84738c6b10529cce39adff42adff4a9cce638c9484",
-	"6b29638c9439adff42adff737b637384635a94ad638c946384847b7b4a84",
-	"6b18846b218c6b185a8c9c4aa5e739a5ff42a5ff429cef638c944a94c639",
-	"adff429ce7638c945a8c9c84733973734a42a5ff39adff4aa5e7528cad52",
-	"9cce4a94ce6b846b846318846b298c7b29947310529cd631adff39adff39",
-	"adff31b5ff529cbd7b846342a5ef39adff39adff39adff7384739473186b",
-	"8c8c42adff39adff39b5ff31adff4aadff738c7b9473218c73298c732994",
-	"7b2173846b6b8c8c6b8c846b8c8c6b8c8c7b8c6b94732184844a6b8c8c63",
-	"949c6b847b8c7b39947321947b217b7b526b8c8c638c9c738c84847b3994",
-	"7b218c7329947b29947b298c73299c7b219c73109c73189473109c731894",
-	"7318947b299473219c7b189473189c7b18947321947b29947b299c7b2194",
-	"73189c7b21947318947b21947329947b29947b298c7321947b298c732994",
-	"7b298c7329947b298c7329947b29947321947b298c7329947b2994732994",
-	"7b298c7321947b29947329947b298c7321947b298c7329947b298c732194",
-	"7b29947b29947b29947b29947329947b29947321947b29947321947b2994",
-	"7321947b29947321947b29947329947b29947b21947b29947b29947b2994",
-	"7321947b29947b29947b299473218c7321947b298c7321947b298c732194",
-	"7b298c7321947b298c7321947b29947321947b298c7321947b2994732194",
-	"7b298c7321947b298c7321947b298c7321947b29947321947b29947b2994",
-	"73219c7b29947b29947b29947321947b29947b29947b29947321947b2994",
-	"7321947b29947b21947b29947321947b29947b29947b29947321947b2994",
-	"7329947b29947b29947321947b29947321947b298c7321947b2994732194",
-	"7b298c7321947b29947321947b29947321947b29947321947b2994732194",
-	"7b298c7321947b29947321947b298c7321947b299c7b29947b29947b298c",
-	"7321947b29947b29947b298c7321947b29947b219c7b29947321947b2994",
-	"7321947b29947b29947b29947321947b29947b29947b29947321947b2994",
-	"7321040000002701ffff030000000000",
-};
-const int icon_length = (sizeof(tsg_icon)/sizeof(tsg_icon[0]));
+#include "icons.h"
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
 const int T_space = 5 * 20;  // 5pt space in twips
@@ -169,9 +103,9 @@ void R_icon(void)
 	// int wid = 240, ht = 225;
 	int wid = 288, ht = 270; 
 	fprintf(outf, 
-		"{\\pict\\wmetafile8\\picw423\\pich397\\picwgoal%d\\pichgoal%d\n",
-		wid, ht);
-	for (int i = 0;  i < icon_length;  i++)
+		"{\\pict\\wmetafile8\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
+		tsg_picw, tsg_pich, wid, ht);
+	for (int i = 0;  i < tsg_icon_length;  i++)
 		fprintf(outf, "%s\n", tsg_icon[i]);
 	fprintf(outf, "}");
 }
@@ -400,12 +334,66 @@ void S_generateDash(void)
 
 
 	/*
-	 * generate an extra RTF box containing a warning
-	 * (with the specified text) to be added to the bottom
+	 * the next clump are the utilities to generate the
+	 * warning box on the dashboard:
+	 * if there are warnings, we generate an extra RTF box
+	 * containing them to be added to the bottom
 	 * of the dashboard
 	 */
-void S_generateWarn(char *warn)
+
+	// list of warnings for the dashboard
+list<char *> _warnings;
+
+	// clear the warnings list
+void clearWarnings(void)
 {
+	_warnings.clear();
+}
+
+	// add a warning to the list to be displayed in the warning box
+void addWarning(char *s)
+{
+	_warnings.push_back(scopy(s));
+}
+
+
+void R_one_warn_icon(int wid, int ht)
+{
+	fprintf(outf,
+		"{\\pict\\wmetafile8\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
+		warn_picw, warn_pich, wid, ht);
+	for (int i = 0;  i < warn_icon_length;  i++)
+		fprintf(outf, "%s\n", warn_icon[i]);
+	fprintf(outf, "}");
+}
+
+void R_warning_icons(void)
+{
+	int wid = 450, ht = 420; 
+	int lasttab = T_width+300;
+	// int midtab = lasttab / 2;
+	int gap = (lasttab - 3*wid)/3;
+	// fprintf(outf, "{\\tx%d\\tx%d", midtab, lasttab);
+	fprintf(outf, "{\\tx%d\\tx%d\\tx%d",
+		wid+gap, 2*(wid+gap), 3*(wid+gap));
+	R_one_warn_icon(wid, ht);
+	fprintf(outf, "\\tab");
+	// R_one_warn_icon(wid, ht);
+	fprintf(outf, "\\tab");
+	// R_one_warn_icon(wid, ht);
+	fprintf(outf, "\\tab");
+	R_one_warn_icon(wid, ht);
+	fprintf(outf, "\\par}\n");
+
+}
+
+	// now produce the warning box if we have any warnings in the list
+void S_generateWarn(void)
+{
+		// we've got nothing to say
+	if (_warnings.empty())
+		return;
+
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");
@@ -417,9 +405,18 @@ void S_generateWarn(char *warn)
 		exit(1);
 	}
 	R_prolog();
-	R_vertspace(20);
-	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b\\i %s}\\par\n",
-		ps_warning, c_warning, warn);
+	R_warning_icons();
+	R_vertspace(10);
+	list<char *>::iterator i;
+	for (i = _warnings.begin();  i != _warnings.end();  i++)
+	{
+		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
+			ps_warning, c_warning, T_space*2, T_space*2, *i);
+		R_vertspace(2);
+
+	}
+	R_vertspace(10);
+	R_warning_icons();
 	R_epilog();
 	fclose(outf);
 	outf = NULL;

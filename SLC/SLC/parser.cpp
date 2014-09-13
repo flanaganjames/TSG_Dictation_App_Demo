@@ -95,7 +95,7 @@ void S_reset(void)
 
 
 	// allocate a copy of the string
-char *scopy(char *s)
+char *scopy(const char *s)
 {
 	char *t = (char *) malloc(strlen(s)+1);
 	strncpy(t, s, strlen(s)+1);

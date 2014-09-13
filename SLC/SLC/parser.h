@@ -22,6 +22,9 @@ extern float VVS_t;
 	// possible information on differential diagnosis
 extern char *differential;
 
+	// do we need validation?
+extern bool validation_required;
+
 char *scopy(const char *);
 void clearWarnings(void);
 void addWarning(char *);

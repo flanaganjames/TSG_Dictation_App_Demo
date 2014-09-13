@@ -130,6 +130,10 @@ bool Validate(void)
 
 		// we need to know what we've completed before
 		// checking for warnings
+		// (not strictly necessary since we're now always
+		//  calling Validate from S_generateDash() which
+		//  has already done this; calling it a second
+		//  time will have no effect)
 	S_sortStatus();
 
 		// clear previous warnings, if any

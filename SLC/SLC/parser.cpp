@@ -182,6 +182,14 @@ void chomp(char *s)
 	while (t && *t == ' ')  *t-- = '\0';
 }
 
+void convert_blanks(char *s)
+{
+	char *t = s;
+	while (t = strchr(s, ' '))
+		*t = '_';
+}
+
+
 bool no_complaint(void)
 {
 	return _complaint.empty();
@@ -210,7 +218,7 @@ void S_parseStatus(void)
 	while ((s = fgets(line, MAX_PATH, status_file)) != NULL)
 	{
 		int i;
-			
+
 		chomp(s);  // strip the EOL characters
 		
 #ifdef TESTING
@@ -290,6 +298,7 @@ void S_parseStatus(void)
 			addWords(_all_complete, s);
 			break;
 		case link_t:
+			convert_blanks(s);
 			addWords(_links, s);
 			break;
 		case delete_t:

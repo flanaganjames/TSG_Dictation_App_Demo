@@ -153,10 +153,10 @@ bool Validate(void)
 	if (!warning)
 	{
 		_unlink(WARN_PATH);
-		SendWinMsg(LOWER_WARNING);
+		// SendWinMsg(LOWER_WARNING);
 	} else {
 		S_generateWarn();
-		SendWinMsg(RAISE_WARNING);
+		// SendWinMsg(RAISE_WARNING);
 	}
 	return warning;
 }

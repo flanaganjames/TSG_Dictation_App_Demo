@@ -61,6 +61,7 @@
             this.check_button.Name = "check_button";
             this.check_button.Size = new System.Drawing.Size(120, 30);
             this.check_button.TabIndex = 1;
+            this.check_button.TabStop = false;
             this.check_button.Text = "Check for warnings";
             this.check_button.UseVisualStyleBackColor = true;
             this.check_button.Click += new System.EventHandler(this.check_button_Click);
@@ -68,10 +69,11 @@
             // ignore_warnings
             // 
             this.ignore_warnings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.ignore_warnings.Location = new System.Drawing.Point(652, 523);
+            this.ignore_warnings.Location = new System.Drawing.Point(653, 523);
             this.ignore_warnings.Name = "ignore_warnings";
             this.ignore_warnings.Size = new System.Drawing.Size(120, 30);
             this.ignore_warnings.TabIndex = 2;
+            this.ignore_warnings.TabStop = false;
             this.ignore_warnings.Text = "Ignore warnings";
             this.ignore_warnings.UseVisualStyleBackColor = true;
             this.ignore_warnings.Visible = false;

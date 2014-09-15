@@ -516,7 +516,11 @@ namespace EHRNarrative
 
         private void disableIgnoreWarnings()
         {
-            ignore_warnings.Visible = false;
+            if (ignore_warnings.Visible)
+            {
+                NotifySLC("ignore");
+                ignore_warnings.Visible = false;
+            }
         }
 
         private void dashboardTimer_Tick(object sender, EventArgs e)

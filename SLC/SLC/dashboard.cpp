@@ -425,6 +425,7 @@ void S_generateWarn(void)
 
 	}
 	R_vertspace(10);
+	// R_vertspace(21);
 	// R_warning_icons();
 	R_epilog();
 	fclose(outf);

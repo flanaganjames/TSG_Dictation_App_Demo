@@ -21,8 +21,21 @@ list<char *> _rec_hpi, _rec_exam;
 list<char *> _all_complete, _comp_req, _comp_rec;
 	// resource links
 list<char *> _links;
+	// vital signs -- one item per category
+char *VS_p, *VS_r, *VS_sbp, *VS_dbp, *VS_t;
+	// vital sign values -- filled in by Validate()
+int VVS_p, VVS_r, VVS_sbp, VVS_dbp;
+float VVS_t;
 	// possible information on differential diagnosis
 char *differential;
+	// do we need validation?
+bool validation_required = false;
+	/*
+	 * we really need to have lists of a class containing
+	 * a string, since we're making copies of strings all
+	 * over the place, and leaking memory like a sieve;
+	 * the constructors & destructors would handle memory
+	 */
 
 
 // ********************************************************
@@ -30,18 +43,20 @@ char *differential;
 enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	req_hpi_t, req_exam_t, assess_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
-	data_hpi_t, data_exam_t, // unused - should be removed
+	//// data_hpi_t, data_exam_t, // unused - should be removed
 	data_t, link_t, delete_t, del_t,
-	end_t, end_tt, reset_t,
+	end_t, end_tt, reset_t, 
+	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
 	validate_t,
 	unknown_t};
 char *commands_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
-	"data hpi", "data exam", // unused - should be removed
+	//// "data hpi", "data exam", // unused - should be removed
 	"data", "link", "delete", "del",
 	"end", "end_of_script",	"reset",
-	"validate"
+	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
+	"validate",
 };
 const int command_count = (sizeof(commands_names)/sizeof(commands_names[0]));
 
@@ -63,9 +78,13 @@ void clobberState(void)
 	_links.clear();
 	free(differential);
 	differential = NULL;
-		// don't bother to check if it exists before
+		// don't bother to check if the warning box exists before
 		// deleting: the unlink failure is benign
 	_unlink(WARN_PATH);
+		// clear the vital signs
+	VS_p = VS_r = VS_t = VS_sbp = VS_dbp = NULL;
+	VVS_p = VVS_r = VVS_sbp = VVS_dbp = 0;
+	VVS_t = 0.0;
 }
 
 
@@ -142,8 +161,6 @@ void addWords(list<char *> &in, char *add)
 			l = strlen(s);
 		
 			// add if it's not a duplicate
-		// list<char *>::iterator f = findword(in, s); //
-		// if (in.empty() || findword(in, s) == in.end())
 		if (findword(in, s) == in.end())
 			in.push_back(scopy(s));
 		
@@ -267,8 +284,8 @@ void S_parseStatus(void)
 		case recc_exam_t:
 			addWords(_rec_exam, s);
 			break;
-		case data_hpi_t:
-		case data_exam_t:
+		//// case data_hpi_t:
+		//// case data_exam_t:
 		case data_t:
 			addWords(_all_complete, s);
 			break;
@@ -286,8 +303,23 @@ void S_parseStatus(void)
 		case reset_t:
 			S_reset();
 			break;
+		case vital_p_t:
+			VS_p = scopy(s);
+			break;
+		case vital_r_t:
+			VS_t = scopy(s);
+			break;
+		case vital_sbp_t:
+			VS_sbp = scopy(s);
+			break;
+		case vital_dbp_t:
+			VS_dbp = scopy(s);
+			break;
+		case vital_t_t:
+			VS_t = scopy(s);
+			break;
 		case validate_t:
-			S_validate();
+			validation_required = true;
 			break;
 		default:
 			break;

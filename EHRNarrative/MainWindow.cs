@@ -57,6 +57,7 @@ namespace EHRNarrative
         private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
+        private bool listen_for_warning_msg = false;
 
         #region Window Messaging Helpers
         public void bringAppToFront(int hWnd)
@@ -120,13 +121,23 @@ namespace EHRNarrative
             switch (msg.Msg)
             {
                 case WM_USER:
-                    MessageBox.Show("Message received from external program: " + msg.WParam + " - " + msg.LParam);
+                    if (listen_for_warning_msg)
+                    {
+                        enableIgnoreWarnings();
+                        listen_for_warning_msg = false;
+                    }
+                    break;
+                case (WM_USER + 0x1):
+                    if (listen_for_warning_msg)
+                    {
+                        HealthRecordText.Clear();
+                        listen_for_warning_msg = false;
+                    }
                     break;
                 case WM_COPYDATA:
                     COPYDATASTRUCT msgCarrier = new COPYDATASTRUCT();
                     Type type = msgCarrier.GetType();
                     msgCarrier = (COPYDATASTRUCT)msg.GetLParam(type);
-                    //MessageBox.Show("String Message Received: " + msgCarrier.lpData + ", " + msgCarrier.dwData + ", " + msgCarrier.cbData);
                     String msgString = msgCarrier.lpData;
 
                     ParseVBACommand(msgString);
@@ -307,6 +318,15 @@ namespace EHRNarrative
             }
         }
 
+        private void NotifySLC(List<String> command_list)
+        {
+            if (command_list.Any())
+            {
+                string command_string = String.Join(" ! ", command_list);
+                NotifySLC(command_string);
+            }
+        }
+
         private void ParseLabels()
         {
             topLevelLines.Clear();
@@ -362,8 +382,29 @@ namespace EHRNarrative
             return list;
         }
 
+        private List<String> CheckForVitals()
+        {
+            List<String> commands = new List<String>();
+            foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
+            {
+                Regex pulse = new Regex(@"\b(Pulse|P|Heart Rate|HR)\b ?(\w+ )?(?<value>\d{2,3})\b( bpm\b| per minute\b| beats per minute\b)?", RegexOptions.IgnoreCase);
+                Match pulse_match = pulse.Match(line);
+                while (pulse_match.Success)
+                {
+                    if (Convert.ToInt32(pulse_match.Groups["value"].Value) >= 30)
+                    {
+                        commands.Add("VS p " + pulse_match.Groups["value"]);
+                    }
+                    pulse_match = pulse_match.NextMatch();
+                }
+            }
+            return commands;
+        }
+
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
         {
+            disableIgnoreWarnings();
+
             if (HealthRecordText.Text.Trim() == "")
             {
                 NotifySLC("reset");
@@ -425,12 +466,11 @@ namespace EHRNarrative
                     command_strings.Add("del " + keyword);
                 }
             }
-            
-            if (command_strings.Any())
-            {
-                string command_string = String.Join(" ! ", command_strings);
-                NotifySLC(command_string);
-            }
+
+            //check for vitals
+            //command_strings.AddRange(CheckForVitals());
+
+            NotifySLC(command_strings);
 
             topLevelLines = lines;
         }
@@ -469,6 +509,20 @@ namespace EHRNarrative
             }
         }
 
+        private void enableIgnoreWarnings()
+        {
+            ignore_warnings.Visible = true;
+        }
+
+        private void disableIgnoreWarnings()
+        {
+            if (ignore_warnings.Visible)
+            {
+                NotifySLC("ignore");
+                ignore_warnings.Visible = false;
+            }
+        }
+
         private void dashboardTimer_Tick(object sender, EventArgs e)
         {
             int dashboardHWnd = 0;
@@ -484,6 +538,20 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
+        }
+
+        private void check_button_Click(object sender, EventArgs e)
+        {
+            listen_for_warning_msg = true;
+            List<String> commands = CheckForVitals();
+            commands.Add("validate");
+            NotifySLC(commands);
+            //NotifySLC("validate");
+        }
+
+        private void ignore_warnings_Click(object sender, EventArgs e)
+        {
+            HealthRecordText.Clear();
         }
     }
 }

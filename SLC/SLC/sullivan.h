@@ -15,11 +15,12 @@ void S_sortStatus(void);
 void S_generateDash(void);
 void S_reset(void);
 bool no_complaint(void);
-bool S_validate(void);
+bool Validate(void);
 void S_generateWarn(char *);
 
 // globals in the SLC
 extern FILE *status_file;
+
 
 
 

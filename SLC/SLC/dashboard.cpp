@@ -50,7 +50,7 @@ int rgb_colors[][3] = {
 	{0,0,0}, {160, 160, 160}, {241,217,198},
 		// c_foreground_req, c_foreground_comp, c_background
 	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {255,0,0},
-		// sepbar_a = gray50, sepbar_b = gray60, heading, warning
+		// sepbar_a, sepbar_b, heading, warning
 };
 int bar_colors[][3] = {
 	// now the list of the colors for the progress bar
@@ -417,7 +417,7 @@ void S_generateWarn(void)
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
 		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
-			ps_warning, c_warning, T_space*2, T_space*2, *i);
+			ps_warning, c_black, T_space*2, T_space*2, *i);
 		R_vertspace(2);
 
 	}

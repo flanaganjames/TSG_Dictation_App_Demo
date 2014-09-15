@@ -26,5 +26,6 @@ extern char *differential;
 extern bool validation_required;
 
 char *scopy(const char *);
-void clearWarnings(void);
-void addWarning(char *);
+void D_clearWarnings(void);
+void D_addWarning(char *);
+void D_removeWarningBox(void);

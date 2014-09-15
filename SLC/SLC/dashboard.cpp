@@ -351,13 +351,13 @@ void S_generateDash(void)
 list<char *> _warnings;
 
 	// clear the warnings list
-void clearWarnings(void)
+void D_clearWarnings(void)
 {
 	_warnings.clear();
 }
 
 	// add a warning to the list to be displayed in the warning box
-void addWarning(char *s)
+void D_addWarning(char *s)
 {
 	_warnings.push_back(scopy(s));
 }
@@ -378,15 +378,15 @@ void R_warning_icons(void)
 	int wid = 450, ht = 420; 
 	int lasttab = T_width+300;
 	// int midtab = lasttab / 2;
-	int gap = (lasttab - 3*wid)/3;
+	int gap = (lasttab - 3*wid)/3 - 20;
 	// fprintf(outf, "{\\tx%d\\tx%d", midtab, lasttab);
 	fprintf(outf, "{\\tx%d\\tx%d\\tx%d",
 		wid+gap, 2*(wid+gap), 3*(wid+gap));
 	R_one_warn_icon(wid, ht);
 	fprintf(outf, "\\tab");
-	// R_one_warn_icon(wid, ht);
+	R_one_warn_icon(wid, ht);
 	fprintf(outf, "\\tab");
-	// R_one_warn_icon(wid, ht);
+	R_one_warn_icon(wid, ht);
 	fprintf(outf, "\\tab");
 	R_one_warn_icon(wid, ht);
 	fprintf(outf, "\\par}\n");
@@ -398,7 +398,10 @@ void S_generateWarn(void)
 {
 		// we've got nothing to say
 	if (_warnings.empty())
+	{
+		D_removeWarningBox();
 		return;
+	}
 
 	if (outf != NULL)
 	{		// already open!?!?
@@ -422,7 +425,7 @@ void S_generateWarn(void)
 
 	}
 	R_vertspace(10);
-	R_warning_icons();
+	// R_warning_icons();
 	R_epilog();
 	fclose(outf);
 	outf = NULL;

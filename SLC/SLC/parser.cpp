@@ -47,7 +47,7 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	data_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t, 
 	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
-	validate_t,
+	validate_t, ignore_t,
 	unknown_t};
 char *commands_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
@@ -56,7 +56,7 @@ char *commands_names[] = { "complaint", "state", "diff", "add",
 	"data", "link", "delete", "del",
 	"end", "end_of_script",	"reset",
 	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
-	"validate",
+	"validate", "ignore",
 };
 const int command_count = (sizeof(commands_names)/sizeof(commands_names[0]));
 
@@ -329,6 +329,10 @@ void S_parseStatus(void)
 			break;
 		case validate_t:
 			validation_required = true;
+			break;
+		case ignore_t:
+			validation_required = false;
+			D_removeWarningBox();
 			break;
 		default:
 			break;

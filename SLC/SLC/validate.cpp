@@ -90,15 +90,15 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 		// this should be wrapped into an external routine
 	if (VVS_p >= R_pulse[v_low] && VVS_p < R_pulse[v_normal])
 	{
-		addWarning("Pulse low!");
+		D_addWarning("Pulse low!");
 		retval = true;
 	} else if (VVS_p >= R_pulse[v_high] && VVS_p <= R_pulse[v_vhigh])
 	{
-		addWarning("Pulse high!");
+		D_addWarning("Pulse high!");
 		retval = true;
 	} else if (VVS_p > R_pulse[v_vhigh])
 	{
-		addWarning("Pulse very high!");
+		D_addWarning("Pulse very high!");
 		retval = true;
 	}
 
@@ -107,13 +107,18 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 	char foobar[200];
 	_snprintf(foobar, 200, "vital signs are p %d, r %d, t %.1f, bp %d/%d",
 		VVS_p, VVS_r, VVS_t, VVS_sbp, VVS_dbp);
-	addWarning(foobar);
+	D_addWarning(foobar);
 #endif
 
 	return retval;
 }
 
+ void D_removeWarningBox(void)
+ {
+	_unlink(WARN_PATH);
+ }
 
+ 
 	/*
 	 * this is the controlling routine for validation
 	 *
@@ -137,7 +142,7 @@ bool Validate(void)
 	S_sortStatus();
 
 		// clear previous warnings, if any
-	clearWarnings();
+	D_clearWarnings();
 
 		// check the vital signs
 	if (vitalSigns())
@@ -146,7 +151,7 @@ bool Validate(void)
 		// are we missing required elements?
 	if (_comp_req.size() < (_req_exam.size() + _req_hpi.size() + _assess.size()))
 	{
-		addWarning("Incomplete required exam & HPI elements!");
+		D_addWarning("Incomplete required exam & HPI elements!");
 		warning = true;
 	}
 

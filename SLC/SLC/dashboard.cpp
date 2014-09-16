@@ -312,10 +312,10 @@ void S_generateDash(void)
 	R_line();
 
 		// differential diagnoses
-	if (differential)
+	if (_differential)
 	{
 		fprintf(outf, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}", 
-			differential);
+			_differential);
 #if 0	// say nothing if there's no differential diagnosis
 	} else
 	{

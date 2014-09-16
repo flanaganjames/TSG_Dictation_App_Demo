@@ -78,25 +78,25 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 	bool retval = false;
 
 		// convert them
-	VVS_p = vitalParse(VS_p);
-	VVS_r = vitalParse(VS_r);
-	VVS_sbp = vitalParse(VS_sbp);
-	VVS_dbp = vitalParse(VS_dbp);
-	VVS_t = vitalParseF(VS_t);
-	if (VVS_t > 70.0) // assume F, convert to C
-		VVS_t = (VVS_t - 32) * 5 / 9;
+	_VVS_p = vitalParse(_VS_p);
+	_VVS_r = vitalParse(_VS_r);
+	_VVS_sbp = vitalParse(_VS_sbp);
+	_VVS_dbp = vitalParse(_VS_dbp);
+	_VVS_t = vitalParseF(_VS_t);
+	if (_VVS_t > 70.0) // assume F, convert to C
+		_VVS_t = (_VVS_t - 32) * 5 / 9;
 
 		// we're only going to write code for pulse
 		// this should be wrapped into an external routine
-	if (VVS_p >= R_pulse[v_low] && VVS_p < R_pulse[v_normal])
+	if (_VVS_p >= R_pulse[v_low] && _VVS_p < R_pulse[v_normal])
 	{
 		D_addWarning("Pulse low!");
 		retval = true;
-	} else if (VVS_p >= R_pulse[v_high] && VVS_p <= R_pulse[v_vhigh])
+	} else if (_VVS_p >= R_pulse[v_high] && _VVS_p <= R_pulse[v_vhigh])
 	{
 		D_addWarning("Pulse high!");
 		retval = true;
-	} else if (VVS_p > R_pulse[v_vhigh])
+	} else if (_VVS_p > R_pulse[v_vhigh])
 	{
 		D_addWarning("Pulse very high!");
 		retval = true;
@@ -106,7 +106,7 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 	// add all the vital signs for debugging purposes
 	char foobar[200];
 	_snprintf(foobar, 200, "vital signs are p %d, r %d, t %.1f, bp %d/%d",
-		VVS_p, VVS_r, VVS_t, VVS_sbp, VVS_dbp);
+		_VVS_p, _VVS_r, _VVS_t, _VVS_sbp, _VVS_dbp);
 	D_addWarning(foobar);
 #endif
 

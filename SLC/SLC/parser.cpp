@@ -22,12 +22,12 @@ list<char *> _all_complete, _comp_req, _comp_rec;
 	// resource links
 list<char *> _links;
 	// vital signs -- one item per category
-char *VS_p, *VS_r, *VS_sbp, *VS_dbp, *VS_t;
+char *_VS_p, *_VS_r, *_VS_sbp, *_VS_dbp, *_VS_t;
 	// vital sign values -- filled in by Validate()
-int VVS_p, VVS_r, VVS_sbp, VVS_dbp;
-float VVS_t;
+int _VVS_p, _VVS_r, _VVS_sbp, _VVS_dbp;
+float _VVS_t;
 	// possible information on differential diagnosis
-char *differential;
+char *_differential;
 	// do we need validation?
 bool validation_required = false;
 	/*
@@ -76,15 +76,15 @@ void clobberState(void)
 	_comp_req.clear();
 	_comp_rec.clear();
 	_links.clear();
-	free(differential);
-	differential = NULL;
+	free(_differential);
+	_differential = NULL;
 		// don't bother to check if the warning box exists before
 		// deleting: the unlink failure is benign
 	_unlink(WARN_PATH);
 		// clear the vital signs
-	VS_p = VS_r = VS_t = VS_sbp = VS_dbp = NULL;
-	VVS_p = VVS_r = VVS_sbp = VVS_dbp = 0;
-	VVS_t = 0.0;
+	_VS_p = _VS_r = _VS_t = _VS_sbp = _VS_dbp = NULL;
+	_VVS_p = _VVS_r = _VVS_sbp = _VVS_dbp = 0;
+	_VVS_t = 0.0;
 }
 
 
@@ -266,10 +266,10 @@ void S_parseStatus(void)
 			_complaint.push_back(scopy(s));
 			break;
 		case diff_t:
-			if (differential)
-				free(differential);
-			differential = (char *) malloc(strlen(s)+1);
-			strcpy(differential, s);
+			if (_differential)
+				free(_differential);
+			_differential = (char *) malloc(strlen(s)+1);
+			strcpy(_differential, s);
 			break;
 		case add_t:
 			// this keyword comes from the MU, not the VB script,
@@ -313,19 +313,19 @@ void S_parseStatus(void)
 			S_reset();
 			break;
 		case vital_p_t:
-			VS_p = scopy(s);
+			_VS_p = scopy(s);
 			break;
 		case vital_r_t:
-			VS_t = scopy(s);
+			_VS_t = scopy(s);
 			break;
 		case vital_sbp_t:
-			VS_sbp = scopy(s);
+			_VS_sbp = scopy(s);
 			break;
 		case vital_dbp_t:
-			VS_dbp = scopy(s);
+			_VS_dbp = scopy(s);
 			break;
 		case vital_t_t:
-			VS_t = scopy(s);
+			_VS_t = scopy(s);
 			break;
 		case validate_t:
 			validation_required = true;

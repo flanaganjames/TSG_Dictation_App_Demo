@@ -15,12 +15,12 @@ extern list<char *> _all_complete, _comp_req, _comp_rec;
 	// resource links
 extern list<char *> _links;
 	// vital signs -- one item per category
-extern char *VS_p, *VS_r, *VS_t, *VS_sbp, *VS_dbp;
+extern char *_VS_p, *_VS_r, *_VS_t, *_VS_sbp, *_VS_dbp;
 	// vital sign values
-extern int VVS_p, VVS_r, VVS_sbp, VVS_dbp;
-extern float VVS_t;
+extern int _VVS_p, _VVS_r, _VVS_sbp, _VVS_dbp;
+extern float _VVS_t;
 	// possible information on differential diagnosis
-extern char *differential;
+extern char *_differential;
 
 	// do we need validation?
 extern bool validation_required;

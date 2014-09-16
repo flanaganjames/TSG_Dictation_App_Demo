@@ -71,9 +71,12 @@ float R_temp[] = {32., 36., -1., 39., 43.};
  *  extracting the numeric values, and then make sure
  *  none of the numeric values we have are outside 
  *  acceptable ranges.
+ * Return true if we've added a warning.
  */
-char *vitalSigns(void)
+ bool vitalSigns(void)
 {
+	bool retval = false;
+
 		// convert them
 	VVS_p = vitalParse(VS_p);
 	VVS_r = vitalParse(VS_r);
@@ -83,39 +86,47 @@ char *vitalSigns(void)
 	if (VVS_t > 70.0) // assume F, convert to C
 		VVS_t = (VVS_t - 32) * 5 / 9;
 
-	char *warntext = NULL;
-	static char foobar[200];
-	
-
 		// we're only going to write code for pulse
 		// this should be wrapped into an external routine
 	if (VVS_p >= R_pulse[v_low] && VVS_p < R_pulse[v_normal])
-		warntext = "pulse low!";
-	else if (VVS_p >= R_pulse[v_high] && VVS_p <= R_pulse[v_vhigh])
-		warntext = "pulse high!";
-	else if (VVS_p > R_pulse[v_vhigh])
-		warntext = "pulse very high!";
-	if (warntext != NULL)
 	{
-		_snprintf(foobar, 200, 
-			"%s: vital signs are p %d, r %d, t %.1f, bp %d/%d",
-			warntext, VVS_p, VVS_r, VVS_t, VVS_sbp, VVS_dbp);
-		return foobar;
-	} else
-		return NULL;
+		D_addWarning("Pulse low!");
+		retval = true;
+	} else if (VVS_p >= R_pulse[v_high] && VVS_p <= R_pulse[v_vhigh])
+	{
+		D_addWarning("Pulse high!");
+		retval = true;
+	} else if (VVS_p > R_pulse[v_vhigh])
+	{
+		D_addWarning("Pulse very high!");
+		retval = true;
+	}
+
+#if 0
+	// add all the vital signs for debugging purposes
+	char foobar[200];
+	_snprintf(foobar, 200, "vital signs are p %d, r %d, t %.1f, bp %d/%d",
+		VVS_p, VVS_r, VVS_t, VVS_sbp, VVS_dbp);
+	D_addWarning(foobar);
+#endif
+
+	return retval;
 }
 
+ void D_removeWarningBox(void)
+ {
+	_unlink(WARN_PATH);
+ }
 
+ 
 	/*
 	 * this is the controlling routine for validation
+	 *
+	 * The flow in the full routine will be: 
+	 * check for warning,
+	 * if true, call S_generateWarn(), call SendMessage();
+	 * if false, unlink WARN_PATH
 	 */
-	/*
-	   The flow in the full routine will be: 
-	   check for warning,
-	   if true, call S_generateWarn(), call SendMessage();
-	   if false, unlink WARN_PATH
-	 */
-static char *warningmsg = NULL;
 bool Validate(void)
 {
 	bool warning = false;
@@ -130,54 +141,27 @@ bool Validate(void)
 		//  time will have no effect)
 	S_sortStatus();
 
-		// clean up from last time, if needed
-	if (warningmsg)
-	{
-		free(warningmsg);
-		warningmsg = NULL;
-	}
+		// clear previous warnings, if any
+	D_clearWarnings();
 
 		// check the vital signs
-	badVS = vitalSigns();
-	warning = (warning) || (badVS != NULL);
+	if (vitalSigns())
+		warning = true;
 
 		// are we missing required elements?
-	int aa = _comp_req.size();
-	int bb = _req_exam.size();
-	int cc = _req_hpi.size();
-	int dd = _assess.size();
 	if (_comp_req.size() < (_req_exam.size() + _req_hpi.size() + _assess.size()))
-		missingExam = "Incomplete required exam & HPI elements!";
-	warning = (warning) || (missingExam != NULL);
+	{
+		D_addWarning("Incomplete required exam & HPI elements!");
+		warning = true;
+	}
 
-		// if we have no warnings, it's the easy case
 	if (!warning)
 	{
 		_unlink(WARN_PATH);
 		SendWinMsg(LOWER_WARNING);
-		return warning;
+	} else {
+		S_generateWarn();
+		SendWinMsg(RAISE_WARNING);
 	}
-
-		// we need to post warnings, so we have work to do
-	size_t n = 3;
-	if (badVS)
-		n += strlen(badVS);
-	if (missingExam)
-		n += strlen(missingExam);
-	warningmsg = (char *) malloc(n);
-	memset(warningmsg, 0, n);
-	if (badVS)
-	{
-		strncat(warningmsg, badVS, strlen(badVS));
-		strncat(warningmsg, "  ", 2);
-	}
-	if (missingExam)
-	{
-		strncat(warningmsg, missingExam, strlen(missingExam));
-	}
-
-		// now post to the dashboard and tell EHR we have warnings
-	S_generateWarn(warningmsg);
-	SendWinMsg(RAISE_WARNING);
 	return warning;
 }

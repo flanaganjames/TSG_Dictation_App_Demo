@@ -57,7 +57,6 @@ namespace EHRNarrative
         private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
-        private bool listen_for_warning_msg = false;
 
         #region Window Messaging Helpers
         public void bringAppToFront(int hWnd)
@@ -121,18 +120,8 @@ namespace EHRNarrative
             switch (msg.Msg)
             {
                 case WM_USER:
-                    if (listen_for_warning_msg)
-                    {
-                        enableIgnoreWarnings();
-                        listen_for_warning_msg = false;
-                    }
                     break;
                 case (WM_USER + 0x1):
-                    if (listen_for_warning_msg)
-                    {
-                        HealthRecordText.Clear();
-                        listen_for_warning_msg = false;
-                    }
                     break;
                 case WM_COPYDATA:
                     COPYDATASTRUCT msgCarrier = new COPYDATASTRUCT();
@@ -403,8 +392,6 @@ namespace EHRNarrative
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
         {
-            disableIgnoreWarnings();
-
             if (HealthRecordText.Text.Trim() == "")
             {
                 NotifySLC("reset");
@@ -468,7 +455,7 @@ namespace EHRNarrative
             }
 
             //check for vitals
-            //command_strings.AddRange(CheckForVitals());
+            command_strings.AddRange(CheckForVitals());
 
             NotifySLC(command_strings);
 
@@ -509,20 +496,6 @@ namespace EHRNarrative
             }
         }
 
-        private void enableIgnoreWarnings()
-        {
-            ignore_warnings.Visible = true;
-        }
-
-        private void disableIgnoreWarnings()
-        {
-            if (ignore_warnings.Visible)
-            {
-                NotifySLC("ignore");
-                ignore_warnings.Visible = false;
-            }
-        }
-
         private void dashboardTimer_Tick(object sender, EventArgs e)
         {
             int dashboardHWnd = 0;
@@ -538,20 +511,6 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
-        }
-
-        private void check_button_Click(object sender, EventArgs e)
-        {
-            listen_for_warning_msg = true;
-            List<String> commands = CheckForVitals();
-            commands.Add("validate");
-            NotifySLC(commands);
-            //NotifySLC("validate");
-        }
-
-        private void ignore_warnings_Click(object sender, EventArgs e)
-        {
-            HealthRecordText.Clear();
         }
     }
 }

@@ -334,7 +334,7 @@ void S_generateDash(void)
 		// once we've finished generating the dashboard,
 		// check if we've got a validation request from the EHR;
 		// Validate() generates a warning box, if necessary
-	if (validation_required)
+	if (_validation_required)
 		Validate();
 }
 

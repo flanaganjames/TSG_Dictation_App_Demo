@@ -72,8 +72,8 @@ const int tsg_icon_length = (sizeof(tsg_icon)/sizeof(tsg_icon[0]));
 const int tsg_picw = 423, tsg_pich = 397;
 
 
-// warning icon
-
+// warning icon -- with different background colors
+#if 0
 	// warning icon with white background
 static char *warn_icon[] = {
 	"0100090000030a0400000000e10300000000040000000301080005000000",
@@ -146,6 +146,7 @@ static char *warn_icon[] = {
 	"0101010101010101010100ff010101010101010101010101010203000401",
 	"010101010101010101010101803f040000002701ffff030000000000",
 };
+#endif
 
 #if 0
 	// warning icon with pink background for warning box
@@ -221,7 +222,7 @@ static char *warn_icon[] = {
 	"02020202020202020202020219ff040000002701ffff030000000000",
 };
 #endif
-#if 0
+
 	// warn icon with yellow background
 static char *warn_icon[] = {
 	"0100090000030a0400000000e10300000000040000000301080005000000",
@@ -294,7 +295,7 @@ static char *warn_icon[] = {
 	"02020202020202020202e4ff020202020202020202020202020300000402",
 	"02020202020202020202020219ff040000002701ffff030000000000",
 };
-#endif
+
 
 const int warn_icon_length = (sizeof(warn_icon)/sizeof(warn_icon[0]));
 const int warn_picw = 794, warn_pich = 741;

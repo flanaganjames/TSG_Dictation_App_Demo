@@ -285,7 +285,7 @@ void S_generateDash(void)
 
 		// required components
 	int n_req_still_need = _req_hpi.size() + _req_exam.size() + _assess.size();
-	D_progressbar("Required", _comp_req.size(),
+	D_progressbar("Recommended", _comp_req.size(),
 		n_req_still_need + _comp_req.size());
 	D_heading("Incomplete", c_heading);
 	D_vertspace(5);
@@ -305,11 +305,14 @@ void S_generateDash(void)
 	D_line();
 	D_separator(c_sepbar_b);
 
+	/*********
+	......... now eliding the "recommended" progress bar
 		// recommended components -- only a progress bar
 	int n_rec_still_need = _rec_hpi.size() + _rec_exam.size();
 	D_progressbar("Recommended",
 		_comp_rec.size(), n_rec_still_need + _comp_rec.size());
 	D_line();
+	**********/
 
 		// differential diagnoses
 	if (_differential)
@@ -420,7 +423,7 @@ void S_generateWarn(void)
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
 		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
-			ps_warning, c_black, T_space*2, T_space*2, *i);
+			ps_warning, c_warning, T_space*2, T_space*2, *i);
 		D_vertspace(2);
 
 	}

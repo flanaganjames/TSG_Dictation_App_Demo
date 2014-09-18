@@ -72,7 +72,7 @@ namespace Dashboard
             warnrtf.Size = wsize;
             warnrtf.Location = wpos;
             warnrtf.ReadOnly = true;
-            warnrtf.BackColor = Color.White;
+            warnrtf.BackColor = Color.Yellow;
         }
 
             // we can invoke failnote if we're already running,

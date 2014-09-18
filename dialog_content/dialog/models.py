@@ -12,8 +12,8 @@ class Group(models.Model):
     name = models.CharField(max_length=250)
 
     dialog = models.ForeignKey('Dialog')
-    complaint_groups = models.ManyToManyField('complaint.ComplaintGroup')
-    complaints = models.ManyToManyField('complaint.Complaint')
+    complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
+    complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
 
     all_complaints = models.BooleanField(default=False, help_text='Show for all complaints.')
 
@@ -41,8 +41,8 @@ class Element(models.Model):
     group = models.ForeignKey('Group')
     subgroup = models.ForeignKey('Subgroup', null=True, blank=True)
 
-    complaint_groups = models.ManyToManyField('complaint.ComplaintGroup')
-    complaints = models.ManyToManyField('complaint.Complaint')
+    complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
+    complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
 
     all_complaints = models.BooleanField(default=False, help_text='Show for all complaints.')
     

@@ -9,7 +9,7 @@ class ComplaintGroup(models.Model):
 
 class Complaint(models.Model):
     name = models.CharField(max_length=250)
-    complaint_group = models.ForeignKey(ComplaintGroup)
+    complaint_group = models.ForeignKey(ComplaintGroup, null=True, blank=True)
 
     def __unicode__(self):
         return "Complaint: %s" % self.name

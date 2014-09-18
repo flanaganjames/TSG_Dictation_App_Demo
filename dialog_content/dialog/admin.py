@@ -1,3 +1,7 @@
 from django.contrib import admin
+from models import Dialog, Group, Subgroup, Element
 
-# Register your models here.
+admin.site.register(Dialog)
+admin.site.register(Group)
+admin.site.register(Subgroup)
+admin.site.register(Element)

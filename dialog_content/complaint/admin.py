@@ -1,3 +1,5 @@
 from django.contrib import admin
+from models import ComplaintGroup, Complaint
 
-# Register your models here.
+admin.site.register(ComplaintGroup)
+admin.site.register(Complaint)

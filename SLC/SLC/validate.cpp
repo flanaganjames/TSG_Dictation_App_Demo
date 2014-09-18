@@ -127,7 +127,7 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 	 * if true, call S_generateWarn(), call SendMessage();
 	 * if false, unlink WARN_PATH
 	 */
-bool Validate(void)
+bool S_Validate(void)
 {
 	bool warning = false;
 	char *badVS = NULL;
@@ -136,7 +136,7 @@ bool Validate(void)
 		// we need to know what we've completed before
 		// checking for warnings
 		// (not strictly necessary since we're now always
-		//  calling Validate from S_generateDash() which
+		//  calling S_Validate from S_generateDash() which
 		//  has already done this; calling it a second
 		//  time will have no effect)
 	S_sortStatus();

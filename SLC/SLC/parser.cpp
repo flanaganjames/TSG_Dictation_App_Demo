@@ -23,7 +23,7 @@ list<char *> _all_complete, _comp_req, _comp_rec;
 list<char *> _links;
 	// vital signs -- one item per category
 char *_VS_p, *_VS_r, *_VS_sbp, *_VS_dbp, *_VS_t;
-	// vital sign values -- filled in by Validate()
+	// vital sign values -- filled in by S_Validate()
 int _VVS_p, _VVS_r, _VVS_sbp, _VVS_dbp;
 float _VVS_t;
 	// possible information on differential diagnosis

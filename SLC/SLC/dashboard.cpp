@@ -72,7 +72,7 @@ const int cc_background = rgb_colors[c_background][c_red] * 256 * 256
 const int color_count = (sizeof(rgb_colors)/sizeof(rgb_colors[0]));
 const int bar_count = (sizeof(bar_colors)/sizeof(bar_colors[0]));
 
-void R_prolog(void)
+void D_prolog(void)
 {
 	fprintf(outf, "{\\rtf1\\ansi\\ansicpg1252\\lang1033\\deff0");
 	fprintf(outf, "\\fs%d\\sl24\\slmult0\\viewbksp1\\margr%d\n", 
@@ -98,7 +98,7 @@ void R_prolog(void)
 	fprintf(outf, "}\n");
 }
 
-void R_icon(void)
+void D_icon(void)
 {
 	// int wid = 240, ht = 225;
 	int wid = 288, ht = 270; 
@@ -110,20 +110,20 @@ void R_icon(void)
 	fprintf(outf, "}");
 }
 
-void R_title(void)
+void D_title(void)
 {
 	fprintf(outf, "{\\pard\\fs%d\n", ps_title);
-	R_icon();
+	D_icon();
 	fprintf(outf, "{ }\\b RSQ{\\super \\'a9} Guidance\\sa200\\par}");
 	fprintf(outf, "\\fs%d\n", ps_def);
 }
 
-void R_epilog()
+void D_epilog()
 {
 	fprintf(outf, "}\n");
 }
 
-void R_separator(int color)
+void D_separator(int color)
 {
 	// example:
 	// {\pard\fs10\sl20{ }\par}
@@ -135,7 +135,7 @@ void R_separator(int color)
 	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void R_hyperlinks(void)
+void D_hyperlinks(void)
 {
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
@@ -149,25 +149,25 @@ void R_hyperlinks(void)
 	}
 }
 
-void R_heading(char *head, int color)
+void D_heading(char *head, int color)
 {
 	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b %s}\\par\n", 
 		ps_heading, color, head);
 }
 
-void R_line(void)
+void D_line(void)
 {
 	// fprintf(outf, "\\line");
 }
 
 	// provide a little vertical space
-void R_vertspace(int points)
+void D_vertspace(int points)
 {
 	fprintf(outf, "{\\pard\\fs%d\\sl0\\sa0\\par}\n", points*2);
 }
 
 
-void R_group(char *hdr, list<char *> L, int color)
+void D_group(char *hdr, list<char *> L, int color)
 {
 	// example:
 	// {\pard\fs16\sl0\sa0\par}
@@ -183,7 +183,7 @@ void R_group(char *hdr, list<char *> L, int color)
 }
 
 
-void R_complaints(void)
+void D_complaints(void)
 {
 	list<char *>::iterator i;
 	for (i = _complaint.begin();  i != _complaint.end();  i++)
@@ -199,7 +199,7 @@ void R_complaints(void)
 }
 
 
-void R_progressbar(char *title, int documented, int needed)
+void D_progressbar(char *title, int documented, int needed)
 {
 	// example:
 	// {\tx477\tx4340\tx4380\tx5040
@@ -217,7 +217,7 @@ void R_progressbar(char *title, int documented, int needed)
 
 	if (strlen(title) > 0)
 	{
-		R_heading(title, c_heading);
+		D_heading(title, c_heading);
 	}
 	if (percent == 0)  barused = barstop;
 	// fprintf(outf, "{\\tx%d\\tx%d\\tx%d\\tx%d\n", 
@@ -232,10 +232,10 @@ void R_progressbar(char *title, int documented, int needed)
 		fprintf(outf, "\\highlight%d\\tab", barcolor);
 	}
 	fprintf(outf, "\\highlight%d{ %d%%}\\tab\\par}\n", c_ignore, percent);
-	R_vertspace(5);
+	D_vertspace(5);
 }
 
-void S_testColorBars(void)
+void D_testColorBars(void)
 {
 		// for grins, let's check the bar colors:
 		//  add some blank space and a number of sample colors
@@ -246,12 +246,12 @@ void S_testColorBars(void)
 		fprintf(outf, (i && (i%10)==0) ? "\\line\n" : "\\line");
 	fprintf(outf, "\n");
 
-	R_separator(c_black);
-	R_heading("Progress bar color samples....", c_black);
+	D_separator(c_black);
+	D_heading("Progress bar color samples....", c_black);
 
 	for (int i = 0;  i <= samples;  i++)
-		R_progressbar("", i, samples);
-	R_vertspace(20);
+		D_progressbar("", i, samples);
+	D_vertspace(20);
 }
 
 void S_generateDash(void)
@@ -270,46 +270,46 @@ void S_generateDash(void)
 		exit(1);
 	}
 
-	R_prolog();
+	D_prolog();
 		// header
-	R_title();
+	D_title();
 		// presenting complaint(s)
-	R_complaints();
+	D_complaints();
 
-	R_line();
+	D_line();
 
 		// resource links
-	R_hyperlinks();
-	R_line();
-	R_separator(c_sepbar_b);
+	D_hyperlinks();
+	D_line();
+	D_separator(c_sepbar_b);
 
 		// required components
 	int n_req_still_need = _req_hpi.size() + _req_exam.size() + _assess.size();
-	R_progressbar("Required", _comp_req.size(),
+	D_progressbar("Required", _comp_req.size(),
 		n_req_still_need + _comp_req.size());
-	R_heading("Incomplete", c_heading);
-	R_vertspace(5);
-	R_group("HPI", _req_hpi, c_foreground_req);
-	R_group("Exam", _req_exam, c_foreground_req);
-	R_group("Assessment", _assess, c_foreground_req);
-	R_vertspace(2);
-	R_line();
-	R_separator(c_sepbar_a);
-	R_heading("Completed", c_heading);
-	R_vertspace(5);
-	R_group("", _comp_req, c_foreground_comp);
-	// R_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
-	// R_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);
-	// R_group("Assessment", comp_assess, n_c_assess, c_foreground_comp);
-	R_vertspace(2);
-	R_line();
-	R_separator(c_sepbar_b);
+	D_heading("Incomplete", c_heading);
+	D_vertspace(5);
+	D_group("HPI", _req_hpi, c_foreground_req);
+	D_group("Exam", _req_exam, c_foreground_req);
+	D_group("Assessment", _assess, c_foreground_req);
+	D_vertspace(2);
+	D_line();
+	D_separator(c_sepbar_a);
+	D_heading("Completed", c_heading);
+	D_vertspace(5);
+	D_group("", _comp_req, c_foreground_comp);
+	// D_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
+	// D_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);
+	// D_group("Assessment", comp_assess, n_c_assess, c_foreground_comp);
+	D_vertspace(2);
+	D_line();
+	D_separator(c_sepbar_b);
 
 		// recommended components -- only a progress bar
 	int n_rec_still_need = _rec_hpi.size() + _rec_exam.size();
-	R_progressbar("Recommended",
+	D_progressbar("Recommended",
 		_comp_rec.size(), n_rec_still_need + _comp_rec.size());
-	R_line();
+	D_line();
 
 		// differential diagnoses
 	if (_differential)
@@ -324,18 +324,18 @@ void S_generateDash(void)
 #endif
 	}
 
-	// S_testColorBars();
+	// D_testColorBars();
 
 		// finish
-	R_epilog();
+	D_epilog();
 	fclose(outf);
 	outf = NULL;
 
 		// once we've finished generating the dashboard,
 		// check if we've got a validation request from the EHR;
-		// Validate() generates a warning box, if necessary
-	if (_validation_required)
-		Validate();
+		// S_Validate() generates a warning box, if necessary
+	if (validation_required)
+		S_Validate();
 }
 
 
@@ -363,7 +363,7 @@ void D_addWarning(char *s)
 }
 
 
-void R_one_warn_icon(int wid, int ht)
+void D_one_warn_icon(int wid, int ht)
 {
 	fprintf(outf,
 		"{\\pict\\wmetafile8\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
@@ -373,7 +373,7 @@ void R_one_warn_icon(int wid, int ht)
 	fprintf(outf, "}");
 }
 
-void R_warning_icons(void)
+void D_warning_icons(void)
 {
 	int wid = 450, ht = 420; 
 	int lasttab = T_width+300;
@@ -382,13 +382,13 @@ void R_warning_icons(void)
 	// fprintf(outf, "{\\tx%d\\tx%d", midtab, lasttab);
 	fprintf(outf, "{\\tx%d\\tx%d\\tx%d",
 		wid+gap, 2*(wid+gap), 3*(wid+gap));
-	R_one_warn_icon(wid, ht);
+	D_one_warn_icon(wid, ht);
 	fprintf(outf, "\\tab");
-	R_one_warn_icon(wid, ht);
+	D_one_warn_icon(wid, ht);
 	fprintf(outf, "\\tab");
-	R_one_warn_icon(wid, ht);
+	D_one_warn_icon(wid, ht);
 	fprintf(outf, "\\tab");
-	R_one_warn_icon(wid, ht);
+	D_one_warn_icon(wid, ht);
 	fprintf(outf, "\\par}\n");
 
 }
@@ -413,21 +413,21 @@ void S_generateWarn(void)
 		fprintf(stderr, "cannot open warning file!!!!!");
 		exit(1);
 	}
-	R_prolog();
-	R_warning_icons();
-	R_vertspace(10);
+	D_prolog();
+	D_warning_icons();
+	D_vertspace(10);
 	list<char *>::iterator i;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
 		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_black, T_space*2, T_space*2, *i);
-		R_vertspace(2);
+		D_vertspace(2);
 
 	}
-	R_vertspace(10);
-	// R_vertspace(21);
-	// R_warning_icons();
-	R_epilog();
+	D_vertspace(10);
+	// D_vertspace(21);
+	// D_warning_icons();
+	D_epilog();
 	fclose(outf);
 	outf = NULL;
 }

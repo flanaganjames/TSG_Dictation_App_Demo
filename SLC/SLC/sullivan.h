@@ -15,7 +15,7 @@ void S_sortStatus(void);
 void S_generateDash(void);
 void S_reset(void);
 bool no_complaint(void);
-bool Validate(void);
+bool S_Validate(void);
 void S_generateWarn(void);
 
 // globals in the SLC

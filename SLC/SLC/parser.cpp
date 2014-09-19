@@ -28,8 +28,7 @@ int _VVS_p, _VVS_r, _VVS_sbp, _VVS_dbp;
 float _VVS_t;
 	// possible information on differential diagnosis
 char *_differential;
-	// do we need validation?
-bool validation_required = false;
+
 	/*
 	 * we really need to have lists of a class containing
 	 * a string, since we're making copies of strings all
@@ -328,11 +327,9 @@ void S_parseStatus(void)
 			_VS_t = scopy(s);
 			break;
 		case validate_t:
-			validation_required = true;
-			break;
 		case ignore_t:
-			validation_required = false;
-			D_removeWarningBox();
+			// we parse, but now ignore validation and ignore requests
+			// we always do validation
 			break;
 		default:
 			break;

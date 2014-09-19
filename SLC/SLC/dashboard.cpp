@@ -334,11 +334,9 @@ void S_generateDash(void)
 	fclose(outf);
 	outf = NULL;
 
-		// once we've finished generating the dashboard,
-		// check if we've got a validation request from the EHR;
-		// S_Validate() generates a warning box, if necessary
-	if (validation_required)
-		S_Validate();
+		// once we've finished generating the dashboard, call
+		// S_Validate() to generate a warning box, if necessary
+	S_Validate();
 }
 
 

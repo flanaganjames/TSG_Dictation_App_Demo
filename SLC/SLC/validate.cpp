@@ -148,12 +148,15 @@ bool S_Validate(void)
 	if (vitalSigns())
 		warning = true;
 
+	/**********
+	*********  no longer checking completion of all exam elements
 		// are we missing required elements?
 	if (_comp_req.size() < (_req_exam.size() + _req_hpi.size() + _assess.size()))
 	{
 		D_addWarning("Incomplete required exam & HPI elements!");
 		warning = true;
 	}
+	***********/
 
 	if (!warning)
 	{

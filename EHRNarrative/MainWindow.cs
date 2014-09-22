@@ -139,6 +139,7 @@ namespace EHRNarrative
         public EHRNarrative()
         {
             InitializeComponent();
+            new ExamDialog("Physical Exam", "Chest pain over 40").Show();
 
             dashboardTimer.Stop();
 
@@ -511,6 +512,11 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            new ExamDialog("Physical Exam", "Chest pain over 40").Show();
         }
     }
 }

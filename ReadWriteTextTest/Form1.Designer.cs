@@ -90,7 +90,7 @@
             this.Controls.Add(this.countdown);
             this.Controls.Add(this.button1);
             this.Name = "Form1";
-            this.Text = "Read Text From External Application";
+            this.Text = "Read / Write Text From External Application";
             this.ResumeLayout(false);
             this.PerformLayout();
 

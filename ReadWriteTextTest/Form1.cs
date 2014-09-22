@@ -55,6 +55,7 @@ namespace ReadWriteTextTest
                 }
                 else
                 {
+                    WindowText.SetTextOfActiveWindowElement(textBox1.Text);
                 }
             }
             else
@@ -113,6 +114,9 @@ namespace ReadWriteTextTest
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, [Out] StringBuilder lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, int wParam, [Out] string lParam);
 
         private struct RECT
         {
@@ -180,7 +184,12 @@ namespace ReadWriteTextTest
             return result;
         }
 
-        
+        private static void SetText(IntPtr handle, string text)
+        {
+            const uint WM_SETTEXT = 0x000C;
+
+            SendMessage(handle, WM_SETTEXT, 0, text);
+        }
 
         // Gets text text from a control by it's handle.
         private static string GetText(IntPtr handle)
@@ -209,7 +218,7 @@ namespace ReadWriteTextTest
                 // Find the main window's handle by the title.
                 var windowHWnd = FindWindowByCaption(IntPtr.Zero, windowTitle);
 
-                return GetTextAllFromWindow(windowHWnd);
+                return GetAllTextFromWindow(windowHWnd);
             }
             catch (Exception e)
             {
@@ -225,7 +234,7 @@ namespace ReadWriteTextTest
             {
                 IntPtr windowHWnd = GetForegroundWindow();
 
-                return GetTextAllFromWindow(windowHWnd);
+                return GetAllTextFromWindow(windowHWnd);
             }
             catch (Exception e)
             {
@@ -258,7 +267,28 @@ namespace ReadWriteTextTest
             return string.Empty;
         }
 
-        private static string GetTextAllFromWindow(IntPtr windowHWnd)
+        public static void SetTextOfActiveWindowElement(string text)
+        {
+            try
+            {
+                IntPtr windowHWnd = GetForegroundWindow();
+                IntPtr lpdwProcessId;
+                IntPtr threadId = GetWindowThreadProcessId(windowHWnd, out lpdwProcessId);
+
+                GUITHREADINFO lpgui = new GUITHREADINFO();
+                lpgui.cbSize = Marshal.SizeOf(lpgui);
+
+                GetGUIThreadInfo(threadId, ref lpgui);
+
+                SetText(lpgui.hwndFocus, text);
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.Message);
+            }
+        }
+
+        private static string GetAllTextFromWindow(IntPtr windowHWnd)
         {
             var sb = new StringBuilder();
 

@@ -516,7 +516,7 @@ namespace EHRNarrative
 
         private void button1_Click(object sender, EventArgs e)
         {
-            new ExamDialog("Physical Exam", "Chest pain over 40").Show();
+            new ExamDialog(textBox2.Text, textBox1.Text).Show();
         }
     }
 }

@@ -254,6 +254,28 @@ void D_testColorBars(void)
 	D_vertspace(20);
 }
 
+
+void D_backgroundColor(int r, int g, int b)
+{
+	fprintf(outf, "{\\*\\background {\\shp{\\*\\shpinst\\shpleft0\\shptop0");
+	fprintf(outf, "\\shpright0\\shpbottom0\\shpfhdr0\\shpbxmargin\n");
+	fprintf(outf, "\\shpbxignore\\shpbymargin\\shpbyignore\\shpwr0");
+	fprintf(outf, "\\shpwrk0\\shpfblwtxt1\\shpz0\\shplid1025\n");
+	fprintf(outf, "{\\sp{\\sn shapeType}{\\sv 1}}");
+	fprintf(outf, "{\\sp{\\sn fFlipH}{\\sv 0}}");
+	fprintf(outf, "{\\sp{\\sn fFlipV}{\\sv 0}}\n");
+	fprintf(outf, "{\\sp{\\sn fillColor}{\\sv %d}}",
+		256*256*r + 256*g + b);
+	fprintf(outf, "{\\sp{\\sn fFilled}{\\sv 1}}\n");
+	fprintf(outf, "{\\sp{\\sn lineWidth}{\\sv 0}}");
+	fprintf(outf, "{\\sp{\\sn fLine}{\\sv 0}}\n");
+	fprintf(outf, "{\\sp{\\sn bWMode}{\\sv 9}}");
+	fprintf(outf, "{\\sp{\\sn fBackground}{\\sv 1}}");
+	fprintf(outf, "{\\sp{\\sn fLayoutInCell}{\\sv 1}}}}}\n");
+
+}
+
+
 void S_generateDash(void)
 {
 	S_sortStatus();
@@ -415,6 +437,7 @@ void S_generateWarn(void)
 		exit(1);
 	}
 	D_prolog();
+	D_backgroundColor(0,255,255);
 	D_warning_icons();
 	D_vertspace(10);
 	list<char *>::iterator i;

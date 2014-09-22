@@ -6,8 +6,10 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Data.SQLite;
+using System.Data.Common;
 
-using Simple.Data;
+using Dapper;
 
 namespace EHRNarrative
 {
@@ -16,63 +18,103 @@ namespace EHRNarrative
         public ExamDialog(string dialog_name, string complaint_name)
         {
             InitializeComponent();
-            var db = Database.OpenConnection("Data Source=dialog_content.sqlite3;Version=3;");
-
-            IEnumerable<Dialog> dialogs = db.Dialogs.FindAllByName(dialog_name).WithMany(db.Dialogs.Group).WithMany(db.Dialogs.Group.Element);
-            if (dialogs.Count() == 0)
+            using (var conn = new SQLiteConnection("Data Source=dialog_content.sqlite3;Version=3;"))
             {
-                MessageBox.Show("Not a valid dialog name");
-                this.Close();
-                return;
-            }
+                conn.Open();
+                var lookup = new Dictionary<int, Dialog>();
+                conn.Query<Dialog, Group, Dialog>(@"
+                    SELECT * FROM dialog d
+                    INNER JOIN 'group' g ON d.id = g.dialog_id
+                    WHERE d.name = @Name",
+                    (d, g) => {
+                        Dialog dl;
+                        if (!lookup.TryGetValue(d.Id, out dl)){
+                            lookup.Add(d.Id, dl = d);
+                        }
+                        if (dl.Group == null)
+                            dl.Group = new List<Group>();
+                        dl.Group.Add(g);
+                        return dl;
+                    },
+                    new { Name = dialog_name });//.FirstOrDefault();
 
-            Dialog dialog = dialogs.First();
-            foreach (Group group in dialog.Group)
-            {
-                group.Element = db.Elements.FindAllByGroup_id(group.Group_id).Where(db.Elements.Subgroup_id == null);
-                group.Subgroups = db.Subgroups.FindAllByGroup_id(group.Group_id).WithMany(db.Subgroups.Elements);
-            }
+                Dialog dialog = lookup.First().Value;
 
-            Complaint complaint = db.Complaints.Find(db.Complaints.Name == complaint_name);
-
-
-            this.Text = dialog.Name;
-
-            // print names
-            richTextBox1.Text += complaint.Name + "\n";
-
-            foreach (Group group in dialog.Group)
-            {
-                richTextBox1.Text += "\n" + group.Name + "\n";
-                richTextBox1.Text += "  -" + String.Join(" \n  -", group.Element.Where(x => x.All_complaints).Select(x => x.Name).ToList());
-                foreach (Subgroup subgroup in group.Subgroups)
+                if (lookup.Values.Count() < 1)
                 {
+                    MessageBox.Show("Not a valid dialog name");
+                    this.Close();
+                    return;
+                }
+
+                Complaint complaint = conn.Query<Complaint>(@"
+                    SELECT * FROM complaint c WHERE c.name = @Name",
+                    new { Name = complaint_name }).FirstOrDefault();
+
+                foreach (Group group in dialog.Group)
+                {
+                    var subgroup_lookup = new Dictionary<int, Subgroup>();
+                    conn.Query<Subgroup, Element, Subgroup>(@"
+                        SELECT * FROM subgroup s
+                        INNER JOIN element e ON s.id + e.subgroup_id
+                        WHERE s.group_id = @Group",
+                        (s, e) => {
+                            Subgroup sg;
+                            if (!subgroup_lookup.TryGetValue(s.Id, out sg)){
+                                subgroup_lookup.Add(s.Id, sg = s);
+                            }
+                            if (sg.Elements == null)
+                                sg.Elements = new List<Element>();
+                            sg.Elements.Add(e);
+                            return sg;
+                        },
+                    new { Group = group.Id });
+                    group.Subgroups = subgroup_lookup.Values.ToList();
+                    group.Element = conn.Query<Element>(@"
+                        SELECT * from element e 
+                        WHERE e.group_id = @Group",
+                        new { Group = group.Id });
+                }
+
+
+                this.Text = dialog.Name;
+
+                // print names
+                richTextBox1.Text += complaint.Name + "\n";
+
+                foreach (Group group in dialog.Group)
+                {
+                    richTextBox1.Text += "\n" + group.Name + "\n";
+                    richTextBox1.Text += "  -" + String.Join(" \n  -", group.Element.Where(x => x.All_complaints).Select(x => x.Name).ToList());
+                    foreach (Subgroup subgroup in group.Subgroups)
+                    {
                         richTextBox1.Text += "\n  =" + subgroup.Name + "\n";
                         richTextBox1.Text += "    -" + String.Join(" \n    -", subgroup.Elements.Select(x => x.Name).ToList());
+                    }
                 }
             }
         }
     }
 
     public class Dialog {
-        public int Dialog_id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public IList<Group> Group { get; set; }
     }
 
     public class Group
     {
-        public int Group_id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public IEnumerable<Element> Element { get; set; }
-        public IEnumerable<Subgroup> Subgroups { get; set; }
+        public IList<Subgroup> Subgroups { get; set; }
 
         public bool All_complaints { get; set; }
 
     }
     public class Subgroup
     {
-        public int Subgroup_id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public int Group_id { get; set; }
         public IList<Element> Elements { get; set; }

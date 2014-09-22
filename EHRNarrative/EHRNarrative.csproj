@@ -69,6 +69,7 @@
     <Compile Include="ExamDialog.Designer.cs">
       <DependentUpon>ExamDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="SqlMapper.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>

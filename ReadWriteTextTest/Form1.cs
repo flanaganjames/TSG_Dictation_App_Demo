@@ -24,8 +24,18 @@ namespace ReadWriteTextTest
 
         private void button1_Click(object sender, EventArgs e)
         {
-            countdown.Text = "Reading Text In: " + ticks.ToString() + " seconds...";
-            timer1.Start();
+            if (!checkBox1.Checked)
+            {
+                countdown.Text = "Reading Text In: " + ticks.ToString() + " seconds...";
+                checkBox1.Enabled = false;
+                timer1.Start();
+            }
+            else
+            {
+                countdown.Text = "Writing Text In: " + ticks.ToString() + " seconds...";
+                checkBox1.Enabled = false;
+                timer1.Start();
+            }
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -35,26 +45,61 @@ namespace ReadWriteTextTest
                 ticks = 5;
                 countdown.Text = "";
                 timer1.Stop();
+                checkBox1.Enabled = true;
 
-                //var allText = GetWindowText.GetAllTextFromWindowByTitle("Document - WordPad");
-                var allText = GetWindowText.GetAllTextFromActiveWindow();
-                textBox1.Text = allText;
+                if (!checkBox1.Checked)
+                {
+                    //var allText = GetWindowText.GetAllTextFromWindowByTitle("Document - WordPad");
+                    var allText = WindowText.GetTextFromActiveWindowElement();
+                    textBox1.Text = allText;
+                }
+                else
+                {
+                }
             }
             else
             {
                 ticks--;
-                countdown.Text = "Reading Text In: " + ticks.ToString() + " seconds...";
+                if (!checkBox1.Checked)
+                {
+                    countdown.Text = "Reading Text In: " + ticks.ToString() + " seconds...";
+                }
+                else
+                {
+                    countdown.Text = "Writing Text In: " + ticks.ToString() + " seconds...";
+                }
+            }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+            {
+                button1.Text = "Write Text";
+                textBox1.ReadOnly = false;
+            }
+            else
+            {
+                button1.Text = "Read UI Elements";
+                textBox1.ReadOnly = true;
+                textBox1.Text = "";
             }
         }
     }
 
-    public class GetWindowText
+    public class WindowText
     {
         [DllImport("user32")]
         private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", EntryPoint = "FindWindow", SetLastError = true)]
         private static extern IntPtr FindWindowByCaption(IntPtr zeroOnly, string lpWindowName);
+
+        [DllImport("user32")]
+        private static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out IntPtr lpdwProcessId);
+
+        [DllImport("user32")]
+        private static extern bool GetGUIThreadInfo(IntPtr hThreadID, ref GUITHREADINFO lpgui);
 
         // Delegate we use to call methods when enumerating child windows.
         private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
@@ -68,6 +113,27 @@ namespace ReadWriteTextTest
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, [Out] StringBuilder lParam);
+
+        private struct RECT
+        {
+            public int iLeft;
+            public int iTop;
+            public int iRight;
+            public int iBottom;
+        }
+
+        private struct GUITHREADINFO
+        {
+            public int cbSize;
+            public int flags;
+            public IntPtr hwndActive;
+            public IntPtr hwndFocus;
+            public IntPtr hwndCapture;
+            public IntPtr hwndMenuOwner;
+            public IntPtr hwndMoveSize;
+            public IntPtr hwndCaret;
+            public RECT rectCaret;
+        }
 
         // Callback method used to collect a list of child windows we need to capture text from.
         private static bool EnumChildWindowsCallback(IntPtr handle, IntPtr pointer)
@@ -114,6 +180,8 @@ namespace ReadWriteTextTest
             return result;
         }
 
+        
+
         // Gets text text from a control by it's handle.
         private static string GetText(IntPtr handle)
         {
@@ -141,7 +209,7 @@ namespace ReadWriteTextTest
                 // Find the main window's handle by the title.
                 var windowHWnd = FindWindowByCaption(IntPtr.Zero, windowTitle);
 
-                return GetAllTextFromWindow(windowHWnd);
+                return GetTextAllFromWindow(windowHWnd);
             }
             catch (Exception e)
             {
@@ -155,9 +223,9 @@ namespace ReadWriteTextTest
         {
             try
             {
-                var windowHWnd = GetForegroundWindow();
+                IntPtr windowHWnd = GetForegroundWindow();
 
-                return GetAllTextFromWindow(windowHWnd);
+                return GetTextAllFromWindow(windowHWnd);
             }
             catch (Exception e)
             {
@@ -167,7 +235,30 @@ namespace ReadWriteTextTest
             return string.Empty;
         }
 
-        private static string GetAllTextFromWindow(IntPtr windowHWnd)
+        public static string GetTextFromActiveWindowElement()
+        {
+            try
+            {
+                IntPtr windowHWnd = GetForegroundWindow();
+                IntPtr lpdwProcessId;
+                IntPtr threadId = GetWindowThreadProcessId(windowHWnd, out lpdwProcessId);
+
+                GUITHREADINFO lpgui = new GUITHREADINFO();
+                lpgui.cbSize = Marshal.SizeOf(lpgui);
+
+                GetGUIThreadInfo(threadId, ref lpgui);
+
+                return GetText(lpgui.hwndFocus);
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.Message);
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetTextAllFromWindow(IntPtr windowHWnd)
         {
             var sb = new StringBuilder();
 

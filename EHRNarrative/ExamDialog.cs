@@ -27,12 +27,19 @@ namespace EHRNarrative
             catch (NotImplementedException)
             {
                 MessageBox.Show("Not a valid dialog name or complaint");
+                data = null;
                 return;
             }
 
             this.Text = data.dialog.Name;
 
             RenderElements(data);
+        }
+        public void Show() {
+            if (data == null)
+                return;
+            else
+                base.Show();
         }
 
         private Collection LoadContent(string dialog_name, string complaint_name)
@@ -108,7 +115,14 @@ namespace EHRNarrative
                 this.Controls.Add(heading);
 
                 //draw multiselects
-
+                var listbox = new EHRListBox();
+                listbox.AddElements(item.group.ElementsForComplaint(data));
+                listbox.AddGroups(item.group.Subgroups(data));
+                if (item.group.ElementsAdditional(data).Count() > 0)
+                    listbox.Items.Add(new EHRListBoxGroup());
+                listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                listbox.Top = 4 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                this.Controls.Add(listbox);
 
             }
             //draw extra group column:
@@ -117,35 +131,6 @@ namespace EHRNarrative
                 AdditionalGroupsList.Items.Add(item.group.Name);
             }
                 
-
-            // debug print names
-            richTextBox1.Text += data.complaint.Id + "|" + data.complaint.Complaint_group_id + data.complaint.Name + "\n";
-            richTextBox1.Text += "Number of groups: " + data.dialog.GroupsForComplaint(data).Count() + "\n";
-            richTextBox1.Text += "Number of Additional groups: " + data.dialog.GroupsAdditional(data).Count() + "\n";
-
-            foreach (Group group in data.dialog.GroupsForComplaint(data))
-            {
-                richTextBox1.Text += "\n" + group.Name + "\n";
-                richTextBox1.Text += "  -" + String.Join(" \n  -", group.ElementsForComplaint(data).Select(x => x.Display(data)).ToList());
-                foreach (Subgroup subgroup in group.Subgroups(data))
-                {
-                    richTextBox1.Text += "\n  =" + subgroup.Name + "\n";
-                    richTextBox1.Text += "    -" + String.Join(" \n    -", subgroup.Elements(data).Select(x => x.Display(data)).ToList());
-                }
-                richTextBox1.Text += "\n  =More:\n";
-                richTextBox1.Text += "    -" + String.Join(" \n    -", group.ElementsAdditional(data).Select(x => x.Display(data)).ToList());
-            }
-            richTextBox1.Text += "\n\nHidden Groups:";
-            foreach (Group group in data.dialog.GroupsAdditional(data))
-            {
-                richTextBox1.Text += "\n" + group.Name + "\n";
-                richTextBox1.Text += "  -" + String.Join(" \n  -", group.ElementsForComplaint(data).Select(x => x.Display(data)).ToList());
-                foreach (Subgroup subgroup in group.Subgroups(data))
-                {
-                    richTextBox1.Text += "\n  =" + subgroup.Name + "\n";
-                    richTextBox1.Text += "    -" + String.Join(" \n    -", subgroup.Elements(data).Select(x => x.Display(data)).ToList());
-                }
-            }
         }
 
         private void InsertEHRText()
@@ -169,6 +154,7 @@ namespace EHRNarrative
         {
             InsertEHRText();
             UpdateSLC();
+            this.Close();
         }
 
 

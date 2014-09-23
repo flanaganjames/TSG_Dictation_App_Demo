@@ -43,10 +43,11 @@
             this.richTextBox1.Size = new System.Drawing.Size(259, 236);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
+            this.richTextBox1.Visible = false;
             // 
             // AdditionalGroups
             // 
-            this.AdditionalGroups.BackColor = System.Drawing.SystemColors.ButtonShadow;
+            this.AdditionalGroups.BackColor = System.Drawing.SystemColors.Control;
             this.AdditionalGroups.Controls.Add(this.DoneButton);
             this.AdditionalGroups.Controls.Add(this.AdditionalGroupsList);
             this.AdditionalGroups.Controls.Add(this.label1);

@@ -103,6 +103,13 @@ namespace EHRNarrative
                 }
                 richTextBox1.Text += "\n  =More:\n";
                 richTextBox1.Text += "    -" + String.Join(" \n    -", group.ElementsAdditional(data).Select(x => x.Display(data)).ToList());
+
+                //TEMP TESTING
+                foreach (Element element in group.ElementsForComplaint(data))
+                {
+                    EHRListBoxItem item = new EHRListBoxItem(element);
+                    ehrListBox1.Items.Add(item);
+                }
             }
             richTextBox1.Text += "\n\nHidden Groups:";
             foreach (Group group in data.dialog.GroupsAdditional(data))
@@ -116,9 +123,5 @@ namespace EHRNarrative
                 }
             }
         }
-
-
     }
-
-
 }

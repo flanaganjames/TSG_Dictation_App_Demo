@@ -63,6 +63,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EHRListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EHRListBox.Designer.cs">
+      <DependentUpon>EHRListBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="ExamDialog.cs">
       <SubType>Form</SubType>
     </Compile>

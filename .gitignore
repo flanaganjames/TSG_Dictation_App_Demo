@@ -25,6 +25,7 @@ dialog_content/*.dll
 dialog_content/include/
 dialog_content/dist/
 dialog_content/static/
+dialog_content/dialog_content.sqlite3
 
 
 #################

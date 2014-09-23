@@ -516,7 +516,8 @@ namespace EHRNarrative
 
         private void button1_Click(object sender, EventArgs e)
         {
-            new ExamDialog(textBox2.Text, textBox1.Text).Show();
+            var dialog = new ExamDialog(textBox2.Text, textBox1.Text);
+            dialog.Show();
         }
     }
 }

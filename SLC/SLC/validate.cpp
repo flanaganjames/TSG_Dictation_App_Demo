@@ -20,6 +20,7 @@ warning was raised, otherwise false.
 #include "parser.h"
 
 
+#if 0
 	/*
 	 * This sends a message to the EHR window, telling
 	 * it we've raised a warning
@@ -35,8 +36,12 @@ void SendWinMsg(int msg)
 		result = SendMessage(hwnd, msg, 0, 0);
 	}
 }
+#endif
 
 
+	/*
+	 * parse a numeric vital sign value out of the given string
+	 */
 int vitalParse(char *s)
 {
 	int n;
@@ -45,17 +50,75 @@ int vitalParse(char *s)
 	return atoi(s+n);
 }
 
-float vitalParseF(char *s)
+	/*
+	 * special case parsing for temperature:
+	 *  as above, but we convert to C, if we've got F
+	 *  and return as a float, not an int
+	 */
+float vitalParseT(char *s)
 {
 	int n;
 	float f;
 	if (s == NULL)  return 0;
 	n = strcspn(s, "0123456890.");
 	f = (float) atof(s+n);
+	if (f > 70.0) // assume F, convert to C
+	{
+		f = (f - 32) * 5 / 9;
+	}
 	return f;
 }
 
 
+struct _range {
+	// open range: x >= low && x < high
+		// ignore a limit if < 0;
+	int low, high;
+	char *warning;
+};
+struct _rangef {
+		// we really should use a template class here
+	float low, high;
+	char *warning;
+};
+typedef struct _range range;
+typedef struct _rangef rangeF;
+
+	/*
+	 * here we have the ranges that generate warnings and 
+	 *  the associated warning text
+	 */
+range RR_pulse[] = { 
+	{30, 50, "Pulse low"},
+	{100, 120, "Pulse high"},
+	{120, -1, "Pulse very high"},
+};
+const int n_pulse = (sizeof(RR_pulse)/sizeof(range));
+
+range RR_resp[] = {
+	{4, 8, "Respiration low"},
+	{25, 99, "Respiration very high"},
+};
+const int n_resp = (sizeof(RR_resp)/sizeof(range));
+
+range RR_sbp[] = {
+	{40, 85, "Systolic BP low"},
+	{155, 290, "Systolic BP very high"},
+};
+const int n_sbp = (sizeof(RR_sbp)/sizeof(range));
+
+range RR_dbp[] = {
+	{99, 150, "Diastolic BP very high"},
+};
+const int n_dbp = (sizeof(RR_dbp)/sizeof(range));
+
+rangeF RR_temp[] = {
+	{32, 36, "Temperature low"},
+	{39, 43, "Temperature very high"},
+};
+const int n_temp = (sizeof(RR_temp)/sizeof(rangeF));
+
+#if 0
 enum t_vital {
 	v_low = 0, v_normal, v_high, v_vhigh, v_ignoreh
 };
@@ -65,42 +128,59 @@ int R_resp[]   = {4, 8, -1, 25, 99};
 int R_sbp[]    = {40, 85, -1, 155, 290};
 int R_dbp[]    = {-1, 30, -1, 99, 150};
 float R_temp[] = {32., 36., -1., 39., 43.};
+#endif
+
+void validateVital(int vital, range Range[], int nn)
+{
+	if (vital == 0)  return;
+	for (int i = 0;  i < nn;  i++)
+	{
+		if ((Range[i].low < 0  &&  vital < Range[i].high)
+			|| (vital >= Range[i].low  &&  vital < Range[i].high)
+			|| (vital >= Range[i].low  &&  Range[i].high < 0))
+		{
+				D_addWarning(Range[i].warning);
+				break;
+		}
+	}
+};
+
+void validateVitalF(float vital, rangeF Range[], int nn)
+{
+	if (vital == 0.0)  return;
+	for (int i = 0;  i < nn;  i++)
+	{
+		if ((Range[i].low < 0.  &&  vital < Range[i].high)
+			|| (vital >= Range[i].low  &&  vital < Range[i].high)
+			|| (vital >= Range[i].low  &&  Range[i].high < 0.))
+		{
+				D_addWarning(Range[i].warning);
+				break;
+		}
+	}
+};
 
 /*
  * We examine the text of the vital signs we've received,
  *  extracting the numeric values, and then make sure
  *  none of the numeric values we have are outside 
  *  acceptable ranges.
- * Return true if we've added a warning.
  */
- bool vitalSigns(void)
+ void vitalSigns(void)
 {
-	bool retval = false;
-
 		// convert them
 	_VVS_p = vitalParse(_VS_p);
 	_VVS_r = vitalParse(_VS_r);
 	_VVS_sbp = vitalParse(_VS_sbp);
 	_VVS_dbp = vitalParse(_VS_dbp);
-	_VVS_t = vitalParseF(_VS_t);
-	if (_VVS_t > 70.0) // assume F, convert to C
-		_VVS_t = (_VVS_t - 32) * 5 / 9;
+	_VVS_t = vitalParseT(_VS_t);
 
-		// we're only going to write code for pulse
-		// this should be wrapped into an external routine
-	if (_VVS_p >= R_pulse[v_low] && _VVS_p < R_pulse[v_normal])
-	{
-		D_addWarning("Pulse low!");
-		retval = true;
-	} else if (_VVS_p >= R_pulse[v_high] && _VVS_p <= R_pulse[v_vhigh])
-	{
-		D_addWarning("Pulse high!");
-		retval = true;
-	} else if (_VVS_p > R_pulse[v_vhigh])
-	{
-		D_addWarning("Pulse very high!");
-		retval = true;
-	}
+		// validate the ranges
+	validateVital(_VVS_p, RR_pulse, n_pulse);
+	validateVital(_VVS_r, RR_resp, n_resp);
+	validateVital(_VVS_sbp, RR_sbp, n_sbp);
+	validateVital(_VVS_dbp, RR_dbp, n_dbp);
+	validateVitalF(_VVS_t, RR_temp, n_temp);
 
 #if 0
 	// add all the vital signs for debugging purposes
@@ -109,8 +189,6 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 		_VVS_p, _VVS_r, _VVS_t, _VVS_sbp, _VVS_dbp);
 	D_addWarning(foobar);
 #endif
-
-	return retval;
 }
 
  void D_removeWarningBox(void)
@@ -127,7 +205,7 @@ float R_temp[] = {32., 36., -1., 39., 43.};
 	 * if true, call S_generateWarn(), call SendMessage();
 	 * if false, unlink WARN_PATH
 	 */
-bool S_Validate(void)
+void S_Validate(void)
 {
 	bool warning = false;
 	char *badVS = NULL;
@@ -145,8 +223,7 @@ bool S_Validate(void)
 	D_clearWarnings();
 
 		// check the vital signs
-	if (vitalSigns())
-		warning = true;
+	vitalSigns();
 
 	/**********
 	*********  no longer checking completion of all exam elements
@@ -158,6 +235,8 @@ bool S_Validate(void)
 	}
 	***********/
 
+	S_generateWarn();
+#if 0
 	if (!warning)
 	{
 		_unlink(WARN_PATH);
@@ -167,4 +246,5 @@ bool S_Validate(void)
 		SendWinMsg(RAISE_WARNING);
 	}
 	return warning;
+#endif
 }

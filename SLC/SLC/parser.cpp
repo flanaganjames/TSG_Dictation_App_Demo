@@ -81,7 +81,7 @@ void clobberState(void)
 		// deleting: the unlink failure is benign
 	_unlink(WARN_PATH);
 		// clear the vital signs
-	_VS_p = _VS_r = _VS_t = _VS_sbp = _VS_dbp = NULL;
+	_VS_p = _VS_r = _VS_sbp = _VS_dbp = _VS_t = NULL;
 	_VVS_p = _VVS_r = _VVS_sbp = _VVS_dbp = 0;
 	_VVS_t = 0.0;
 }

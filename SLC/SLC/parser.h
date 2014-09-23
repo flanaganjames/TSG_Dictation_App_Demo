@@ -15,7 +15,7 @@ extern list<char *> _all_complete, _comp_req, _comp_rec;
 	// resource links
 extern list<char *> _links;
 	// vital signs -- one item per category
-extern char *_VS_p, *_VS_r, *_VS_t, *_VS_sbp, *_VS_dbp;
+extern char *_VS_p, *_VS_r, *_VS_sbp, *_VS_dbp, *_VS_t;
 	// vital sign values
 extern int _VVS_p, _VVS_r, _VVS_sbp, _VVS_dbp;
 extern float _VVS_t;

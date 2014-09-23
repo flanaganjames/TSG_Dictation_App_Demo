@@ -27,21 +27,21 @@ namespace EHRNarrative
         {
 
             // if selected, mark the background differently
-            if (this.Element.selected == "present")
+            if (this.Element.normal == "normal")
             {
-                e.Graphics.FillRectangle(Brushes.Yellow, e.Bounds);
+                e.Graphics.FillRectangle(Brushes.LightSteelBlue, e.Bounds);
             }
-            else if (this.Element.selected == "not present")
+            else if (this.Element.normal == "abnormal")
             {
-                e.Graphics.FillRectangle(Brushes.Red, e.Bounds);
+                e.Graphics.FillRectangle(Brushes.LightSalmon, e.Bounds);
             }
             else
             {
-                e.Graphics.FillRectangle(Brushes.White, e.Bounds);
+                e.Graphics.FillRectangle(SystemBrushes.Control, e.Bounds);
             }
 
             // draw some item separator
-            e.Graphics.DrawLine(Pens.DarkGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+            e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
 
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal,
@@ -84,11 +84,11 @@ namespace EHRNarrative
         public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
         {
 
-            e.Graphics.FillRectangle(Brushes.White, e.Bounds);
+            e.Graphics.FillRectangle(SystemBrushes.Control, e.Bounds);
             
 
             // draw some item separator
-            e.Graphics.DrawLine(Pens.DarkGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+            e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
 
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal,
@@ -123,8 +123,9 @@ namespace EHRNarrative
             InitializeComponent();
             this._fmt = new StringFormat();
             this._fmt.Alignment = StringAlignment.Near;
-            this._fmt.LineAlignment = StringAlignment.Near;
+            this._fmt.LineAlignment = StringAlignment.Center;
             this._font = new Font(this.Font, FontStyle.Bold);
+            this.Cursor = Cursors.Hand;
             SetOptions();
         }
 
@@ -147,8 +148,11 @@ namespace EHRNarrative
         {
             this.SelectionMode = System.Windows.Forms.SelectionMode.None;
             this.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-            this.ItemHeight = (int)this._font.GetHeight() + this.Margin.Vertical;
+            this.ItemHeight = Math.Max(30, (int)this._font.GetHeight() + this.Margin.Vertical);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(MouseSelectItem);
+
+            this.BackColor = SystemColors.Control;
+            this.BorderStyle = BorderStyle.None;
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)

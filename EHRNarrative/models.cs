@@ -122,7 +122,22 @@ namespace EHRNarrative
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
         public bool Is_present_normal { get; set; }
-        public bool Default_present { get; set; }
+        private bool _default_present;
+        public bool Default_present
+        {
+            get
+            {
+                return this._default_present;
+            }
+            set
+            {
+                if (value)
+                {
+                    this.selected = "present";
+                }
+                this._default_present = value;
+            }
+        }
         public string Present_text { get; set; }
         public string Not_present_text { get; set; }
 
@@ -160,12 +175,6 @@ namespace EHRNarrative
                 else
                     return "";
             }
-        }
-
-        public Element()
-        {
-            if (this.Default_present)
-                this.selected = "present";
         }
     }
 

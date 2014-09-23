@@ -44,7 +44,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.HealthRecordText.Location = new System.Drawing.Point(12, 12);
             this.HealthRecordText.Name = "HealthRecordText";
-            this.HealthRecordText.Size = new System.Drawing.Size(760, 538);
+            this.HealthRecordText.Size = new System.Drawing.Size(760, 525);
             this.HealthRecordText.TabIndex = 0;
             this.HealthRecordText.Text = "";
             this.HealthRecordText.KeyUp += new System.Windows.Forms.KeyEventHandler(this.HealthRecordText_KeyUp);
@@ -57,7 +57,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(67, 141);
+            this.button1.Location = new System.Drawing.Point(224, 543);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 1;
@@ -67,7 +67,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(67, 101);
+            this.textBox1.Location = new System.Drawing.Point(118, 543);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(100, 20);
             this.textBox1.TabIndex = 2;
@@ -75,7 +75,7 @@
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(67, 62);
+            this.textBox2.Location = new System.Drawing.Point(12, 543);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(100, 20);
             this.textBox2.TabIndex = 3;

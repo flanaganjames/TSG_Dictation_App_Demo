@@ -35,7 +35,7 @@ namespace EHRNarrative
 
             RenderElements(data);
         }
-        public void Show() {
+        new public void Show() {
             if (data == null)
                 return;
             else
@@ -90,7 +90,7 @@ namespace EHRNarrative
         private void RenderElements(Collection data) {
             int columnWidth = 200;
             int columnGutter = 20;
-            int itemHeight = 50;
+            int itemHeight = 35;
             int columns = data.dialog.GroupsForComplaint(data).Count();
 
             int rows;
@@ -99,11 +99,11 @@ namespace EHRNarrative
             else
                 rows = 2;
 
-            int columnsPerRow = columns / rows;
+            int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
 
-            this.Width = columnsPerRow * (columnWidth + columnGutter) + columnWidth;
+            this.Width = (columnsPerRow + 1) * (columnWidth + columnGutter);
             this.Height = 50 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight * rows;
-            //this.CenterToScreen();
+            this.CenterToScreen();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
@@ -122,6 +122,8 @@ namespace EHRNarrative
                     listbox.Items.Add(new EHRListBoxGroup());
                 listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 listbox.Top = 4 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                listbox.Width = columnWidth;
+                listbox.Height = listbox.Items.Count * listbox.ItemHeight;
                 this.Controls.Add(listbox);
 
             }
@@ -165,6 +167,7 @@ namespace EHRNarrative
         {
             Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
             ForeColor = System.Drawing.Color.DarkSlateGray;
+            Width = 200;
         }
     }
 

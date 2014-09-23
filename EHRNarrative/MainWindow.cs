@@ -139,7 +139,7 @@ namespace EHRNarrative
         public EHRNarrative()
         {
             InitializeComponent();
-            new ExamDialog("Physical Exam", "Chest pain over 40").Show();
+            //new ExamDialog("Physical Exam", "Chest pain over 40").Show();
 
             dashboardTimer.Stop();
 

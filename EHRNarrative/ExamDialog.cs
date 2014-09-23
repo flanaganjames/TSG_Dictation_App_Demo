@@ -15,10 +15,11 @@ namespace EHRNarrative
 {
     public partial class ExamDialog : Form
     {
+        Collection data;
+
         public ExamDialog(string dialog_name, string complaint_name)
         {
             InitializeComponent();
-            var data = new Collection();
             try
             {
                 data = LoadContent(dialog_name, complaint_name);
@@ -84,10 +85,40 @@ namespace EHRNarrative
             int columnGutter = 20;
             int itemHeight = 50;
             int columns = data.dialog.GroupsForComplaint(data).Count();
-            this.Width = columns * (columnWidth + columnGutter) + columnWidth;
-            this.Height = 50 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight;
-            
-            // print names
+
+            int rows;
+            if ((columns + 1) * (columnWidth + columnGutter) < System.Windows.Forms.Screen.GetWorkingArea(this).Width)
+                rows = 1;
+            else
+                rows = 2;
+
+            int columnsPerRow = columns / rows;
+
+            this.Width = columnsPerRow * (columnWidth + columnGutter) + columnWidth;
+            this.Height = 50 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight * rows;
+            //this.CenterToScreen();
+
+            foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
+            {
+                //draw headings
+                var heading = new GroupLabel();
+                heading.Text = item.group.Name;
+                heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
+                this.Controls.Add(heading);
+
+                //draw multiselects
+
+
+            }
+            //draw extra group column:
+            foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
+            {
+                AdditionalGroupsList.Items.Add(item.group.Name);
+            }
+                
+
+            // debug print names
             richTextBox1.Text += data.complaint.Id + "|" + data.complaint.Complaint_group_id + data.complaint.Name + "\n";
             richTextBox1.Text += "Number of groups: " + data.dialog.GroupsForComplaint(data).Count() + "\n";
             richTextBox1.Text += "Number of Additional groups: " + data.dialog.GroupsAdditional(data).Count() + "\n";
@@ -117,8 +148,38 @@ namespace EHRNarrative
             }
         }
 
+        private void InsertEHRText()
+        {
+            foreach (IEnumerable<Element> keywordGroup in data.elements
+                .Where(x => x.selected != null)
+                .OrderBy(x => x.Is_present_normal)
+                .GroupBy(x => x.EHR_keyword)
+                )
+            {
+                var keyword = keywordGroup.First().EHR_keyword;
+                var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
+            }
+        }
+        private void UpdateSLC()
+        {
+            //??
+        }
+
+        private void DoneButton_Click(object sender, EventArgs e)
+        {
+            InsertEHRText();
+            UpdateSLC();
+        }
+
 
     }
 
+    public partial class GroupLabel : Label {
+        public GroupLabel()
+        {
+            Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
+            ForeColor = System.Drawing.Color.DarkSlateGray;
+        }
+    }
 
 }

@@ -245,6 +245,60 @@ void S_parseStatus(void)
 			// log the command and the arguments
 			// in alphabetical order by enum of the command
 		switch (i) {
+		case add_t:
+			// this keyword comes from the MU, not the VB script,
+			// so ignore for the moment
+			break;
+		case assess_t:
+			addWords(_assess, s);
+			break;
+		case complaint_t:
+			// if it's a new complaint command, clobber the old one
+			// and start a new parsed tree
+			// ..... note that we ignore a second state,
+			//       but each new complaint resets and overrides
+			//       the existing one
+			clobberState();
+			_complaint.push_back(scopy(s));
+			break;
+		case data_t:
+			addWords(_all_complete, s);
+			break;
+		case delete_t:
+		case del_t:
+			// currently informational and ignored
+			break;
+		case diff_t:
+			if (_differential)
+				free(_differential);
+			_differential = (char *) malloc(strlen(s)+1);
+			strcpy(_differential, s);
+			break;
+		case end_t:
+		case end_tt:
+			S_finishStatus();
+			break;
+		case link_t:
+			convert_blanks(s);
+			addWords(_links, s);
+			break;
+		case rec_hpi_t:
+		case recc_hpi_t:
+			addWords(_rec_hpi, s);
+			break;
+		case rec_exam_t:
+		case recc_exam_t:
+			addWords(_rec_exam, s);
+			break;
+		case req_hpi_t:
+			addWords(_req_hpi, s);
+			break;
+		case req_exam_t:
+			addWords(_req_exam, s);
+			break;
+		case reset_t:
+			S_reset();
+			break;
 		case state_t:
 			// it's a new state:  assume a new complaint, too,
 			// but don't update the saved complaint name if
@@ -255,62 +309,6 @@ void S_parseStatus(void)
 			clobberState();
 			_complaint.push_back(scopy(s));
 			break;			
-		case complaint_t:
-			// if it's a new complaint command, clobber the old one
-			// and start a new parsed tree
-			// ..... note that we ignore a second state,
-			//       but each new complaint resets and overrides
-			//       the existing one
-			clobberState();
-			_complaint.push_back(scopy(s));
-			break;
-		case diff_t:
-			if (_differential)
-				free(_differential);
-			_differential = (char *) malloc(strlen(s)+1);
-			strcpy(_differential, s);
-			break;
-		case add_t:
-			// this keyword comes from the MU, not the VB script,
-			// so ignore for the moment
-			break;
-		case req_hpi_t:
-			addWords(_req_hpi, s);
-			break;
-		case req_exam_t:
-			addWords(_req_exam, s);
-			break;
-		case assess_t:
-			addWords(_assess, s);
-			break;
-		case rec_hpi_t:
-		case recc_hpi_t:
-			addWords(_rec_hpi, s);
-			break;
-		case rec_exam_t:
-		case recc_exam_t:
-			addWords(_rec_exam, s);
-			break;
-		//// case data_hpi_t:
-		//// case data_exam_t:
-		case data_t:
-			addWords(_all_complete, s);
-			break;
-		case link_t:
-			convert_blanks(s);
-			addWords(_links, s);
-			break;
-		case delete_t:
-		case del_t:
-			// currently informational and ignored
-			break;
-		case end_t:
-		case end_tt:
-			S_finishStatus();
-			break;
-		case reset_t:
-			S_reset();
-			break;
 		case vital_p_t:
 			_VS_p = scopy(s);
 			break;
@@ -328,8 +326,8 @@ void S_parseStatus(void)
 			break;
 		case validate_t:
 		case ignore_t:
-			// we parse, but now ignore validation and ignore requests
-			// we always do validation
+			// we now parse, but ignore, validation and ignore requests:
+			// we always do validation, not just when requested
 			break;
 		default:
 			break;

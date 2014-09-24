@@ -27,13 +27,14 @@ namespace EHRNarrative
         {
 
             // if selected, mark the background differently
-            if (this.Element.normal == "normal")
+            if (this.Element.selected == "present")
             {
-                e.Graphics.FillRectangle(Brushes.LightSteelBlue, e.Bounds);
+                e.Graphics.FillRectangle(Brushes.LightGoldenrodYellow, e.Bounds);
             }
-            else if (this.Element.normal == "abnormal")
+            else if (this.Element.selected == "not present")
             {
-                e.Graphics.FillRectangle(Brushes.LightSalmon, e.Bounds);
+                //e.Graphics.FillRectangle(Brushes.LightSalmon, e.Bounds);
+                e.Graphics.DrawLine(Pens.Black, e.Bounds.X, e.Bounds.Y + e.Bounds.Height, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
             }
             else
             {
@@ -152,6 +153,20 @@ namespace EHRNarrative
                     EHRListBoxItem listItem = (EHRListBoxItem)item;
                     if (listItem.Element.Is_present_normal)
                         listItem.Element.selected = "present";
+                    else
+                        listItem.Element.selected = "not present";
+                }
+            }
+            this.Refresh();
+        }
+        public void ClearAll()
+        {
+            foreach (var item in this.Items)
+            {
+                if (item is EHRListBoxItem)
+                {
+                    EHRListBoxItem listItem = (EHRListBoxItem)item;
+                    listItem.Element.selected = null;
                 }
             }
             this.Refresh();

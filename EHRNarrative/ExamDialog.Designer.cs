@@ -76,7 +76,7 @@
             this.AdditionalGroupsList.BackColor = System.Drawing.SystemColors.Control;
             this.AdditionalGroupsList.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.AdditionalGroupsList.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.AdditionalGroupsList.ForeColor = System.Drawing.Color.DarkSlateGray;
+            this.AdditionalGroupsList.ForeColor = System.Drawing.SystemColors.WindowFrame;
             this.AdditionalGroupsList.FormattingEnabled = true;
             this.AdditionalGroupsList.ItemHeight = 18;
             this.AdditionalGroupsList.Location = new System.Drawing.Point(7, 26);
@@ -88,6 +88,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
             this.label1.Location = new System.Drawing.Point(4, 4);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(129, 18);

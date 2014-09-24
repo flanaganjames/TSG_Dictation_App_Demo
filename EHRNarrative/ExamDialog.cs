@@ -131,6 +131,10 @@ namespace EHRNarrative
                 button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 this.Controls.Add(button);
+                var clearbutton = new ClearAllButton(listbox);
+                clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                this.Controls.Add(clearbutton);
 
             }
             //draw extra group column:
@@ -172,7 +176,7 @@ namespace EHRNarrative
         public GroupLabel()
         {
             Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
-            ForeColor = System.Drawing.Color.DarkSlateGray;
+            ForeColor = SystemColors.WindowFrame;
             Width = 200;
         }
     }
@@ -186,13 +190,32 @@ namespace EHRNarrative
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             ForeColor = SystemColors.Highlight;
-            TextAlign = ContentAlignment.MiddleLeft;
-            Width = 200;
+            TextAlign = ContentAlignment.BottomLeft;
+            Width = 100;
             Click += new System.EventHandler(this.SelectAll);
         }
         public void SelectAll(object sender, EventArgs e)
         {
             this._group.SelectAllNL();
+        }
+    }
+    public partial class ClearAllButton : Button
+    {
+        private EHRListBox _group;
+        public ClearAllButton(EHRListBox group)
+        {
+            _group = group;
+            Text = "Clear All";
+            FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            FlatAppearance.BorderSize = 0;
+            ForeColor = SystemColors.Highlight;
+            TextAlign = ContentAlignment.BottomLeft;
+            Width = 100;
+            Click += new System.EventHandler(this.ClearAll);
+        }
+        public void ClearAll(object sender, EventArgs e)
+        {
+            this._group.ClearAll();
         }
     }
 }

@@ -121,10 +121,16 @@ namespace EHRNarrative
                 if (item.group.ElementsAdditional(data).Count() > 0)
                     listbox.Items.Add(new EHRListBoxGroup());
                 listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                listbox.Top = 4 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 listbox.Width = columnWidth;
                 listbox.Height = listbox.Items.Count * listbox.ItemHeight;
                 this.Controls.Add(listbox);
+
+                //draw select alls
+                var button = new SelectAllButton(listbox);
+                button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                this.Controls.Add(button);
 
             }
             //draw extra group column:
@@ -170,5 +176,23 @@ namespace EHRNarrative
             Width = 200;
         }
     }
-
+    public partial class SelectAllButton : Button
+    {
+        private EHRListBox _group;
+        public SelectAllButton(EHRListBox group)
+        {
+            _group = group;
+            Text = "All Normal";
+            FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            FlatAppearance.BorderSize = 0;
+            ForeColor = SystemColors.Highlight;
+            TextAlign = ContentAlignment.MiddleLeft;
+            Width = 200;
+            Click += new System.EventHandler(this.SelectAll);
+        }
+        public void SelectAll(object sender, EventArgs e)
+        {
+            this._group.SelectAllNL();
+        }
+    }
 }

@@ -143,6 +143,19 @@ namespace EHRNarrative
                 this.Items.Add(new EHRListBoxGroup(group));
             }
         }
+        public void SelectAllNL()
+        {
+            foreach (var item in this.Items)
+            {
+                if (item is EHRListBoxItem)
+                {
+                    EHRListBoxItem listItem = (EHRListBoxItem)item;
+                    if (listItem.Element.Is_present_normal)
+                        listItem.Element.selected = "present";
+                }
+            }
+            this.Refresh();
+        }
 
         private void SetOptions()
         {

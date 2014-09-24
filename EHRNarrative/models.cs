@@ -90,6 +90,13 @@ namespace EHRNarrative
         {
             return this.ElementsForComplaint(data).Count() + this.Subgroups(data).Count() + (this.ElementsAdditional(data).Any() ? 1 : 0);
         }
+        public void SetAllNormal(Collection data)
+        {
+            foreach (Element element in this.ElementsForComplaint(data))
+            {
+                element.selected = element.Is_present_normal ? "present" : "not present";
+            }
+        }
     }
     public class Subgroup
     {

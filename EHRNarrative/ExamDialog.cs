@@ -16,10 +16,12 @@ namespace EHRNarrative
     public partial class ExamDialog : Form
     {
         Collection data;
+        EHRNarrative narrative_window;
 
-        public ExamDialog(string dialog_name, string complaint_name)
+        public ExamDialog(EHRNarrative parent, string dialog_name, string complaint_name)
         {
             InitializeComponent();
+            narrative_window = parent;
             try
             {
                 data = LoadContent(dialog_name, complaint_name);
@@ -155,6 +157,7 @@ namespace EHRNarrative
             {
                 var keyword = keywordGroup.First().EHR_keyword;
                 var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
+                narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
             }
         }
         private void UpdateSLC()

@@ -152,6 +152,18 @@ namespace EHRNarrative
             HealthRecordText.TextChanged += hrTextChanged;
         }
 
+        public void ReplaceKeyword(String commandStr)
+        {
+            this.HealthRecordText.TextChanged -= hrTextChanged;
+
+            string command_str = "";
+            ParseReplaceCommand(ref command_str, commandStr.Trim());
+
+            NotifySLC(command_str);
+
+            this.HealthRecordText.TextChanged += hrTextChanged;
+        }
+
         private void ParseVBACommand(String commandStr)
         {
             this.HealthRecordText.TextChanged -= hrTextChanged;
@@ -516,7 +528,7 @@ namespace EHRNarrative
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var dialog = new ExamDialog(textBox2.Text, textBox1.Text);
+            var dialog = new ExamDialog(this, textBox2.Text, textBox1.Text);
             dialog.Show();
         }
     }

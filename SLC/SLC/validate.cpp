@@ -226,6 +226,18 @@ void S_Validate(void)
 		// clear previous warnings, if any
 	D_clearWarnings();
 
+		// special case for TAD Risk
+	list<char *>::iterator i;
+	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
+	{
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0
+			|| _strnicmp(*i, "TAD risk factors", strlen(*i)) == 0)
+		{
+			D_addWarning("Check TAD Risk!");
+			break;
+		}
+	}
+
 		// check the vital signs
 	vitalSigns();
 

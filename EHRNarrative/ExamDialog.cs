@@ -104,7 +104,7 @@ namespace EHRNarrative
             int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
 
             this.Width = (columnsPerRow + 1) * (columnWidth + columnGutter);
-            this.Height = 50 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight * rows;
+            this.Height = 100 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight * rows;
             this.CenterToScreen();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))

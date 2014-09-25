@@ -22,6 +22,7 @@ list<char *> _rec_hpi, _rec_exam;
 list<char *> _all_complete, _comp_req, _comp_rec;
 	// billing lists
 list<char *> _bill_hpi, _bill_ros, _bill_pfsh, _bill_exam;
+int _max_exam_level = 0;
 	// resource links
 list<char *> _links;
 	// vital signs -- one item per category
@@ -72,6 +73,9 @@ char *qualifier_names[] = {
 };
 const int qualifier_count = (sizeof(qualifier_names)/sizeof(qualifier_names[0]));
 
+	// forward declaration
+void addwords(list<char *> &, char *);
+
 
 // ********************************************************
 
@@ -88,6 +92,12 @@ void clobberState(void)
 	_comp_req.clear();
 	_comp_rec.clear();
 	_bill_hpi.clear();
+	//  this outlines a general way of knowing the hpi billing criteria, 
+	//    but we'll hardcode in S_sortStatus()
+	// _bill_hpi_base.clear();
+	// addwords(_bill_hpi_base, "location, current severity, onset");
+	// addwords(_bill_hpi_base, "quality, duration, context");
+	// addwords(_bill_hpi_base, "relievers, associated symptoms");
 	_bill_ros.clear();
 	_bill_pfsh.clear();
 	_bill_exam.clear();
@@ -119,6 +129,7 @@ char *scopy(const char *s)
 	strncpy(t, s, strlen(s)+1);
 	return t;
 }
+
 
 
 	// is the given string in the list?
@@ -197,7 +208,8 @@ void addWords(list<char *> &in, char *add)
 
 void addDataQual(char *t)
 {
-	int i;
+	int i, n;
+	int count = 0;
 	char *s = t;
 	for (i = 0;  i < qualifier_count; i++ )
 	{
@@ -211,9 +223,14 @@ void addDataQual(char *t)
 	if (s == t)
 		return;  // unrecognized qualifier: ignore
 
+		// find a count, if we've got one
+	if ((n = strcspn(t, "0123456789")) > 0)
+		count = atoi(t+n);
+
 	switch(i) {
 	case ros_t:
 	case ros2_t:
+		_max_exam_level = __max(count, _max_exam_level);
 		addWords(_bill_ros, s);
 		break;
 	case pfsh_t:
@@ -420,6 +437,53 @@ void printlist(char *title, list<char *> L)
 }
 #endif
 
+	// list of the HPI elements we count for billing
+char *HPI_bill_list[] = {
+	"modifiers", "severity",
+	"location", "onset", "quality",
+	"duration", "context", "associated symptoms",
+};
+char *HPI_bill_aliases[] = {
+	"relievers", "modifiers",
+	"aggravators", "modifiers",
+	"maximum severity", "severity",
+	"current severity", "severity",
+};
+const int n_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
+const int n_hpi_billing = sizeof(HPI_bill_list) / sizeof(HPI_bill_list[0]);
+
+void sortHPIBilling(char *s)
+{
+	list<char *>::iterator ii;
+	int j;
+	char *t = s;
+		// we have some elements that need to count only once,
+		// so we set the element name to an alias to store in 
+		// the billing list
+	for (j = 0;  j < n_aliases;  j++)
+	{
+		if (_strnicmp(t, HPI_bill_aliases[j*2], strlen(t)) == 0)
+		{
+			t = HPI_bill_aliases[j*2+1];
+			break;
+		}
+	}
+
+		// is it a word we might need to add to the billing list
+	for (j = 0;  j < n_hpi_billing;  j++)
+	{
+		if(_strnicmp(t, HPI_bill_list[j], strlen(t)) == 0)
+			break;
+	}
+	if (j == n_hpi_billing)
+		return;
+
+		// now see if the word needs to be added to the list
+	if ((ii = findword(_bill_hpi, t)) == _bill_hpi.end())
+	{
+		_bill_hpi.push_back(scopy(t));
+	}
+}
 
 
 void S_sortStatus(void)
@@ -467,6 +531,7 @@ void S_sortStatus(void)
 			_rec_exam.erase(ii);
 			_comp_rec.push_front(scopy(s));
 		}
+		sortHPIBilling(s);
 	}
 }
 

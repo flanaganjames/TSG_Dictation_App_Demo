@@ -14,7 +14,7 @@ The main entry point is S_generatedash.
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
 const int T_inch = 72 * 20;		// 1 inch in twips
-const int T_billingtab = 72 * 20 * 3 / 4;  // .75 inches
+const int T_billingtab = 72 * 20 * 5 / 10;  // .5 inches
 const int T_space = 5 * 20;  // 5pt space in twips
 	// point sizes of various elements (in half points)
 const int ps_def = 11*2;
@@ -306,64 +306,166 @@ void D_backgroundColor(int r, int g, int b)
 void D_billingElement(char *head, int count, char *score)
 {
 	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
-		T_billingtab, T_inch, T_inch+5*T_space);
-	fprintf(outf, "\\fs%d\\cf%d { }%s\\tab %d\\tab %s\\par}\n",
-		ps_billing, c_billing, head, count, score);
+		T_billingtab, T_inch+T_space, T_inch+3*T_space);
+	fprintf(outf, "\\fs%d\\cf%d { }%s\\tab %d %s\\tab %s\\par}\n",
+		ps_billing, c_billing, head, 
+		count, (count == 1) ? "item" : "items", score);
 }
 
-void D_billingSummary(char *head, char *score)
+void D_billingSummary(char *head, int score)
 {
-	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
-		T_billingtab, T_inch, T_inch+5*T_space);
-	fprintf(outf, "\\fs%d\\cf%d {   }%s\\tab %s\\par}\n",
+	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
+		T_billingtab, T_width-3*T_space, T_width);
+	fprintf(outf, "\\b\\fs%d\\cf%d {   }%s\\tab %d\\par}\n",
 		ps_billing, c_billing, head, score);
 }
 
-	// these new couple give us the text descriptions of the
-	// various scores -- we could have set these up in tables
+	// these next couple handle the scores in the various categories
+	// -- we could have set these up in tables
 	// like the vital sign validation, but this is more maleable
 	// as we hone the algorithms
-char *score_HPI(int count)
+		// naming conventions:
+		//   score_XX -- the function to generate the score
+		//   XX_t -- the enum for the score names, which are XX_name
+		//   XX_score -- the value of the score recorded in D_billingScore
+		//   but see D_billingScore(), below, for more
+enum HPI_t { HPI_none, HPI_BRF, HPI_EXT };
+char *score_HPI(int count, int *score)
 {
 	if (count == 0)
+	{
+		*score = HPI_none;
 		return "None";
+	}
 	if (count <= 3)
+	{
+		*score = HPI_BRF;
 		return "Brief (1-3)";
+	}
+	*score = HPI_EXT;
 	return "Extended (>3)";
 }
 
-char *score_ROS(int count)
+enum ROS_t { ROS_none, ROS_PP, ROS_EXT, ROS_COM };
+char *score_ROS(int count, int *score)
 {
 	if (count == 0)
+	{
+		*score = ROS_none;
 		return "None";
+	}
 	if (count == 1)
+	{
+		*score = ROS_PP;
 		return "Problem Pertinent (1)";
+	}
 	if (count <= 9)
+	{
+		*score = ROS_EXT;
 		return "Extended (2-9)";
+	}
+	*score = ROS_COM;
 	return "Complete (>9)";
 }
 
-char *score_PFSH(int count)
+enum PFSH_t { PFSH_none, PFSH_PP, PFSH_COM };
+char *score_PFSH(int count, int *score)
 {
 	if (count == 0)
+	{
+		*score = 0;
 		return "None";
+	}
 	if (count == 1)
+	{
+		*score = 1;
 		return "Problem Pertinent (1)";
+	}
+	*score = 2;
 	return "Complete (>1)";
 }
 
+enum EX_t { EX_none, EX_PF, EX_EPF, EX_DET, EX_COM };
+char *score_exam(int count, int *score)
+{
+	if (count == 0)
+	{
+		*score = EX_none;
+		return "None";
+	}
+	if (count == 1)
+	{
+		*score = EX_PF;
+		return "Problem Focussed (1)";
+	}
+#if 0
+			// this next should pivot on whether
+			// the exam is cursory or detailed
+			// we assume detailed for the moment
+	{
+		*score = EX_EPF;
+		return "Extended Problem Focused (2-7)";
+	}
+#endif
+	if (count <= 7)
+	{
+		*score = EX_DET;
+		return "Detailed (2-7)";
+	}
+	*score = EX_COM;
+	return "Complete (>7)";
+}
+
+enum HX_t { HX_none, HX_PF, HX_EPF, HX_DET, HX_COM };
+char *score_HX(int HPI_score, int ROS_count, int PFSH_count, int *hx_total)
+{
+	if (HPI_score >= HPI_EXT && ROS_count >= ROS_COM && PFSH_count >= PFSH_COM)
+	{
+		*hx_total = HX_COM;
+		return "Comprehensive";
+	}
+	if (HPI_score >= HPI_EXT && ROS_count >= ROS_EXT && PFSH_count >= PFSH_PP)
+	{
+		*hx_total = HX_DET;
+		return "Detailed";
+	}
+	if (HPI_score >= HPI_BRF && ROS_count >= ROS_PP && PFSH_count >= PFSH_none)
+	{
+		*hx_total = HX_EPF;
+		return "Ext Problem Focused";
+	}
+	if (HPI_score >= HPI_BRF && ROS_count >= ROS_none && PFSH_count >= PFSH_none)
+	{
+		*hx_total = HX_PF;
+		return "Problem Focused";
+	}
+	*hx_total = HX_none;
+	return "None";
+}
+
+
+
 void D_billingScore(void)
 {
+	int HPI_score, ROS_score, PFSH_score, EX_score;
+	int HPI_count = _bill_hpi.size();
+	int ROS_count = _bill_ros.size();
+	int PFSH_count = _bill_pfsh.size();
+	int hx_total;
+		// yeah, that's confusing: the routine to determine the
+		// score is verb_noun, but the score variable is noun_noun
+		// and the element count is XX_count, but the billing score
+		// is XX_score
 	D_heading("Billing Advice", c_heading);
-		// HPI score is a count of HPI elements completed
-	int HPI = _req_hpi.size();
-	D_billingElement("HPI", HPI, score_HPI(HPI));
-	int ROS = _bill_ros.size();
-	D_billingElement("ROS", ROS, score_ROS(ROS));
-	int PFSH = _bill_pfsh.size();
-	D_billingElement("PFSH", PFSH, score_PFSH(PFSH));
-	D_billingSummary("History total", "placeholder");
-	D_billingElement("Exam", 1, "placeholder");
+	D_vertspace(5);
+	D_billingElement("HPI", HPI_count, score_HPI(HPI_count, &HPI_score));
+	D_billingElement("ROS", ROS_count, score_ROS(ROS_count, &ROS_score));
+	D_billingElement("PFSH", PFSH_count, score_PFSH(PFSH_count, &PFSH_score));
+	char *hx_level = score_HX(HPI_score, ROS_score, PFSH_score, &hx_total);
+	D_billingSummary("History total", hx_total);
+	D_billingElement("Exam", _max_exam_level, 
+		score_exam(_max_exam_level, &EX_score));
+	D_billingSummary("Maximum billing level", __min(hx_total, EX_score));
 }
 
 
@@ -463,6 +565,11 @@ void S_generateDash(void)
 	S_Validate();
 }
 
+
+/******************************************************************************
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
 	/*
 	 * the next clump are the utilities to generate the

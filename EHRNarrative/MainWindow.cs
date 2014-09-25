@@ -302,7 +302,7 @@ namespace EHRNarrative
             return command_str;
         }
 
-        private void NotifySLC(string command_str)
+        public void NotifySLC(string command_str)
         {
             if (command_str != "")
             {

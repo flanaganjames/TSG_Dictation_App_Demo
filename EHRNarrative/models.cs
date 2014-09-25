@@ -72,6 +72,15 @@ namespace EHRNarrative
         {
             return data.elements.Where(x => x.Group_id == this.Id);
         }
+        public IEnumerable<Element> AllElements(Collection data)
+        {
+            IEnumerable<Element> elements = data.elements.Where(x => x.Group_id == this.Id);
+            foreach (Subgroup subgroup in this.Subgroups(data))
+            {
+                elements = elements.Union(subgroup.Elements(data));
+            }
+            return elements;
+        }
 
         public bool All_complaints { get; set; }
 
@@ -89,6 +98,10 @@ namespace EHRNarrative
         public int ItemCount(Collection data)
         {
             return this.ElementsForComplaint(data).Count() + this.Subgroups(data).Count() + (this.ElementsAdditional(data).Any() ? 1 : 0);
+        }
+        public int SelectedItemCount(Collection data)
+        {
+            return this.AllElements(data).Where(x => x.selected != null).Count();
         }
         public void SetAllNormal(Collection data)
         {

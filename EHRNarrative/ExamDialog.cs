@@ -162,7 +162,12 @@ namespace EHRNarrative
         }
         private void UpdateSLC()
         {
-            //??
+            List<String> groupData = new List<String>();
+            foreach (Group group in data.groups.Where(x => x.SelectedItemCount(data) > 0))
+            {
+                groupData.Add("dataqual " + data.dialog.Name + " " + group.Name + " " + group.SelectedItemCount(data).ToString());
+            }
+            narrative_window.NotifySLC(String.Join(" ! ", groupData));
         }
 
         private void DoneButton_Click(object sender, EventArgs e)

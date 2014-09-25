@@ -139,6 +139,7 @@ namespace EHRNarrative
         public EHRNarrative()
         {
             InitializeComponent();
+            //new ExamDialog("Physical Exam", "Chest pain over 40").Show();
 
             dashboardTimer.Stop();
 
@@ -149,6 +150,18 @@ namespace EHRNarrative
             ParseLabels();
 
             HealthRecordText.TextChanged += hrTextChanged;
+        }
+
+        public void ReplaceKeyword(String commandStr)
+        {
+            this.HealthRecordText.TextChanged -= hrTextChanged;
+
+            string command_str = "";
+            ParseReplaceCommand(ref command_str, commandStr.Trim());
+
+            NotifySLC(command_str);
+
+            this.HealthRecordText.TextChanged += hrTextChanged;
         }
 
         private void ParseVBACommand(String commandStr)
@@ -289,7 +302,7 @@ namespace EHRNarrative
             return command_str;
         }
 
-        private void NotifySLC(string command_str)
+        public void NotifySLC(string command_str)
         {
             if (command_str != "")
             {
@@ -511,6 +524,12 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var dialog = new ExamDialog(this, textBox2.Text, textBox1.Text);
+            dialog.Show();
         }
     }
 }

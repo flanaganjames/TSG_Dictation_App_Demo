@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 #include "sullivan.h"
 #include "parser.h"
@@ -19,6 +20,8 @@ list<char *> _req_hpi, _req_exam, _assess;
 list<char *> _rec_hpi, _rec_exam;
 	// items completed
 list<char *> _all_complete, _comp_req, _comp_rec;
+	// billing lists
+list<char *> _bill_hpi, _bill_ros, _bill_pfsh, _bill_exam;
 	// resource links
 list<char *> _links;
 	// vital signs -- one item per category
@@ -43,21 +46,31 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	req_hpi_t, req_exam_t, assess_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
 	//// data_hpi_t, data_exam_t, // unused - should be removed
-	data_t, link_t, delete_t, del_t,
+	data_t, dataqual_t,
+	bill_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t, 
 	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
 	validate_t, ignore_t,
 	unknown_t};
-char *commands_names[] = { "complaint", "state", "diff", "add",
+char *command_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	//// "data hpi", "data exam", // unused - should be removed
-	"data", "link", "delete", "del",
+	"data", "dataqual",
+	"bill", "link", "delete", "del",
 	"end", "end_of_script",	"reset",
 	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
 	"validate", "ignore",
 };
-const int command_count = (sizeof(commands_names)/sizeof(commands_names[0]));
+const int command_count = (sizeof(command_names)/sizeof(command_names[0]));
+
+enum qualifiers_t {
+	ros_t = 0, ros2_t, pfsh_t, exam_t,
+};
+char *qualifier_names[] = {
+	"review of systems", "ros", "pfsh", "exam",
+};
+const int qualifier_count = (sizeof(qualifier_names)/sizeof(qualifier_names[0]));
 
 
 // ********************************************************
@@ -74,6 +87,10 @@ void clobberState(void)
 	_all_complete.clear();
 	_comp_req.clear();
 	_comp_rec.clear();
+	_bill_hpi.clear();
+	_bill_ros.clear();
+	_bill_pfsh.clear();
+	_bill_exam.clear();
 	_links.clear();
 	free(_differential);
 	_differential = NULL;
@@ -128,11 +145,12 @@ void addWords(list<char *> &in, char *add)
 		// we need to strip the decorations
 		// do this in a quick-and-dirty way by copying
 		// the input string
+		// also ignore digits -- we don't want counts from the ROS reporting
 	char *ss = (char *) malloc(strlen(add)+1);
 	s = ss;
 	for (char *p = add;  p && *p;  p++)
 	{
-		if (*p != '['  &&  *p != ']'  &&  *p != '*')
+		if (*p != '['  &&  *p != ']'  &&  *p != '*' &&  !isdigit(*p))
 			*s++ = *p;
 	}
 	*s = 0;
@@ -158,6 +176,11 @@ void addWords(list<char *> &in, char *add)
 		}
 		else
 			l = strlen(s);
+
+			// peel off the trailing blanks
+		char *q = s + l - 1;
+		while (*q == ' ')
+			*q-- = '\0';
 		
 			// add if it's not a duplicate
 		if (findword(in, s) == in.end())
@@ -169,6 +192,37 @@ void addWords(list<char *> &in, char *add)
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
 	}
 	free(ss);
+}
+
+
+void addDataQual(char *t)
+{
+	int i;
+	char *s = t;
+	for (i = 0;  i < qualifier_count; i++ )
+	{
+		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0)
+		{
+			s += strlen(qualifier_names[i]); // skip the qualifier text
+			s += strspn(s, " ");  // skip the blanks after qualifier
+			break;
+		}
+	}
+	if (s == t)
+		return;  // unrecognized qualifier: ignore
+
+	switch(i) {
+	case ros_t:
+	case ros2_t:
+		addWords(_bill_ros, s);
+		break;
+	case pfsh_t:
+		addWords(_bill_pfsh, s);
+		break;
+	case exam_t:
+		addWords(_bill_exam, s);
+		break;
+	};
 }
 
 
@@ -192,6 +246,15 @@ void convert_blanks(char *s)
 bool no_complaint(void)
 {
 	return _complaint.empty();
+}
+
+
+	// return the length of the command part of the line
+	// (allows us to check if we've only got the subword
+	//  at the beginning of the command -- e.g., data vs dataqual)
+bool lengthOfCommand(char *s, size_t n)
+{
+	return (s[n] == '\0' || s[n] == ' ');
 }
 
 void S_parseStatus(void)
@@ -226,9 +289,10 @@ void S_parseStatus(void)
 			// recognize the command part of the line
 		for (i = 0;  i < command_count; i++ )
 		{
-			if (_strnicmp(s, commands_names[i], strlen(commands_names[i])) == 0)
+			if (_strnicmp(s, command_names[i], strlen(command_names[i])) == 0
+				&& lengthOfCommand(s, strlen(command_names[i])))
 			{
-				s += strlen(commands_names[i]); // skip the command
+				s += strlen(command_names[i]); // skip the command
 				s += strspn(s, " ");  // skip the blanks after command
 				break;
 			}
@@ -252,6 +316,8 @@ void S_parseStatus(void)
 		case assess_t:
 			addWords(_assess, s);
 			break;
+		case bill_t:
+			break;
 		case complaint_t:
 			// if it's a new complaint command, clobber the old one
 			// and start a new parsed tree
@@ -263,6 +329,10 @@ void S_parseStatus(void)
 			break;
 		case data_t:
 			addWords(_all_complete, s);
+			break;
+		case dataqual_t:
+			// for dataqual, we have to further parse the qualifier
+			addDataQual(s);
 			break;
 		case delete_t:
 		case del_t:

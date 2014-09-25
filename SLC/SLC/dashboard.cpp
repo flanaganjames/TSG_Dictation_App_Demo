@@ -13,12 +13,16 @@ The main entry point is S_generatedash.
 #include "icons.h"
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
+const int T_inch = 72 * 20;		// 1 inch in twips
+const int T_billingtab = 72 * 20 * 3 / 4;  // .75 inches
 const int T_space = 5 * 20;  // 5pt space in twips
 	// point sizes of various elements (in half points)
 const int ps_def = 11*2;
 const int ps_title = 11*2;
 const int ps_exam = 8*2;
+const int ps_billing = 8*2;
 const int ps_heading = 11*2;
+const int ps_subheading = 9*2+1;
 const int ps_link = 10*2;
 const int ps_warning = 12*2;
 
@@ -31,7 +35,9 @@ enum colors_t {
 	c_ignore = 0, c_black=1, c_white, c_gray, 
 	c_hyperlink, c_highlight_req, c_highlight_comp, 
 	c_foreground_req, c_foreground_comp, c_background,
-	c_sepbar_a, c_sepbar_b, c_heading, c_warning,
+	c_sepbar_a, c_sepbar_b, c_heading, c_subheading,
+	c_billing,
+	c_warning,
 	/*
 		IMPORTANT: These next two colors need to always
 		end the enumeration.  c_bar_inc is the gray
@@ -49,8 +55,12 @@ int rgb_colors[][3] = {
 		// c_hyperlink, c_highlight_req, c_highlight_comp
 	{0,0,0}, {160, 160, 160}, {241,217,198},
 		// c_foreground_req, c_foreground_comp, c_background
-	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {255,0,0},
-		// sepbar_a, sepbar_b, heading, warning
+	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {160,160,160},
+		// sepbar_a, sepbar_b, heading, subheading
+	{0,0,0},
+		// billing_element,
+	{255,0,0},
+		// warning foreground
 };
 int bar_colors[][3] = {
 	// now the list of the colors for the progress bar
@@ -154,6 +164,13 @@ void D_heading(char *head, int color)
 	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b %s}\\par\n", 
 		ps_heading, color, head);
 }
+
+void D_subheading(char *head, int color)
+{
+	fprintf(outf, "{\\pard\\s0{  }\\fs%d\\cf%d\\b %s}\\par\n", 
+		ps_subheading, color, head);
+}
+
 
 void D_line(void)
 {
@@ -272,10 +289,95 @@ void D_backgroundColor(int r, int g, int b)
 	fprintf(outf, "{\\sp{\\sn bWMode}{\\sv 9}}");
 	fprintf(outf, "{\\sp{\\sn fBackground}{\\sv 1}}");
 	fprintf(outf, "{\\sp{\\sn fLayoutInCell}{\\sv 1}}}}}\n");
+}
 
+/******************************************************************************
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
+
+	/*
+	 * these next few functions generate the billing data on the dashboard
+	 *  (strictly, this should be a separate module, but
+	 *   we need a lot of the dashboard data, so having it
+	 *   local to the other dashboard functions makes sense
+	 *   for the moment)
+	 */
+void D_billingElement(char *head, int count, char *score)
+{
+	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
+		T_billingtab, T_inch, T_inch+5*T_space);
+	fprintf(outf, "\\fs%d\\cf%d { }%s\\tab %d\\tab %s\\par}\n",
+		ps_billing, c_billing, head, count, score);
+}
+
+void D_billingSummary(char *head, char *score)
+{
+	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
+		T_billingtab, T_inch, T_inch+5*T_space);
+	fprintf(outf, "\\fs%d\\cf%d {   }%s\\tab %s\\par}\n",
+		ps_billing, c_billing, head, score);
+}
+
+	// these new couple give us the text descriptions of the
+	// various scores -- we could have set these up in tables
+	// like the vital sign validation, but this is more maleable
+	// as we hone the algorithms
+char *score_HPI(int count)
+{
+	if (count == 0)
+		return "None";
+	if (count <= 3)
+		return "Brief (1-3)";
+	return "Extended (>3)";
+}
+
+char *score_ROS(int count)
+{
+	if (count == 0)
+		return "None";
+	if (count == 1)
+		return "Problem Pertinent (1)";
+	if (count <= 9)
+		return "Extended (2-9)";
+	return "Complete (>9)";
+}
+
+char *score_PFSH(int count)
+{
+	if (count == 0)
+		return "None";
+	if (count == 1)
+		return "Problem Pertinent (1)";
+	return "Complete (>1)";
+}
+
+void D_billingScore(void)
+{
+	D_heading("Billing Advice", c_heading);
+		// HPI score is a count of HPI elements completed
+	int HPI = _req_hpi.size();
+	D_billingElement("HPI", HPI, score_HPI(HPI));
+	int ROS = _bill_ros.size();
+	D_billingElement("ROS", ROS, score_ROS(ROS));
+	int PFSH = _bill_pfsh.size();
+	D_billingElement("PFSH", PFSH, score_PFSH(PFSH));
+	D_billingSummary("History total", "placeholder");
+	D_billingElement("Exam", 1, "placeholder");
 }
 
 
+
+/******************************************************************************
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
+
+	/********************************************************************/
+	/*
+	 * this is the parent routine for generating the dashboard,
+	 *  calling all the utilities above named D_xxx
+	 */
 void S_generateDash(void)
 {
 	S_sortStatus();
@@ -349,7 +451,7 @@ void S_generateDash(void)
 #endif
 	}
 
-	// D_testColorBars();
+	D_billingScore();
 
 		// finish
 	D_epilog();
@@ -417,7 +519,7 @@ void D_warning_icons(void)
 }
 
 	// now produce the warning box if we have any warnings in the list
-void S_generateWarn(void)
+void S_generateWarnBox(void)
 {
 		// we've got nothing to say
 	if (_warnings.empty())
@@ -437,6 +539,9 @@ void S_generateWarn(void)
 		exit(1);
 	}
 	D_prolog();
+		// we add a background color, even though the DotNet
+		// RTF control doesn't honor it, and the background
+		// color must be supplied by the dashboard program
 	D_backgroundColor(0,255,255);
 	D_warning_icons();
 	D_vertspace(10);

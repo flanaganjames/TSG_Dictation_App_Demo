@@ -183,6 +183,12 @@ void validateVitalF(float vital, rangeF Range[], int nn)
 	validateVitalF(_VVS_t, RR_temp, n_temp);
 
 #if 0
+		// Easter Egg for Sean
+	if (_VVS_p == 115  &&  _VVS_r == 25)
+		D_addWarning("Go Bears!!");
+#endif
+
+#if 0
 	// add all the vital signs for debugging purposes
 	char foobar[200];
 	_snprintf(foobar, 200, "vital signs are p %d, r %d, t %.1f, bp %d/%d",
@@ -198,12 +204,10 @@ void validateVitalF(float vital, rangeF Range[], int nn)
 
  
 	/*
-	 * this is the controlling routine for validation
-	 *
-	 * The flow in the full routine will be: 
-	 * check for warning,
-	 * if true, call S_generateWarn(), call SendMessage();
-	 * if false, unlink WARN_PATH
+	 * this is the controlling routine for validation:
+	 *  we validate the vital signs and exams, and then
+	 *  go to the routine to generate the warning box
+	 *  which only produces a warning box if it's needed
 	 */
 void S_Validate(void)
 {
@@ -235,14 +239,14 @@ void S_Validate(void)
 	}
 	***********/
 
-	S_generateWarn();
+	S_generateWarnBox();
 #if 0
 	if (!warning)
 	{
 		_unlink(WARN_PATH);
 		SendWinMsg(LOWER_WARNING);
 	} else {
-		S_generateWarn();
+		S_generateWarnBox();
 		SendWinMsg(RAISE_WARNING);
 	}
 	return warning;

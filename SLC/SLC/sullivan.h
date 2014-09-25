@@ -16,7 +16,7 @@ void S_generateDash(void);
 void S_reset(void);
 bool no_complaint(void);
 void S_Validate(void);
-void S_generateWarn(void);
+void S_generateWarnBox(void);
 
 // globals in the SLC
 extern FILE *status_file;

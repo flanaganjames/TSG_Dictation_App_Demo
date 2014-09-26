@@ -24,7 +24,7 @@ namespace EHRNarrative
         public struct COPYDATASTRUCT
         {
             //ULONG_PTR The data to be passed to the receiving application
-            public int dwData;
+            public ulong dwData;
             //DWORD The size, in bytes, of the data pointed to by the lpData member
             public int cbData;
             //PVOID (void pointer) The data to be passed to the receiving application. This member can be NULL

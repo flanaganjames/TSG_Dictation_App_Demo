@@ -57,6 +57,7 @@ namespace EHRNarrative
         private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
+        private string complaint;
 
         #region Window Messaging Helpers
         public void bringAppToFront(int hWnd)
@@ -139,7 +140,6 @@ namespace EHRNarrative
         public EHRNarrative()
         {
             InitializeComponent();
-            //new ExamDialog("Physical Exam", "Chest pain over 40").Show();
 
             dashboardTimer.Stop();
 
@@ -185,7 +185,12 @@ namespace EHRNarrative
                         break;
                     case "LOAD_TEMPLATE":
                         char[] separator = new char[] { ' ' };
-                        LoadTemplate(command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1]);
+                        this.complaint = command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+                        LoadTemplate(complaint);
+                        break;
+                    case "DIALOG":
+                        var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+                        new ExamDialog(this, dialogName, this.complaint).Show();
                         break;
                     default:
                         ParseReplaceCommand(ref command_str, command);
@@ -530,6 +535,12 @@ namespace EHRNarrative
         {
             var dialog = new ExamDialog(this, textBox2.Text, textBox1.Text);
             dialog.Show();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            ParseVBACommand("LOAD_TEMPLATE Chest pain over 40");
+            ParseVBACommand("DIALOG Review of systems");
         }
     }
 }

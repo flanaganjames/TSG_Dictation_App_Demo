@@ -31,6 +31,12 @@ namespace EHRNarrative
                 MessageBox.Show("Not a valid dialog name or complaint");
                 data = null;
                 return;
+            } 
+            catch (BadImageFormatException) 
+            {
+                MessageBox.Show("Missing file: dialog_content.sqlite3");
+                data = null;
+                return;
             }
 
             this.Text = data.dialog.Name;

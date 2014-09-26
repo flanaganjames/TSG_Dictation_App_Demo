@@ -58,7 +58,7 @@ namespace Dashboard
             dash = new WindowsFormsApplication1.Form1(); // dash = new Form();
             dash.Size = dsize;
             // dash.Visible = true; //  this appears to steal focus
-            dash.Text = "TSG Dashboard";
+            dash.Text = "The Sullivan Group dashboard";
                 // the dashboard RTF control
             dashrtf = new RichTextBox();
             dashrtf.Size = dsize;

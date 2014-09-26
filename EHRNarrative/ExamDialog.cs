@@ -124,6 +124,7 @@ namespace EHRNarrative
 
                 //draw multiselects
                 var listbox = new EHRListBox();
+                item.group.SetAllDefaults(data);
                 listbox.AddElements(item.group.ElementsForComplaint(data));
                 listbox.AddGroups(item.group.Subgroups(data));
                 if (item.group.ElementsAdditional(data).Count() > 0)
@@ -157,7 +158,7 @@ namespace EHRNarrative
         {
             foreach (IEnumerable<Element> keywordGroup in data.elements
                 .Where(x => x.selected != null)
-                .OrderBy(x => x.Is_present_normal)
+                .OrderBy(x => x.normal)
                 .GroupBy(x => x.EHR_keyword)
                 )
             {

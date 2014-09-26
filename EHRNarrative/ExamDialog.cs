@@ -118,6 +118,7 @@ namespace EHRNarrative
 
                 //draw multiselects
                 var listbox = new EHRListBox();
+                item.group.SetAllDefaults(data);
                 listbox.AddElements(item.group.ElementsForComplaint(data));
                 listbox.AddGroups(item.group.Subgroups(data));
                 if (item.group.ElementsAdditional(data).Count() > 0)

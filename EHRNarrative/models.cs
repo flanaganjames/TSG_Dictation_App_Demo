@@ -103,6 +103,14 @@ namespace EHRNarrative
         {
             return this.AllElements(data).Where(x => x.selected != null).Count();
         }
+        public void SetAllDefaults(Collection data)
+        {
+            foreach (Element element in this.ElementsForComplaint(data))
+            {
+                if (element.Default_present)
+                    element.selected = "present";
+            }
+        }
         public void SetAllNormal(Collection data)
         {
             foreach (Element element in this.ElementsForComplaint(data))
@@ -142,22 +150,7 @@ namespace EHRNarrative
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
         public bool Is_present_normal { get; set; }
-        private bool _default_present;
-        public bool Default_present
-        {
-            get
-            {
-                return this._default_present;
-            }
-            set
-            {
-                if (value)
-                {
-                    this.selected = "present";
-                }
-                this._default_present = value;
-            }
-        }
+        public bool Default_present { get; set; }
         private string _Present_text;
         public string Present_text
         {

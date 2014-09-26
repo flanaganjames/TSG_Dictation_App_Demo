@@ -151,7 +151,7 @@ namespace EHRNarrative
         {
             foreach (IEnumerable<Element> keywordGroup in data.elements
                 .Where(x => x.selected != null)
-                .OrderBy(x => x.Is_present_normal)
+                .OrderBy(x => x.normal)
                 .GroupBy(x => x.EHR_keyword)
                 )
             {

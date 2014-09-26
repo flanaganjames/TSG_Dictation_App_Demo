@@ -158,8 +158,36 @@ namespace EHRNarrative
                 this._default_present = value;
             }
         }
-        public string Present_text { get; set; }
-        public string Not_present_text { get; set; }
+        private string _Present_text;
+        public string Present_text
+        {
+            get
+            {
+                if (this._Present_text == null || this._Present_text == "")
+                    return "admits " + this.Name;
+                else
+                    return this._Present_text;
+            }
+            set
+            {
+                this._Present_text = value;
+            }
+        }
+        private string _Not_present_text { get; set; }
+        public string Not_present_text
+        {
+            get
+            {
+                if (this._Not_present_text == null || this._Not_present_text == "")
+                    return "denies " + this.Name;
+                else
+                    return this._Not_present_text;
+            }
+            set
+            {
+                this._Not_present_text = value;
+            }
+        }
 
         public string Display(Collection data)
         {

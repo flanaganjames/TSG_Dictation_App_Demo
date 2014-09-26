@@ -536,11 +536,5 @@ namespace EHRNarrative
             var dialog = new ExamDialog(this, textBox2.Text, textBox1.Text);
             dialog.Show();
         }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            ParseVBACommand("LOAD_TEMPLATE Chest pain over 40");
-            ParseVBACommand("DIALOG Review of systems");
-        }
     }
 }

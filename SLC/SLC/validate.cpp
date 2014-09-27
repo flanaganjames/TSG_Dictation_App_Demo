@@ -228,16 +228,11 @@ void S_Validate(void)
 
 		// special case for TAD Risk
 	list<char *>::iterator i;
-	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
+	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
 	{
-		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0
-			|| _strnicmp(*i, "TAD risk factors", strlen(*i)) == 0)
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
 		{
-			int percentage = 100 * _comp_req.size() /
-				(_req_hpi.size() + _req_exam.size() + 
-				_assess.size() + _comp_req.size());
-			if (percentage > 50)
-				D_addWarning("Check TAD Risk!");
+			D_addWarning("Check TAD Risk!");
 			break;
 		}
 	}

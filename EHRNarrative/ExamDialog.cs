@@ -26,9 +26,9 @@ namespace EHRNarrative
             {
                 data = LoadContent(dialog_name, complaint_name);
             }
-            catch (NotImplementedException)
+            catch (NotImplementedException e)
             {
-                MessageBox.Show("Not a valid dialog name or complaint");
+                MessageBox.Show(e.Message);
                 data = null;
                 return;
             } 
@@ -87,7 +87,11 @@ namespace EHRNarrative
                     }
                     catch
                     {
-                        throw new NotImplementedException("Not a valid dialog name or complaint");
+                        if (conn.Query(@"SELECT * FROM dialog d WHERE d.name = @Dialog", new {Dialog=dialog_name}).Count() != 1)
+                            throw new NotImplementedException("\"" + dialog_name + "\" is not a valid dialog name");
+                        else if (conn.Query(@"SELECT * FROM complaint c WHERE c.name = @Complaint", new { Complaint = complaint_name }).Count() != 1)
+                            throw new NotImplementedException("\"" + complaint_name + "\" is not a valid complaint");
+                        throw;
                     }
                 }
                 conn.Close();
@@ -169,6 +173,7 @@ namespace EHRNarrative
                 var keyword = keywordGroup.First().EHR_keyword;
                 var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
                 narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
+                narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
             }
         }
         private void UpdateSLC()

@@ -233,7 +233,11 @@ void S_Validate(void)
 		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0
 			|| _strnicmp(*i, "TAD risk factors", strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			int percentage = 100 * _comp_req.size() /
+				(_req_hpi.size() + _req_exam.size() + 
+				_assess.size() + _comp_req.size());
+			if (percentage > 50)
+				D_addWarning("Check TAD Risk!");
 			break;
 		}
 	}

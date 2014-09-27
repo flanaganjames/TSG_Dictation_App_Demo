@@ -206,41 +206,6 @@ void addWords(list<char *> &in, char *add)
 }
 
 
-void addDataQual(char *t)
-{
-	int i, n;
-	int count = 0;
-	char *s = t;
-	for (i = 0;  i < qualifier_count; i++ )
-	{
-		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0)
-		{
-			s += strlen(qualifier_names[i]); // skip the qualifier text
-			s += strspn(s, " ");  // skip the blanks after qualifier
-			break;
-		}
-	}
-	if (s == t)
-		return;  // unrecognized qualifier: ignore
-
-		// find a count, if we've got one
-	if ((n = strcspn(t, "0123456789")) > 0)
-		count = atoi(t+n);
-
-	switch(i) {
-	case ros_t:
-	case ros2_t:
-		_max_exam_level = __max(count, _max_exam_level);
-		addWords(_bill_ros, s);
-		break;
-	case pfsh_t:
-		addWords(_bill_pfsh, s);
-		break;
-	case exam_t:
-		addWords(_bill_exam, s);
-		break;
-	};
-}
 
 
 	// strip off the line-ending characters & trailing blanks
@@ -273,6 +238,45 @@ bool lengthOfCommand(char *s, size_t n)
 {
 	return (s[n] == '\0' || s[n] == ' ');
 }
+
+	// parse the substatus of the dataqual keywords
+void addDataQual(char *t)
+{
+	int i, n;
+	int count = 0;
+	char *s = t;
+	for (i = 0;  i < qualifier_count; i++ )
+	{
+		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0
+			&& lengthOfCommand(s, strlen(qualifier_names[i])))
+		{
+			s += strlen(qualifier_names[i]); // skip the qualifier text
+			s += strspn(s, " ");  // skip the blanks after qualifier
+			break;
+		}
+	}
+	if (s == t)
+		return;  // unrecognized qualifier: ignore
+
+		// find a count, if we've got one
+	if ((n = strcspn(t, "0123456789")) > 0)
+		count = atoi(t+n);
+
+	switch(i) {
+	case ros_t:
+	case ros2_t:
+		_max_exam_level = __max(count, _max_exam_level);
+		addWords(_bill_ros, s);
+		break;
+	case pfsh_t:
+		addWords(_bill_pfsh, s);
+		break;
+	case exam_t:
+		addWords(_bill_exam, s);
+		break;
+	};
+}
+
 
 void S_parseStatus(void)
 {

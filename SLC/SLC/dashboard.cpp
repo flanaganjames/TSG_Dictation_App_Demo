@@ -312,11 +312,21 @@ void D_billingElement(char *head, int count, char *score)
 		count, (count == 1) ? "item" : "items", score);
 }
 
+void D_historySummary(char *head, char *score)
+{
+	// fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
+		// T_billingtab, T_width-3*T_space, T_width);
+	fprintf(outf, "{\\pard");
+	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:{  }%s\\par}\n",
+		ps_billing, c_billing, head, score);
+}
+
 void D_billingSummary(char *head, int score)
 {
-	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
-		T_billingtab, T_width-3*T_space, T_width);
-	fprintf(outf, "\\b\\fs%d\\cf%d {   }%s\\tab %d\\par}\n",
+	// fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
+		// T_billingtab, T_width-3*T_space, T_width);
+	fprintf(outf, "{\\pard");
+	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:{  }%d\\par}\n",
 		ps_billing, c_billing, head, score);
 }
 
@@ -456,16 +466,16 @@ void D_billingScore(void)
 		// score is verb_noun, but the score variable is noun_noun
 		// and the element count is XX_count, but the billing score
 		// is XX_score
-	D_heading("Billing Advice", c_heading);
+	D_heading("E/M Review", c_heading);
 	D_vertspace(5);
 	D_billingElement("HPI", HPI_count, score_HPI(HPI_count, &HPI_score));
 	D_billingElement("ROS", ROS_count, score_ROS(ROS_count, &ROS_score));
 	D_billingElement("PFSH", PFSH_count, score_PFSH(PFSH_count, &PFSH_score));
 	char *hx_level = score_HX(HPI_score, ROS_score, PFSH_score, &hx_total);
-	D_billingSummary("History total", hx_total);
+	D_historySummary("History level", hx_level);
 	D_billingElement("Exam", _max_exam_level, 
 		score_exam(_max_exam_level, &EX_score));
-	D_billingSummary("Maximum billing level", __min(hx_total, EX_score));
+	D_billingSummary("Maximum E/M Level", __min(hx_total, EX_score));
 }
 
 
@@ -509,7 +519,7 @@ void S_generateDash(void)
 	D_line();
 	D_separator(c_sepbar_b);
 
-		// required components
+		// required components -- now called "Recommended"
 	int n_req_still_need = _req_hpi.size() + _req_exam.size() + _assess.size();
 	D_progressbar("Recommended", _comp_req.size(),
 		n_req_still_need + _comp_req.size());

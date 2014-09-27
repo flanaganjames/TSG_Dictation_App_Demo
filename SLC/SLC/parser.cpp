@@ -161,6 +161,12 @@ void addWords(list<char *> &in, char *add)
 	s = ss;
 	for (char *p = add;  p && *p;  p++)
 	{
+			// skip RTF markup: anything beginning with backslash up to a blank
+		if (*p == '\\')
+		{
+			while (*p != ' ' && *p != '\0') { p++; }
+			continue;
+		}
 		if (*p != '['  &&  *p != ']'  &&  *p != '*' &&  !isdigit(*p))
 			*s++ = *p;
 	}

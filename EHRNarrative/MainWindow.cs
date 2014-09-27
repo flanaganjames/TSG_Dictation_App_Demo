@@ -159,7 +159,7 @@ namespace EHRNarrative
             string command_str = "";
             ParseReplaceCommand(ref command_str, commandStr.Trim());
 
-            NotifySLC(command_str);
+            //NotifySLC(command_str);
 
             this.HealthRecordText.TextChanged += hrTextChanged;
         }
@@ -529,12 +529,6 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            var dialog = new ExamDialog(this, textBox2.Text, textBox1.Text);
-            dialog.Show();
         }
     }
 }

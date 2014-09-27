@@ -107,10 +107,14 @@ namespace EHRNarrative
             else
                 rows = 2;
 
+            
+            int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height/rows - 100;
+            int maxListBoxItems = data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max();
+
             int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
 
             this.Width = (columnsPerRow + 1) * (columnWidth + columnGutter);
-            this.Height = 100 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight * rows;
+            this.Height = (85 + Math.Min(maxListBoxItems * itemHeight, maxListBoxHeight)) * rows;
             this.CenterToScreen();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
@@ -130,9 +134,9 @@ namespace EHRNarrative
                 if (item.group.ElementsAdditional(data).Count() > 0)
                     listbox.Items.Add(new EHRListBoxGroup());
                 listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                listbox.Top = 5 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 listbox.Width = columnWidth;
-                listbox.Height = listbox.Items.Count * listbox.ItemHeight;
+                listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
                 this.Controls.Add(listbox);
 
                 //draw select alls

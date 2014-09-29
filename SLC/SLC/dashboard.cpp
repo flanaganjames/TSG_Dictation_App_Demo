@@ -147,15 +147,24 @@ void D_separator(int color)
 
 void D_hyperlinks(void)
 {
+	char *www, *l;
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
 	{
-			// do we need to prepend "www."?
-		char *www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
+			// is it a local file link?
+		if (strncmp(*i, "local:", 6) == 0)
+		{
+			www = "";
+			l = (*i)+6;
+		} else {
+				// do we need to prepend "www."?
+			www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
+			l = *i;
+		}
 		fprintf(outf, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
-			T_space, www, *i);
+			T_space, www, l);
 		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
-			ps_link, c_hyperlink, www, *i);
+			ps_link, c_hyperlink, www, l);
 	}
 }
 

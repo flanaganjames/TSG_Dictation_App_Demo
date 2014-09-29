@@ -152,6 +152,7 @@ void D_hyperlinks(void)
 	for (i = _links.begin();  i != _links.end();  i++)
 	{
 			// is it a local file link?
+			// (though this may not work correctly in the RTF)
 		if (strncmp(*i, "local:", 6) == 0)
 		{
 			www = "";
@@ -470,20 +471,20 @@ void D_billingScore(void)
 	int HPI_count = _bill_hpi.size();
 	int ROS_count = _bill_ros.size();
 	int PFSH_count = _bill_pfsh.size();
+	int EXAM_count = _bill_exam.size();
 	int hx_total;
 		// yeah, that's confusing: the routine to determine the
 		// score is verb_noun, but the score variable is noun_noun
 		// and the element count is XX_count, but the billing score
 		// is XX_score
 	D_heading("E/M Review", c_heading);
-	D_vertspace(5);
+	D_vertspace(2);  // D_vertspace(5);
 	D_billingElement("HPI", HPI_count, score_HPI(HPI_count, &HPI_score));
 	D_billingElement("ROS", ROS_count, score_ROS(ROS_count, &ROS_score));
 	D_billingElement("PFSH", PFSH_count, score_PFSH(PFSH_count, &PFSH_score));
 	char *hx_level = score_HX(HPI_score, ROS_score, PFSH_score, &hx_total);
 	D_historySummary("History level", hx_level);
-	D_billingElement("Exam", _max_exam_level, 
-		score_exam(_max_exam_level, &EX_score));
+	D_billingElement("Exam", EXAM_count, score_exam(EXAM_count, &EX_score));
 	D_billingSummary("Maximum E/M Level", __min(hx_total, EX_score));
 }
 
@@ -533,15 +534,15 @@ void S_generateDash(void)
 	D_progressbar("Recommended", _comp_req.size(),
 		n_req_still_need + _comp_req.size());
 	D_heading("Incomplete", c_heading);
-	D_vertspace(5);
+	D_vertspace(2);  // D_vertspace(5);
 	D_group("HPI", _req_hpi, c_foreground_req);
 	D_group("Exam", _req_exam, c_foreground_req);
 	D_group("Assessment", _assess, c_foreground_req);
-	D_vertspace(2);
+	D_vertspace(2);  // D_vertspace(2);
 	D_line();
 	D_separator(c_sepbar_a);
 	D_heading("Completed", c_heading);
-	D_vertspace(5);
+	D_vertspace(2);  // D_vertspace(5);
 	D_group("", _comp_req, c_foreground_comp);
 	// D_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
 	// D_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);

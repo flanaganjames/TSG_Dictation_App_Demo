@@ -278,6 +278,8 @@ namespace Dashboard
             "TSG-sore-throat: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             "Sore_Throat_Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "Chest_Pain_Resources: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
+            "Differential_Diagnosis_Tool: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
             "Unknown: file:///C:/TEMP/Sullivan/bywater.html",
             };
 
@@ -302,7 +304,7 @@ namespace Dashboard
                 }
             }
 
-            if (!(link.StartsWith("http://") || link.StartsWith("https://") 
+            if (!(link.StartsWith("http://") || link.StartsWith("https://")
                 || link.StartsWith("file://")))
             {
                 link = "http://" + link;

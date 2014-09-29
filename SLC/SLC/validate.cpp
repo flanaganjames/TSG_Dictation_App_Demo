@@ -184,7 +184,7 @@ void validateVitalF(float vital, rangeF Range[], int nn)
 
 #if 0
 		// Easter Egg for Sean
-	if (_VVS_p == 115  &&  _VVS_r == 25)
+	if (_VVS_p == 107)
 		D_addWarning("Go Bears!!");
 #endif
 

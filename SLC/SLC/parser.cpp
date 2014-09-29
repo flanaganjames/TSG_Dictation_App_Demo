@@ -22,7 +22,6 @@ list<char *> _rec_hpi, _rec_exam;
 list<char *> _all_complete, _comp_req, _comp_rec;
 	// billing lists
 list<char *> _bill_hpi, _bill_ros, _bill_pfsh, _bill_exam;
-int _max_exam_level = 0;
 	// resource links
 list<char *> _links;
 	// vital signs -- one item per category
@@ -271,7 +270,6 @@ void addDataQual(char *t)
 	switch(i) {
 	case ros_t:
 	case ros2_t:
-		_max_exam_level = __max(count, _max_exam_level);
 		addWords(_bill_ros, s);
 		break;
 	case pfsh_t:

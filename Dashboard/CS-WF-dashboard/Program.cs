@@ -280,7 +280,7 @@ namespace Dashboard
             "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             "Chest_Pain_Resources: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
             "Differential_Diagnosis_Tool: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
-            "Unknown: file:///C:/TEMP/Sullivan/bywater.html",
+            "RSQ_Assist: www.thesullivangroup.com/RSQAssist/",
             };
 
                 // strip off the required syntactic sugar

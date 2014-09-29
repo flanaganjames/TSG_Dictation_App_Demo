@@ -228,7 +228,23 @@ void S_Validate(void)
 
 		// special case for TAD Risk
 	list<char *>::iterator i;
+	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
+	{
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		{
+			D_addWarning("Check TAD Risk!");
+			break;
+		}
+	}
 	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
+	{
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		{
+			D_addWarning("Check TAD Risk!");
+			break;
+		}
+	}
+	for (i = _assess.begin();  i != _assess.end();  i++)
 	{
 		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
 		{

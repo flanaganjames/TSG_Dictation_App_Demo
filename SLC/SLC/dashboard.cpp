@@ -436,7 +436,7 @@ char *score_exam(int count, int *score)
 	return "Complete (>7)";
 }
 
-enum HX_t { HX_none, HX_PF, HX_EPF, HX_DET, HX_COM };
+enum HX_t { HX_none = 0, HX_PF = 1, HX_EPF = 3, HX_DET = 4, HX_COM = 5 };
 char *score_HX(int HPI_score, int ROS_count, int PFSH_count, int *hx_total)
 {
 	if (HPI_score >= HPI_EXT && ROS_count >= ROS_COM && PFSH_count >= PFSH_COM)

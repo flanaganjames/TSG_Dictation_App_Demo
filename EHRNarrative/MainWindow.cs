@@ -137,9 +137,18 @@ namespace EHRNarrative
             base.WndProc(ref msg);
         }
 
+        [Conditional("DEBUG")]
+        private void EnableTestingButtons()
+        {
+            mockDragonButton.Visible = true;
+            mockDragonButton.Enabled = true;
+        }
+
         public EHRNarrative()
         {
             InitializeComponent();
+
+            EnableTestingButtons();
 
             dashboardTimer.Stop();
 
@@ -529,6 +538,11 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
+        }
+
+        private void mockDragonButton_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("MockDragon.exe");
         }
     }
 }

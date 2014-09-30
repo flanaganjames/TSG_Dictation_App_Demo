@@ -30,9 +30,11 @@
         {
             this.chestPainButton = new System.Windows.Forms.Button();
             this.nextFieldButton = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
+            this.showDialogButton = new System.Windows.Forms.Button();
             this.commandInput = new System.Windows.Forms.TextBox();
             this.sendButton = new System.Windows.Forms.Button();
+            this.dialogInput = new System.Windows.Forms.TextBox();
+            this.cleanTemplateButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // chestPainButton
@@ -55,25 +57,26 @@
             this.nextFieldButton.UseVisualStyleBackColor = true;
             this.nextFieldButton.Click += new System.EventHandler(this.nextFieldButton_Click);
             // 
-            // button3
+            // showDialogButton
             // 
-            this.button3.Location = new System.Drawing.Point(177, 13);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 2;
-            this.button3.Text = "button3";
-            this.button3.UseVisualStyleBackColor = true;
+            this.showDialogButton.Location = new System.Drawing.Point(13, 42);
+            this.showDialogButton.Name = "showDialogButton";
+            this.showDialogButton.Size = new System.Drawing.Size(85, 23);
+            this.showDialogButton.TabIndex = 2;
+            this.showDialogButton.Text = "Show Dialog:";
+            this.showDialogButton.UseVisualStyleBackColor = true;
+            this.showDialogButton.Click += new System.EventHandler(this.showDialogButton_Click);
             // 
             // commandInput
             // 
-            this.commandInput.Location = new System.Drawing.Point(13, 201);
+            this.commandInput.Location = new System.Drawing.Point(12, 71);
             this.commandInput.Name = "commandInput";
-            this.commandInput.Size = new System.Drawing.Size(239, 20);
+            this.commandInput.Size = new System.Drawing.Size(240, 20);
             this.commandInput.TabIndex = 3;
             // 
             // sendButton
             // 
-            this.sendButton.Location = new System.Drawing.Point(62, 227);
+            this.sendButton.Location = new System.Drawing.Point(61, 97);
             this.sendButton.Name = "sendButton";
             this.sendButton.Size = new System.Drawing.Size(140, 23);
             this.sendButton.TabIndex = 4;
@@ -81,14 +84,34 @@
             this.sendButton.UseVisualStyleBackColor = true;
             this.sendButton.Click += new System.EventHandler(this.sendButton_Click);
             // 
+            // dialogInput
+            // 
+            this.dialogInput.Location = new System.Drawing.Point(105, 42);
+            this.dialogInput.Name = "dialogInput";
+            this.dialogInput.Size = new System.Drawing.Size(147, 20);
+            this.dialogInput.TabIndex = 5;
+            this.dialogInput.Text = "Review of Systems";
+            // 
+            // cleanTemplateButton
+            // 
+            this.cleanTemplateButton.Location = new System.Drawing.Point(177, 13);
+            this.cleanTemplateButton.Name = "cleanTemplateButton";
+            this.cleanTemplateButton.Size = new System.Drawing.Size(75, 23);
+            this.cleanTemplateButton.TabIndex = 6;
+            this.cleanTemplateButton.Text = "Clean";
+            this.cleanTemplateButton.UseVisualStyleBackColor = true;
+            this.cleanTemplateButton.Click += new System.EventHandler(this.cleanTemplateButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(264, 262);
+            this.ClientSize = new System.Drawing.Size(264, 129);
+            this.Controls.Add(this.cleanTemplateButton);
+            this.Controls.Add(this.dialogInput);
             this.Controls.Add(this.sendButton);
             this.Controls.Add(this.commandInput);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.showDialogButton);
             this.Controls.Add(this.nextFieldButton);
             this.Controls.Add(this.chestPainButton);
             this.Name = "Form1";
@@ -102,9 +125,11 @@
 
         private System.Windows.Forms.Button chestPainButton;
         private System.Windows.Forms.Button nextFieldButton;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button showDialogButton;
         private System.Windows.Forms.TextBox commandInput;
         private System.Windows.Forms.Button sendButton;
+        private System.Windows.Forms.TextBox dialogInput;
+        private System.Windows.Forms.Button cleanTemplateButton;
 
     }
 }

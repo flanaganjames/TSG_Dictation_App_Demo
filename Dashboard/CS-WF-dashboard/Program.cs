@@ -37,8 +37,8 @@ namespace Dashboard
         private System.Drawing.Size tsize = new System.Drawing.Size(dashwid, dashht+warnht);
         private System.Drawing.Point wpos = new System.Drawing.Point(0, dashht);
         private System.Drawing.Point dpos = new System.Drawing.Point(0, 0);
-        public String dashpath = @"C:/TEMP/Sullivan/dashboard.rtf";
-        public String warnpath = @"C:/TEMP/Sullivan/dashwarn.rtf";
+        public String dashpath = "dashboard.rtf";
+        public String warnpath = "dashwarn.rtf";
         public String rtfmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
         public WindowsFormsApplication1.Form1 dash;
         public RichTextBox dashrtf, warnrtf;

@@ -25,7 +25,7 @@ namespace EHRNarrative
 
         public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
         {
-
+            Brush fontColor = Brushes.Black;
             // if selected, mark the background differently
             if (this.Element.selected == "present")
             {
@@ -34,7 +34,9 @@ namespace EHRNarrative
             else if (this.Element.selected == "not present")
             {
                 //e.Graphics.FillRectangle(Brushes.LightSalmon, e.Bounds);
-                e.Graphics.DrawLine(Pens.Black, e.Bounds.X, e.Bounds.Y + e.Bounds.Height, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+                //e.Graphics.DrawLine(Pens.Black, e.Bounds.X, e.Bounds.Y + e.Bounds.Height, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+                font = new Font(font, FontStyle.Strikeout | FontStyle.Bold);
+                fontColor = Brushes.DarkSlateGray;
             }
             else
             {
@@ -51,7 +53,7 @@ namespace EHRNarrative
                                                  (int)font.GetHeight() + 2);
 
             // draw the text within the bounds
-            e.Graphics.DrawString(this.Element.Name, font, Brushes.Black, textBounds, aligment);
+            e.Graphics.DrawString(this.Element.Name, font, fontColor, textBounds, aligment);
 
             // put some focus rectangle
             e.DrawFocusRectangle();

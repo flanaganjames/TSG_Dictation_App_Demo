@@ -26,9 +26,15 @@ namespace EHRNarrative
             {
                 data = LoadContent(dialog_name, complaint_name);
             }
-            catch (NotImplementedException)
+            catch (NotImplementedException e)
             {
-                MessageBox.Show("Not a valid dialog name or complaint");
+                MessageBox.Show(e.Message);
+                data = null;
+                return;
+            } 
+            catch (BadImageFormatException) 
+            {
+                MessageBox.Show("Missing file: dialog_content.sqlite3");
                 data = null;
                 return;
             }
@@ -81,7 +87,11 @@ namespace EHRNarrative
                     }
                     catch
                     {
-                        throw new NotImplementedException("Not a valid dialog name or complaint");
+                        if (conn.Query(@"SELECT * FROM dialog d WHERE d.name = @Dialog", new {Dialog=dialog_name}).Count() != 1)
+                            throw new NotImplementedException("\"" + dialog_name + "\" is not a valid dialog name");
+                        else if (conn.Query(@"SELECT * FROM complaint c WHERE c.name = @Complaint", new { Complaint = complaint_name }).Count() != 1)
+                            throw new NotImplementedException("\"" + complaint_name + "\" is not a valid complaint");
+                        throw;
                     }
                 }
                 conn.Close();
@@ -101,10 +111,14 @@ namespace EHRNarrative
             else
                 rows = 2;
 
+            
+            int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height/rows - 100;
+            int maxListBoxItems = data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max();
+
             int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
 
             this.Width = (columnsPerRow + 1) * (columnWidth + columnGutter);
-            this.Height = 100 + data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max() * itemHeight * rows;
+            this.Height = (85 + Math.Min(maxListBoxItems * itemHeight, maxListBoxHeight)) * rows;
             this.CenterToScreen();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
@@ -118,14 +132,15 @@ namespace EHRNarrative
 
                 //draw multiselects
                 var listbox = new EHRListBox();
+                item.group.SetAllDefaults(data);
                 listbox.AddElements(item.group.ElementsForComplaint(data));
                 listbox.AddGroups(item.group.Subgroups(data));
                 if (item.group.ElementsAdditional(data).Count() > 0)
                     listbox.Items.Add(new EHRListBoxGroup());
                 listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                listbox.Top = 5 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 listbox.Width = columnWidth;
-                listbox.Height = listbox.Items.Count * listbox.ItemHeight;
+                listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
                 this.Controls.Add(listbox);
 
                 //draw select alls
@@ -151,13 +166,14 @@ namespace EHRNarrative
         {
             foreach (IEnumerable<Element> keywordGroup in data.elements
                 .Where(x => x.selected != null)
-                .OrderBy(x => x.Is_present_normal)
+                .OrderBy(x => x.normal)
                 .GroupBy(x => x.EHR_keyword)
                 )
             {
                 var keyword = keywordGroup.First().EHR_keyword;
                 var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
                 narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
+                narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
             }
         }
         private void UpdateSLC()

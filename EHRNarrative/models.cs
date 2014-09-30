@@ -103,6 +103,14 @@ namespace EHRNarrative
         {
             return this.AllElements(data).Where(x => x.selected != null).Count();
         }
+        public void SetAllDefaults(Collection data)
+        {
+            foreach (Element element in this.ElementsForComplaint(data))
+            {
+                if (element.Default_present)
+                    element.selected = "present";
+            }
+        }
         public void SetAllNormal(Collection data)
         {
             foreach (Element element in this.ElementsForComplaint(data))
@@ -142,24 +150,37 @@ namespace EHRNarrative
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
         public bool Is_present_normal { get; set; }
-        private bool _default_present;
-        public bool Default_present
+        public bool Default_present { get; set; }
+        private string _Present_text;
+        public string Present_text
         {
             get
             {
-                return this._default_present;
+                if (this._Present_text == null || this._Present_text == "")
+                    return "admits " + this.Name;
+                else
+                    return this._Present_text;
             }
             set
             {
-                if (value)
-                {
-                    this.selected = "present";
-                }
-                this._default_present = value;
+                this._Present_text = value;
             }
         }
-        public string Present_text { get; set; }
-        public string Not_present_text { get; set; }
+        private string _Not_present_text { get; set; }
+        public string Not_present_text
+        {
+            get
+            {
+                if (this._Not_present_text == null || this._Not_present_text == "")
+                    return "denies " + this.Name;
+                else
+                    return this._Not_present_text;
+            }
+            set
+            {
+                this._Not_present_text = value;
+            }
+        }
 
         public string Display(Collection data)
         {

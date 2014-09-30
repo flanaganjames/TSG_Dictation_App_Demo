@@ -24,9 +24,9 @@ namespace EHRNarrative
         public struct COPYDATASTRUCT
         {
             //ULONG_PTR The data to be passed to the receiving application
-            public int dwData;
+            public ulong dwData;
             //DWORD The size, in bytes, of the data pointed to by the lpData member
-            public int cbData;
+            public ulong cbData;
             //PVOID (void pointer) The data to be passed to the receiving application. This member can be NULL
             //However, we are using it differently to just store a string.
             [MarshalAs(UnmanagedType.LPStr)]
@@ -86,7 +86,7 @@ namespace EHRNarrative
                 int len = msgArray.Length;
                 COPYDATASTRUCT cds;
                 cds.dwData = 0;
-                cds.cbData = len + 1;
+                cds.cbData = (ulong)len + 1;
                 cds.lpData = msg;
                 result = SendMessage(hWnd, WM_COPYDATA, wParam, ref cds);
             }
@@ -159,7 +159,7 @@ namespace EHRNarrative
             string command_str = "";
             ParseReplaceCommand(ref command_str, commandStr.Trim());
 
-            NotifySLC(command_str);
+            //NotifySLC(command_str);
 
             this.HealthRecordText.TextChanged += hrTextChanged;
         }
@@ -529,12 +529,6 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            var dialog = new ExamDialog(this, textBox2.Text, textBox1.Text);
-            dialog.Show();
         }
     }
 }

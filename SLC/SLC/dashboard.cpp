@@ -14,7 +14,7 @@ The main entry point is S_generatedash.
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
 const int T_inch = 72 * 20;		// 1 inch in twips
-const int T_billingtab = 72 * 20 * 5 / 10;  // .5 inches
+const int T_billingtab = T_inch;  // .5 inches
 const int T_space = 5 * 20;  // 5pt space in twips
 	// point sizes of various elements (in half points)
 const int ps_def = 11*2;
@@ -36,7 +36,7 @@ enum colors_t {
 	c_hyperlink, c_highlight_req, c_highlight_comp, 
 	c_foreground_req, c_foreground_comp, c_background,
 	c_sepbar_a, c_sepbar_b, c_heading, c_subheading,
-	c_billing,
+	c_billing, c_billhdr,
 	c_warning,
 	/*
 		IMPORTANT: These next two colors need to always
@@ -57,8 +57,8 @@ int rgb_colors[][3] = {
 		// c_foreground_req, c_foreground_comp, c_background
 	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {160,160,160},
 		// sepbar_a, sepbar_b, heading, subheading
-	{0,0,0},
-		// billing_element,
+	{0,0,0}, {0,0,0}, // {0, 192, 192},
+		// billing_element, billing_element_hdr
 	{255,0,0},
 		// warning foreground
 };
@@ -307,185 +307,178 @@ void D_backgroundColor(int r, int g, int b)
 ******************************************************************************/
 
 	/*
+	 * naming conventions:
+	 * score_XX -- the function to generate the score
+	 * XX_levels -- the names of the billing levels
+	 * Level_t -- the enum for the score levels, which are Ln
+	 * XX_score -- the value of the score recorded in D_billingScore
+	 * but see D_billingScore(), below, for more
+	 */
+
+	/*
+	 * here are the names for the billing levels for each category
+	 * (we may not need these in production, but some test scenarios
+	 *  want to use them)
+	 */
+char *HPI_levels[] = { "none", "", "", "Brief", "", "Extended" };
+char *ROS_levels[] = { "", "none", "PP", "", "Extended", "Complete" };
+char *PFSH_levels[] = { "", "", "", "none", "PP", "Complete" };
+char *EXAM_levels[] = { "none", "Problem focused", "EPF", "Detailed", "Complete" };
+
+	/*
 	 * these next few functions generate the billing data on the dashboard
 	 *  (strictly, this should be a separate module, but
 	 *   we need a lot of the dashboard data, so having it
 	 *   local to the other dashboard functions makes sense
 	 *   for the moment)
 	 */
-void D_billingElement(char *head, int count, char *score)
+		// use the same set of tabstops for the billing panel
+		//  (headline uses the last, right justified tab)
+void D_billingTabs()
 {
-	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
-		T_billingtab, T_inch+T_space, T_inch+3*T_space);
-	fprintf(outf, "\\fs%d\\cf%d { }%s\\tab %d %s\\tab %s\\par}\n",
-		ps_billing, c_billing, head, 
-		count, (count == 1) ? "item" : "items", score);
+	fprintf(outf, "{\\pard\\tx%d\\tx%d", 
+		T_inch+1*T_space, 2*T_inch-2*T_space);
 }
 
-void D_historySummary(char *head, char *score)
+void D_billingHeading(void)
 {
-	// fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
-		// T_billingtab, T_width-3*T_space, T_width);
-	fprintf(outf, "{\\pard");
-	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:{  }%s\\par}\n",
-		ps_billing, c_billing, head, score);
+	D_billingTabs();
+	fprintf(outf, "\\fs%d\\cf%d {\\b{ }%s}\\tab %s\\tab %s\\par}\n",
+		ps_billing, c_billhdr,
+		"Level (3/4/5)", "Elements", "Max E/M");
 }
 
-void D_billingSummary(char *head, int score)
+void D_billingElement(char *head, int count, int score)
 {
-	// fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
-		// T_billingtab, T_width-3*T_space, T_width);
-	fprintf(outf, "{\\pard");
-	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:{  }%d\\par}\n",
-		ps_billing, c_billing, head, score);
+	D_billingTabs();
+	fprintf(outf, "\\fs%d\\cf%d { }{\\cf%d\\b %s}\\tab {      }%d\\tab {  }%d\\par}\n",
+		ps_billing, c_billing, c_billhdr, head, count, score);
+
+}
+
+void D_billingSummary(int score)
+{
+	D_billingTabs();
+	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:\\tab {  }%d\\par}\n",
+		ps_billing, c_billhdr, "Maximum Allowable E/M", score);
+	// D_billingTabs();
+	// fprintf(outf, "|\\tab|\\tab|\\tab|\\tab|\\tab|\\tab|\\par}\n");
 }
 
 	// these next couple handle the scores in the various categories
 	// -- we could have set these up in tables
 	// like the vital sign validation, but this is more maleable
 	// as we hone the algorithms
-		// naming conventions:
-		//   score_XX -- the function to generate the score
-		//   XX_t -- the enum for the score names, which are XX_name
-		//   XX_score -- the value of the score recorded in D_billingScore
-		//   but see D_billingScore(), below, for more
-enum HPI_t { HPI_none, HPI_BRF, HPI_EXT };
-char *score_HPI(int count, int *score)
+
+enum Level_t { L0 = 0, L1, L2, L3, L4, L5 };
+
+int score_HPI(int count)
 {
 	if (count == 0)
 	{
-		*score = HPI_none;
-		return "None";
+		return L0;
+		// return "None";
 	}
 	if (count <= 3)
 	{
-		*score = HPI_BRF;
-		return "Brief (1-3)";
+		return L3;
+		// return "Brief (1-3)";
 	}
-	*score = HPI_EXT;
-	return "Extended (>3)";
+	return L5;
+	// return "Extended (>3)";
 }
 
-enum ROS_t { ROS_none, ROS_PP, ROS_EXT, ROS_COM };
-char *score_ROS(int count, int *score)
+int score_ROS(int count)
 {
 	if (count == 0)
 	{
-		*score = ROS_none;
-		return "None";
+		return L1;
+		// return "None";
 	}
 	if (count == 1)
 	{
-		*score = ROS_PP;
-		return "Problem Pertinent (1)";
+		return L2;
+		// return "Problem Pertinent (1)";
 	}
 	if (count <= 9)
 	{
-		*score = ROS_EXT;
-		return "Extended (2-9)";
+		return L4;
+		// return "Extended (2-9)";
 	}
-	*score = ROS_COM;
-	return "Complete (>9)";
+	return L5;
+	// return "Complete (>9)";
 }
 
-enum PFSH_t { PFSH_none, PFSH_PP, PFSH_COM };
-char *score_PFSH(int count, int *score)
+int score_PFSH(int count)
 {
 	if (count == 0)
 	{
-		*score = 0;
-		return "None";
+		return L3;
+		// return "None";
 	}
 	if (count == 1)
 	{
-		*score = 1;
-		return "Problem Pertinent (1)";
+		return L4;
+		// return "Problem Pertinent (1)";
 	}
-	*score = 2;
-	return "Complete (>1)";
+	return L5;
+	// return "Complete (>1)";
 }
 
-enum EX_t { EX_none, EX_PF, EX_EPF, EX_DET, EX_COM };
-char *score_exam(int count, int *score)
+int score_exam(int count)
 {
 	if (count == 0)
 	{
-		*score = EX_none;
-		return "None";
+		return L0;
+		// return "None";
 	}
 	if (count == 1)
 	{
-		*score = EX_PF;
-		return "Problem Focussed (1)";
+		return L1;
+		// return "Problem Focussed (1)";
 	}
-#if 0
-			// this next should pivot on whether
-			// the exam is cursory or detailed
-			// we assume detailed for the moment
+	if (count <= 5)
 	{
-		*score = EX_EPF;
-		return "Extended Problem Focused (2-7)";
+		return L3;
+		// return "Extended Problem Focused (2-7)";
 	}
-#endif
 	if (count <= 7)
 	{
-		*score = EX_DET;
-		return "Detailed (2-7)";
+		return L4;
+		// return "Detailed (2-7)";
 	}
-	*score = EX_COM;
-	return "Complete (>7)";
-}
-
-enum HX_t { HX_none = 0, HX_PF = 1, HX_EPF = 3, HX_DET = 4, HX_COM = 5 };
-char *score_HX(int HPI_score, int ROS_count, int PFSH_count, int *hx_total)
-{
-	if (HPI_score >= HPI_EXT && ROS_count >= ROS_COM && PFSH_count >= PFSH_COM)
-	{
-		*hx_total = HX_COM;
-		return "Comprehensive";
-	}
-	if (HPI_score >= HPI_EXT && ROS_count >= ROS_EXT && PFSH_count >= PFSH_PP)
-	{
-		*hx_total = HX_DET;
-		return "Detailed";
-	}
-	if (HPI_score >= HPI_BRF && ROS_count >= ROS_PP && PFSH_count >= PFSH_none)
-	{
-		*hx_total = HX_EPF;
-		return "Ext Problem Focused";
-	}
-	if (HPI_score >= HPI_BRF && ROS_count >= ROS_none && PFSH_count >= PFSH_none)
-	{
-		*hx_total = HX_PF;
-		return "Problem Focused";
-	}
-	*hx_total = HX_none;
-	return "None";
+	return L5;
+	// return "Complete (>7)";
 }
 
 
 
 void D_billingScore(void)
 {
-	int HPI_score, ROS_score, PFSH_score, EX_score;
 	int HPI_count = _bill_hpi.size();
+	int HPI_score = score_HPI(HPI_count);
+	int max_level = HPI_score;
 	int ROS_count = _bill_ros.size();
+	int ROS_score = score_ROS(ROS_count);
+	max_level = __min(max_level, ROS_score);
 	int PFSH_count = _bill_pfsh.size();
+	int PFSH_score = score_PFSH(PFSH_count);
+	max_level = __min(max_level, PFSH_score);
 	int EXAM_count = _bill_exam.size();
-	int hx_total;
+	int EXAM_score = score_exam(EXAM_count);
+	max_level = __min(max_level, EXAM_score);
 		// yeah, that's confusing: the routine to determine the
 		// score is verb_noun, but the score variable is noun_noun
 		// and the element count is XX_count, but the billing score
 		// is XX_score
 	D_heading("E/M Review", c_heading);
 	D_vertspace(2);  // D_vertspace(5);
-	D_billingElement("HPI", HPI_count, score_HPI(HPI_count, &HPI_score));
-	D_billingElement("ROS", ROS_count, score_ROS(ROS_count, &ROS_score));
-	D_billingElement("PFSH", PFSH_count, score_PFSH(PFSH_count, &PFSH_score));
-	char *hx_level = score_HX(HPI_score, ROS_score, PFSH_score, &hx_total);
-	D_historySummary("History level", hx_level);
-	D_billingElement("Exam", EXAM_count, score_exam(EXAM_count, &EX_score));
-	D_billingSummary("Maximum E/M Level", __min(hx_total, EX_score));
+	D_billingHeading();
+	D_billingElement("HPI (1/4/4)", HPI_count, HPI_score);
+	D_billingElement("ROS (2/2/10)", ROS_count, ROS_score);
+	D_billingElement("PFSH (0/1/2)", PFSH_count, PFSH_score);
+	D_billingElement("Exam (3/3/8)", EXAM_count, EXAM_score);
+	D_billingSummary(max_level);
 }
 
 
@@ -670,12 +663,13 @@ void S_generateWarnBox(void)
 		// RTF control doesn't honor it, and the background
 		// color must be supplied by the dashboard program
 	D_backgroundColor(0,255,255);
-	D_warning_icons();
-	D_vertspace(10);
+	// D_warning_icons();
+	D_vertspace(5);
 	list<char *>::iterator i;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
-		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
+		D_one_warn_icon(225, 210);
+		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
 		D_vertspace(2);
 
@@ -686,6 +680,7 @@ void S_generateWarnBox(void)
 	D_epilog();
 	fclose(outf);
 	outf = NULL;
+	return;
 }
 
 

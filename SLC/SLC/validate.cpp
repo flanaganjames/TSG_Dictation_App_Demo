@@ -267,15 +267,4 @@ void S_Validate(void)
 	***********/
 
 	S_generateWarnBox();
-#if 0
-	if (!warning)
-	{
-		_unlink(WARN_PATH);
-		SendWinMsg(LOWER_WARNING);
-	} else {
-		S_generateWarnBox();
-		SendWinMsg(RAISE_WARNING);
-	}
-	return warning;
-#endif
 }

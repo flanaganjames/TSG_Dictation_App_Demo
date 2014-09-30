@@ -1,9 +1,9 @@
 // common definitions between the dashboard and the SLC
 
 
-#define STATUS_PATH "C:/TEMP/Sullivan/status.txt"
-#define DASHBOARD_PATH "C:/TEMP/Sullivan/dashboard.rtf"
-#define WARN_PATH "C:/TEMP/Sullivan/dashwarn.rtf"
+#define STATUS_PATH "status.txt"
+#define DASHBOARD_PATH "dashboard.rtf"
+#define WARN_PATH "dashwarn.rtf"
 
 // prototypes in SLC
 int S_initStatus(void);

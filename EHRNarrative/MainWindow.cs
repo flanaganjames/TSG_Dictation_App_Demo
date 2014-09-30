@@ -26,7 +26,7 @@ namespace EHRNarrative
             //ULONG_PTR The data to be passed to the receiving application
             public ulong dwData;
             //DWORD The size, in bytes, of the data pointed to by the lpData member
-            public int cbData;
+            public ulong cbData;
             //PVOID (void pointer) The data to be passed to the receiving application. This member can be NULL
             //However, we are using it differently to just store a string.
             [MarshalAs(UnmanagedType.LPStr)]
@@ -86,7 +86,7 @@ namespace EHRNarrative
                 int len = msgArray.Length;
                 COPYDATASTRUCT cds;
                 cds.dwData = 0;
-                cds.cbData = len + 1;
+                cds.cbData = (ulong)len + 1;
                 cds.lpData = msg;
                 result = SendMessage(hWnd, WM_COPYDATA, wParam, ref cds);
             }

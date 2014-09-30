@@ -120,9 +120,9 @@ namespace EHRNarrative
                 var listbox = new EHRListBox();
                 item.group.SetAllDefaults(data);
                 listbox.AddElements(item.group.ElementsForComplaint(data));
-                listbox.AddGroups(item.group.Subgroups(data));
+                listbox.AddGroups(item.group.Subgroups(data), data);
                 if (item.group.ElementsAdditional(data).Count() > 0)
-                    listbox.Items.Add(new EHRListBoxGroup());
+                    listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data)));
                 listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 listbox.Width = columnWidth;

@@ -75,6 +75,12 @@
     </Compile>
     <Compile Include="models.cs" />
     <Compile Include="SqlMapper.cs" />
+    <Compile Include="SubmenuPopover.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SubmenuPopover.Designer.cs">
+      <DependentUpon>SubmenuPopover.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utility.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
@@ -99,6 +105,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="SubmenuPopover.resx">
+      <DependentUpon>SubmenuPopover.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

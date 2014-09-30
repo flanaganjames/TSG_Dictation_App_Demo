@@ -61,10 +61,16 @@ namespace EHRNarrative
     public class EHRListBoxGroup
     {
         private Subgroup _group;
+        private SubmenuPopover _popover;
 
-        public EHRListBoxGroup(Subgroup group)
+        public EHRListBoxGroup(Subgroup group, Collection data)
         {
             this._group = group;
+            this._popover = new SubmenuPopover(this, this._group, data);
+            this._popover.Show();
+        }
+        public EHRListBoxGroup(IEnumerable<Element> elements)
+        {
         }
 
         public EHRListBoxGroup()
@@ -98,7 +104,7 @@ namespace EHRNarrative
                                                  (int)font.GetHeight() + 2);
 
             // draw the text within the bounds
-            e.Graphics.DrawString(this.Name, font, Brushes.Black, textBounds, aligment);
+            e.Graphics.DrawString(this.Name, font, Brushes.DimGray, textBounds, aligment);
 
             // put some focus rectangle
             e.DrawFocusRectangle();
@@ -137,11 +143,11 @@ namespace EHRNarrative
                 this.Items.Add(new EHRListBoxItem(element));
             }
         }
-        public void AddGroups(IEnumerable<Subgroup> groups)
+        public void AddGroups(IEnumerable<Subgroup> groups, Collection data)
         {
             foreach (Subgroup group in groups)
             {
-                this.Items.Add(new EHRListBoxGroup(group));
+                this.Items.Add(new EHRListBoxGroup(group, data));
             }
         }
         public void SelectAllNL()

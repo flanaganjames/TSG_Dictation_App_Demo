@@ -307,26 +307,52 @@ void D_backgroundColor(int r, int g, int b)
 ******************************************************************************/
 
 	/*
-	 * naming conventions:
+	 * naming conventions (where XX is one of HPI, ROS, PFSH, Exam):
 	 * score_XX -- the function to generate the score
+	 * XX_items -- table of minimum items per billing level
 	 * XX_levels -- the names of the billing levels
 	 * Level_t -- the enum for the score levels, which are Ln
 	 * XX_score -- the value of the score recorded in D_billingScore
 	 * but see D_billingScore(), below, for more
 	 */
 
+	// we have a list of the billing levels
+enum Level_t { L0 = 0, L1, L2, L3, L4, L5 };
+
+	// the minimum number of items to enter each level
+	// (-1 means we don't use that level)
+	//              L0, L1, L2, L3, L4, L5
+int HPI_items[]  = { 0, -1, -1,  1, -1,  4};
+int ROS_items[]  = {-1,  0,  1, -1,  2, 10};
+int PFSH_items[] = {-1, -1,  0, -1,  1,  2};
+int Exam_items[] = { 0,  1, -1,  3,  6,  8};
+
 	/*
 	 * here are the names for the billing levels for each category
 	 * (we may not need these in production, but some test scenarios
 	 *  want to use them)
 	 */
-char *HPI_levels[] = { "none", "", "", "Brief", "", "Extended" };
+char *HPI_levels[] = { "", "", "None", "Brief", "", "Extended" };
 char *ROS_levels[] = { "", "none", "PP", "", "Extended", "Complete" };
-char *PFSH_levels[] = { "", "", "", "none", "PP", "Complete" };
-char *EXAM_levels[] = { "none", "Problem focused", "EPF", "Detailed", "Complete" };
+char *PFSH_levels[] = { "", "", "", "none", "Problem Pertinent", "Complete" };
+char *Exam_levels[] = { "none", "Problem Focused", "", "EPF", "Detailed", "Complete" };
+
+	// take the array of minimum items per level, and a count of items
+	//  and return the level
+int EM_score(int *items, int count)
+{
+	int level = L0;
+	int i;
+	for (i = L0;  i <= L5;  i++)
+	{
+		if (items[i] == -1) continue;
+		if (count >= items[i]) level = i;
+	}
+	return level;
+}
 
 	/*
-	 * these next few functions generate the billing data on the dashboard
+	 * these next few functions format the billing data on the dashboard
 	 *  (strictly, this should be a separate module, but
 	 *   we need a lot of the dashboard data, so having it
 	 *   local to the other dashboard functions makes sense
@@ -365,108 +391,21 @@ void D_billingSummary(int score)
 	// fprintf(outf, "|\\tab|\\tab|\\tab|\\tab|\\tab|\\tab|\\par}\n");
 }
 
-	// these next couple handle the scores in the various categories
-	// -- we could have set these up in tables
-	// like the vital sign validation, but this is more maleable
-	// as we hone the algorithms
-
-enum Level_t { L0 = 0, L1, L2, L3, L4, L5 };
-
-int score_HPI(int count)
-{
-	if (count == 0)
-	{
-		return L0;
-		// return "None";
-	}
-	if (count <= 3)
-	{
-		return L3;
-		// return "Brief (1-3)";
-	}
-	return L5;
-	// return "Extended (>3)";
-}
-
-int score_ROS(int count)
-{
-	if (count == 0)
-	{
-		return L1;
-		// return "None";
-	}
-	if (count == 1)
-	{
-		return L2;
-		// return "Problem Pertinent (1)";
-	}
-	if (count <= 9)
-	{
-		return L4;
-		// return "Extended (2-9)";
-	}
-	return L5;
-	// return "Complete (>9)";
-}
-
-int score_PFSH(int count)
-{
-	if (count == 0)
-	{
-		return L3;
-		// return "None";
-	}
-	if (count == 1)
-	{
-		return L4;
-		// return "Problem Pertinent (1)";
-	}
-	return L5;
-	// return "Complete (>1)";
-}
-
-int score_exam(int count)
-{
-	if (count == 0)
-	{
-		return L0;
-		// return "None";
-	}
-	if (count == 1)
-	{
-		return L1;
-		// return "Problem Focussed (1)";
-	}
-	if (count <= 5)
-	{
-		return L3;
-		// return "Extended Problem Focused (2-7)";
-	}
-	if (count <= 7)
-	{
-		return L4;
-		// return "Detailed (2-7)";
-	}
-	return L5;
-	// return "Complete (>7)";
-}
-
-
 
 void D_billingScore(void)
 {
 	int HPI_count = _bill_hpi.size();
-	int HPI_score = score_HPI(HPI_count);
+	int HPI_score = EM_score(HPI_items, HPI_count);
 	int max_level = HPI_score;
 	int ROS_count = _bill_ros.size();
-	int ROS_score = score_ROS(ROS_count);
+	int ROS_score = EM_score(ROS_items, ROS_count);
 	max_level = __min(max_level, ROS_score);
 	int PFSH_count = _bill_pfsh.size();
-	int PFSH_score = score_PFSH(PFSH_count);
+	int PFSH_score = EM_score(PFSH_items, PFSH_count);
 	max_level = __min(max_level, PFSH_score);
-	int EXAM_count = _bill_exam.size();
-	int EXAM_score = score_exam(EXAM_count);
-	max_level = __min(max_level, EXAM_score);
+	int Exam_count = _bill_exam.size();
+	int Exam_score = EM_score(Exam_items, Exam_count);
+	max_level = __min(max_level, Exam_score);
 		// yeah, that's confusing: the routine to determine the
 		// score is verb_noun, but the score variable is noun_noun
 		// and the element count is XX_count, but the billing score
@@ -477,7 +416,7 @@ void D_billingScore(void)
 	D_billingElement("HPI (1/4/4)", HPI_count, HPI_score);
 	D_billingElement("ROS (2/2/10)", ROS_count, ROS_score);
 	D_billingElement("PFSH (0/1/2)", PFSH_count, PFSH_score);
-	D_billingElement("Exam (3/3/8)", EXAM_count, EXAM_score);
+	D_billingElement("Exam (3/3/8)", Exam_count, Exam_score);
 	D_billingSummary(max_level);
 }
 

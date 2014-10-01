@@ -413,10 +413,10 @@ void D_billingScore(void)
 	D_heading("E/M Review", c_heading);
 	D_vertspace(2);  // D_vertspace(5);
 	D_billingHeading();
-	D_billingElement("HPI (1/4/4)", HPI_count, HPI_score);
-	D_billingElement("ROS (2/2/10)", ROS_count, ROS_score);
+	D_billingElement("HPI (1/1/4)", HPI_count, HPI_score);
+	D_billingElement("ROS (1/2/10)", ROS_count, ROS_score);
 	D_billingElement("PFSH (0/1/2)", PFSH_count, PFSH_score);
-	D_billingElement("Exam (3/3/8)", Exam_count, Exam_score);
+	D_billingElement("Exam (3/6/8)", Exam_count, Exam_score);
 	D_billingSummary(max_level);
 }
 

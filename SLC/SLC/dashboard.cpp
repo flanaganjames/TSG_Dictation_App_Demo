@@ -310,6 +310,7 @@ void D_backgroundColor(int r, int g, int b)
 
 	/*
 	 * naming conventions (where XX is one of HPI, ROS, PFSH, Exam):
+	 *    (.... however: Exam is reported out in the E/M advice as "PE")
 	 * score_XX -- the function to generate the score
 	 * XX_items -- table of minimum items per billing level
 	 * XX_levels -- the names of the billing levels
@@ -327,7 +328,7 @@ enum Level_t { L0 = 0, L1, L2, L3, L4, L5 };
 int HPI_items[]  = { 0,  1,  1,  1,  4,  4};
 int ROS_items[]  = { 0,  0,  1,  2,  2, 10};
 int PFSH_items[] = { 0,  0,  0,  0,  1,  2};
-int Exam_items[] = { 0,  1,  3,  3,  6,  8};
+int Exam_items[] = { 0,  1,  1,  2,  6,  8};
 
 	/*
 	 * here are the names for the billing levels for each category
@@ -386,16 +387,18 @@ void D_billingElement(char *head, char *levels, int count, int score)
 		ps_billing, c_billing, c_billhdr, head, 
 		ps_bill_lvl, levels);
 	fprintf(outf, "\\tab {      }%d\\tab {  }", count);
-	fprintf(outf, (score == 0) ? "NA\\par}\n" : "%d\\par}\n", score);
+	fprintf(outf, (score == 0) ? "NA\\par}\n" : " %d\\par}\n", score);
 }
 
 void D_billingSummary(int score)
 {
 	D_billingTabs(false);
-	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:\\tab {  }",
-		ps_billing, c_billhdr, "      Overall E/M Level");
-	fprintf(outf, (score == 0) ? "NA\\par}\n" : "%d\\par}\n", score);
-	// uncomment these next two to see tab positions
+	fprintf(outf, "\\b\\fs%d\\cf%d { }%s\\tab {  }",
+		ps_billing, c_billhdr, "    Potential E/M Level");
+	fprintf(outf, "\\line{}                 c/w Hx and PE:\\tab {  }");
+	fprintf(outf, (score == 0) ? "NA" : " %d", score);
+	fprintf(outf, "\\par}\n");
+	//   uncomment these next two to see tab positions
 	// D_billingTabs(false);
 	// fprintf(outf, "|\\tab|\\tab|\\tab|\\par}\n");
 }
@@ -425,7 +428,7 @@ void D_billingScore(void)
 	D_billingElement("HPI", "(1/1/1/4/4)", HPI_count, HPI_score);
 	D_billingElement("ROS", "(0/1/2/2/10)", ROS_count, ROS_score);
 	D_billingElement("PFSH", "(0/0/0/1/2)", PFSH_count, PFSH_score);
-	D_billingElement("Exam", "(1/3/3/6/8)", Exam_count, Exam_score);
+	D_billingElement("PE", "(1/1/2/6/8)", Exam_count, Exam_score);
 	D_billingSummary(max_level);
 }
 

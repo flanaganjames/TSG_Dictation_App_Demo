@@ -21,6 +21,7 @@ const int ps_def = 11*2;
 const int ps_title = 11*2;
 const int ps_exam = 8*2;
 const int ps_billing = 8*2;
+const int ps_bill_lvl = 6*2;
 const int ps_heading = 11*2;
 const int ps_subheading = 9*2+1;
 const int ps_link = 10*2;
@@ -303,6 +304,7 @@ void D_backgroundColor(int r, int g, int b)
 
 /******************************************************************************
 *******************************************************************************
+	E/M panel
 *******************************************************************************
 ******************************************************************************/
 
@@ -320,12 +322,12 @@ void D_backgroundColor(int r, int g, int b)
 enum Level_t { L0 = 0, L1, L2, L3, L4, L5 };
 
 	// the minimum number of items to enter each level
-	// (-1 means we don't use that level)
+	// (we report the max level possible)
 	//              L0, L1, L2, L3, L4, L5
-int HPI_items[]  = { 0, -1, -1,  1, -1,  4};
-int ROS_items[]  = {-1,  0,  1, -1,  2, 10};
-int PFSH_items[] = {-1, -1,  0, -1,  1,  2};
-int Exam_items[] = { 0,  1, -1,  3,  6,  8};
+int HPI_items[]  = { 0,  1,  1,  1,  4,  4};
+int ROS_items[]  = { 0,  0,  1,  2,  2, 10};
+int PFSH_items[] = { 0,  0,  0,  0,  1,  2};
+int Exam_items[] = { 0,  1,  3,  3,  6,  8};
 
 	/*
 	 * here are the names for the billing levels for each category
@@ -359,8 +361,9 @@ int EM_score(int *items, int count)
 	 *   for the moment)
 	 */
 		// use the same set of tabstops for the billing panel
-		//  (headline uses the last, right justified tab)
-void D_billingTabs()
+		//  (headline & summary should use some right justified tabs,
+		//   but the .Net RTF control doesn't honor \\tqr)
+void D_billingTabs(bool right)
 {
 	fprintf(outf, "{\\pard\\tx%d\\tx%d", 
 		T_inch+1*T_space, 2*T_inch-2*T_space);
@@ -368,27 +371,33 @@ void D_billingTabs()
 
 void D_billingHeading(void)
 {
-	D_billingTabs();
-	fprintf(outf, "\\fs%d\\cf%d {\\b{ }%s}\\tab %s\\tab %s\\par}\n",
-		ps_billing, c_billhdr,
-		"Level (3/4/5)", "Elements", "Max E/M");
+	D_billingTabs(true);
+	fprintf(outf, "\\fs%d\\cf%d { }{\\b %s} {\\fs%d %s}",
+		ps_billing, c_billhdr, "Level",
+		ps_bill_lvl, "(1/2/3/4/5)");
+	fprintf(outf, "\\tab %s\\tab %s\\par}\n",
+		"Elements", "E/M Level");
 }
 
-void D_billingElement(char *head, int count, int score)
+void D_billingElement(char *head, char *levels, int count, int score)
 {
-	D_billingTabs();
-	fprintf(outf, "\\fs%d\\cf%d { }{\\cf%d\\b %s}\\tab {      }%d\\tab {  }%d\\par}\n",
-		ps_billing, c_billing, c_billhdr, head, count, score);
-
+	D_billingTabs(false);
+	fprintf(outf, "\\fs%d\\cf%d { }{\\cf%d\\b %s} {\\fs%d %s}",
+		ps_billing, c_billing, c_billhdr, head, 
+		ps_bill_lvl, levels);
+	fprintf(outf, "\\tab {      }%d\\tab {  }", count);
+	fprintf(outf, (score == 0) ? "NA\\par}\n" : "%d\\par}\n", score);
 }
 
 void D_billingSummary(int score)
 {
-	D_billingTabs();
-	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:\\tab {  }%d\\par}\n",
-		ps_billing, c_billhdr, "Maximum Allowable E/M", score);
-	// D_billingTabs();
-	// fprintf(outf, "|\\tab|\\tab|\\tab|\\tab|\\tab|\\tab|\\par}\n");
+	D_billingTabs(false);
+	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:\\tab {  }",
+		ps_billing, c_billhdr, "      Overall E/M Level");
+	fprintf(outf, (score == 0) ? "NA\\par}\n" : "%d\\par}\n", score);
+	// uncomment these next two to see tab positions
+	// D_billingTabs(false);
+	// fprintf(outf, "|\\tab|\\tab|\\tab|\\par}\n");
 }
 
 
@@ -413,10 +422,10 @@ void D_billingScore(void)
 	D_heading("E/M Review", c_heading);
 	D_vertspace(2);  // D_vertspace(5);
 	D_billingHeading();
-	D_billingElement("HPI (1/1/4)", HPI_count, HPI_score);
-	D_billingElement("ROS (1/2/10)", ROS_count, ROS_score);
-	D_billingElement("PFSH (0/1/2)", PFSH_count, PFSH_score);
-	D_billingElement("Exam (3/6/8)", Exam_count, Exam_score);
+	D_billingElement("HPI", "(1/1/1/4/4)", HPI_count, HPI_score);
+	D_billingElement("ROS", "(0/1/2/2/10)", ROS_count, ROS_score);
+	D_billingElement("PFSH", "(0/0/0/1/2)", PFSH_count, PFSH_score);
+	D_billingElement("Exam", "(1/3/3/6/8)", Exam_count, Exam_score);
 	D_billingSummary(max_level);
 }
 
@@ -424,10 +433,10 @@ void D_billingScore(void)
 
 /******************************************************************************
 *******************************************************************************
+	overall dashboard generation
 *******************************************************************************
 ******************************************************************************/
 
-	/********************************************************************/
 	/*
 	 * this is the parent routine for generating the dashboard,
 	 *  calling all the utilities above named D_xxx
@@ -520,6 +529,7 @@ void S_generateDash(void)
 
 /******************************************************************************
 *******************************************************************************
+	warning box below the dashboard
 *******************************************************************************
 ******************************************************************************/
 

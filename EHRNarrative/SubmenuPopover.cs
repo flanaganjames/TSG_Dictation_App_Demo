@@ -20,6 +20,22 @@ namespace EHRNarrative
             this._listBox = new EHRListBox();
             this._listBox.AddElements(subgroup.Elements(data));
             this.Controls.Add(this._listBox);
+
+            this.Width = 220;
+            this.Height = 400;
+            this.Refresh();
+        }
+        public SubmenuPopover(EHRListBoxGroup parent, IEnumerable<Element> elements)
+        {
+            InitializeComponent();
+            this._parentListItem = parent;
+            this._listBox = new EHRListBox();
+            this._listBox.AddElements(elements);
+            this.Controls.Add(this._listBox);
+
+            this.Width = 220;
+            this.Height = 400;
+            this.Refresh();
         }
     }
 }

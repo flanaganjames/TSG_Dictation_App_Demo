@@ -62,20 +62,26 @@ namespace EHRNarrative
     {
         private Subgroup _group;
         private SubmenuPopover _popover;
+        public SubmenuPopover Popover
+        {
+            get { return this._popover; }
+            set { }
+        }
+        private Rectangle _bounds;
+        public Rectangle Bounds
+        {
+            get { return this._bounds; }
+            set { }
+        }
 
         public EHRListBoxGroup(Subgroup group, Collection data)
         {
             this._group = group;
             this._popover = new SubmenuPopover(this, this._group, data);
-            this._popover.Show();
         }
         public EHRListBoxGroup(IEnumerable<Element> elements)
         {
-        }
-
-        public EHRListBoxGroup()
-        {
-            
+            this._popover = new SubmenuPopover(this, elements);
         }
         public String Name
         {
@@ -90,9 +96,8 @@ namespace EHRNarrative
 
         public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
         {
-
+            this._bounds = e.Bounds;
             e.Graphics.FillRectangle(SystemBrushes.Control, e.Bounds);
-            
 
             // draw some item separator
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
@@ -184,6 +189,7 @@ namespace EHRNarrative
             this.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.ItemHeight = Math.Max(30, (int)this._font.GetHeight() + this.Margin.Vertical);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(MouseSelectItem);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(MouseHoverItem);
 
             this.BackColor = SystemColors.Control;
             this.BorderStyle = BorderStyle.None;
@@ -239,6 +245,24 @@ namespace EHRNarrative
             }
 
             this.Refresh();
+        }
+
+        private void MouseHoverItem(object sender, MouseEventArgs e)
+        {
+
+            EHRListBoxGroup group;
+            try
+            {
+                group = (EHRListBoxGroup)this.Items[IndexFromPoint(e.X, e.Y)];
+            }
+            catch
+            {
+                return;
+            }
+
+            group.Popover.Location = new System.Drawing.Point(group.Bounds.Location.X, group.Bounds.Location.Y);
+            group.Popover.Show();
+            group.Popover.Refresh();
         }
     }
 }

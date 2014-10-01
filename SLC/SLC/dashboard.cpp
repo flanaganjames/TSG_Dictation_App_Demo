@@ -308,10 +308,9 @@ void D_backgroundColor(int r, int g, int b)
 
 	/*
 	 * naming conventions (where XX is one of HPI, ROS, PFSH, Exam):
-	 * score_XX -- the function to generate the score
+	 * Level_t -- the enum for the score levels, which are Ln
 	 * XX_items -- table of minimum items per billing level
 	 * XX_levels -- the names of the billing levels
-	 * Level_t -- the enum for the score levels, which are Ln
 	 * XX_score -- the value of the score recorded in D_billingScore
 	 * but see D_billingScore(), below, for more
 	 */
@@ -363,7 +362,7 @@ int EM_score(int *items, int count)
 void D_billingTabs()
 {
 	fprintf(outf, "{\\pard\\tx%d\\tx%d", 
-		T_inch+1*T_space, 2*T_inch-2*T_space);
+		T_inch/2, 2*T_inch);
 }
 
 void D_billingHeading(void)
@@ -371,14 +370,14 @@ void D_billingHeading(void)
 	D_billingTabs();
 	fprintf(outf, "\\fs%d\\cf%d {\\b{ }%s}\\tab %s\\tab %s\\par}\n",
 		ps_billing, c_billhdr,
-		"Level (3/4/5)", "Elements", "Max E/M");
+		"Level", "Elements", "Max E/M");
 }
 
-void D_billingElement(char *head, int count, int score)
+void D_billingElement(char *head, int count, char *names[], int score)
 {
 	D_billingTabs();
-	fprintf(outf, "\\fs%d\\cf%d { }{\\cf%d\\b %s}\\tab {      }%d\\tab {  }%d\\par}\n",
-		ps_billing, c_billing, c_billhdr, head, count, score);
+	fprintf(outf, "\\fs%d\\cf%d { }{\\cf%d\\b %s}\\tab {   }%d (%s)\\tab {  }%d\\par}\n",
+		ps_billing, c_billing, c_billhdr, head, count, names[score], score);
 
 }
 
@@ -388,7 +387,7 @@ void D_billingSummary(int score)
 	fprintf(outf, "\\b\\fs%d\\cf%d { }%s:\\tab {  }%d\\par}\n",
 		ps_billing, c_billhdr, "Maximum Allowable E/M", score);
 	// D_billingTabs();
-	// fprintf(outf, "|\\tab|\\tab|\\tab|\\tab|\\tab|\\tab|\\par}\n");
+	// fprintf(outf, "|\\tab|\\tab|\\par}\n");
 }
 
 
@@ -413,10 +412,10 @@ void D_billingScore(void)
 	D_heading("E/M Review", c_heading);
 	D_vertspace(2);  // D_vertspace(5);
 	D_billingHeading();
-	D_billingElement("HPI (1/4/4)", HPI_count, HPI_score);
-	D_billingElement("ROS (2/2/10)", ROS_count, ROS_score);
-	D_billingElement("PFSH (0/1/2)", PFSH_count, PFSH_score);
-	D_billingElement("Exam (3/3/8)", Exam_count, Exam_score);
+	D_billingElement("HPI", HPI_count, HPI_levels, HPI_score);
+	D_billingElement("ROS", ROS_count, ROS_levels, ROS_score);
+	D_billingElement("PFSH", PFSH_count, PFSH_levels, PFSH_score);
+	D_billingElement("Exam", Exam_count, Exam_levels, Exam_score);
 	D_billingSummary(max_level);
 }
 

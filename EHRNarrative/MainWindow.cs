@@ -194,12 +194,19 @@ namespace EHRNarrative
                         break;
                     case "LOAD_TEMPLATE":
                         char[] separator = new char[] { ' ' };
-                        this.complaint = command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+                        this.complaint = command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
                         LoadTemplate(complaint);
                         break;
                     case "DIALOG":
-                        var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+                        var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
                         new ExamDialog(this, dialogName, this.complaint).Show();
+                        break;
+                    case "CLEAN":
+                        CleanCurrentTemplate();
+                        break;
+                    case "SEND_TO_SLC":
+                        string slc_command = command.Trim().Split(new char[] { ' ' }, 2)[1].Trim();
+                        NotifySLC(slc_command);
                         break;
                     default:
                         ParseReplaceCommand(ref command_str, command);
@@ -314,6 +321,21 @@ namespace EHRNarrative
                 //Do Error!!!
             }
             return command_str;
+        }
+
+        private void CleanCurrentTemplate()
+        {
+            List<EHRLine> lines = FindEHRLines();
+
+            foreach (EHRLine line in lines)
+            {
+                if (String.IsNullOrWhiteSpace(line.text))
+                {
+                    int start = HealthRecordText.Rtf.IndexOf(line.label);
+                    int end = HealthRecordText.Rtf.IndexOf(System.Environment.NewLine, start);
+                    HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
+                }
+            }
         }
 
         public void NotifySLC(string command_str)

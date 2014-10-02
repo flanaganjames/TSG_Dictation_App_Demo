@@ -23,7 +23,7 @@ namespace EHRNarrative
 
             this.Width = 220;
             this.Height = 400;
-            this.Refresh();
+            this.Visible = false;
         }
         public SubmenuPopover(EHRListBoxGroup parent, IEnumerable<Element> elements)
         {
@@ -35,7 +35,7 @@ namespace EHRNarrative
 
             this.Width = 220;
             this.Height = 400;
-            this.Refresh();
+            this.Visible = false;
         }
     }
 }

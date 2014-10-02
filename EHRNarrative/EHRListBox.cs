@@ -58,15 +58,18 @@ namespace EHRNarrative
         }
 
     }
+
     public class EHRListBoxGroup
     {
         private Subgroup _group;
+
         private SubmenuPopover _popover;
         public SubmenuPopover Popover
         {
             get { return this._popover; }
             set { }
         }
+
         private Rectangle _bounds;
         public Rectangle Bounds
         {
@@ -261,8 +264,9 @@ namespace EHRNarrative
             }
 
             group.Popover.Location = new System.Drawing.Point(group.Bounds.Location.X, group.Bounds.Location.Y);
+            this.Controls.Add(group.Popover);
+            group.Popover.Enabled = true;
             group.Popover.Show();
-            group.Popover.Refresh();
         }
     }
 }

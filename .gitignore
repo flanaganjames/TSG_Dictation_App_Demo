@@ -18,6 +18,15 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+dialog_content/Lib/
+dialog_content/Scripts/
+dialog_content/*.pyd
+dialog_content/*.dll
+dialog_content/include/
+dialog_content/dist/
+dialog_content/static/
+dialog_content/dialog_content.sqlite3
+
 
 #################
 ## Django

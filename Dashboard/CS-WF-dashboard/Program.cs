@@ -37,8 +37,8 @@ namespace Dashboard
         private System.Drawing.Size tsize = new System.Drawing.Size(dashwid, dashht+warnht);
         private System.Drawing.Point wpos = new System.Drawing.Point(0, dashht);
         private System.Drawing.Point dpos = new System.Drawing.Point(0, 0);
-        public String dashpath = @"C:/TEMP/Sullivan/dashboard.rtf";
-        public String warnpath = @"C:/TEMP/Sullivan/dashwarn.rtf";
+        public String dashpath = "dashboard.rtf";
+        public String warnpath = "dashwarn.rtf";
         public String rtfmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
         public WindowsFormsApplication1.Form1 dash;
         public RichTextBox dashrtf, warnrtf;
@@ -58,7 +58,7 @@ namespace Dashboard
             dash = new WindowsFormsApplication1.Form1(); // dash = new Form();
             dash.Size = dsize;
             // dash.Visible = true; //  this appears to steal focus
-            dash.Text = "The Sullivan Group Dashboard";
+            dash.Text = "The Sullivan Group dashboard";
                 // the dashboard RTF control
             dashrtf = new RichTextBox();
             dashrtf.Size = dsize;
@@ -72,7 +72,7 @@ namespace Dashboard
             warnrtf.Size = wsize;
             warnrtf.Location = wpos;
             warnrtf.ReadOnly = true;
-            warnrtf.BackColor = Color.LightPink;
+            warnrtf.BackColor = Color.Yellow;
         }
 
             // we can invoke failnote if we're already running,
@@ -273,8 +273,10 @@ namespace Dashboard
                 // this table really needs to be external
             String[] links = {
             "TSG-chest-pain: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
+            "Chest_Pain_Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
             "Chest Pain Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
             "TSG-sore-throat: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "Sore_Throat_Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             };
 

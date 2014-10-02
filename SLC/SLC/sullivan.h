@@ -1,9 +1,9 @@
 // common definitions between the dashboard and the SLC
 
 
-#define STATUS_PATH "C:/TEMP/Sullivan/status.txt"
-#define DASHBOARD_PATH "C:/TEMP/Sullivan/dashboard.rtf"
-#define WARN_PATH "C:/TEMP/Sullivan/dashwarn.rtf"
+#define STATUS_PATH "status.txt"
+#define DASHBOARD_PATH "dashboard.rtf"
+#define WARN_PATH "dashwarn.rtf"
 
 // prototypes in SLC
 int S_initStatus(void);
@@ -15,11 +15,12 @@ void S_sortStatus(void);
 void S_generateDash(void);
 void S_reset(void);
 bool no_complaint(void);
-bool S_validate(void);
-void S_generateWarn(char *);
+void S_Validate(void);
+void S_generateWarnBox(void);
 
 // globals in the SLC
 extern FILE *status_file;
+
 
 
 

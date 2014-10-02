@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <Windows.h>
 
 #include "sullivan.h"
 
@@ -15,9 +16,13 @@ BOOL reset(_TCHAR *);
 
 FILE *status_file = NULL;
 
-// int __stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR cmdline, int nCmdShow)
-int _tmain(int argc, _TCHAR* argv[])
+int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
+	int argc;
+	LPWSTR *argv;
+
+	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
 	if (argc == 1)
 	{
 		// S_initStatus();

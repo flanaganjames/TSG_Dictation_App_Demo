@@ -10,81 +10,19 @@ The main entry point is S_generatedash.
 
 #include "sullivan.h"
 #include "parser.h"
-
-static char *icon_data[] = {  // nominal 24x24 icon data
-	"010009000003aa0300000000810300000000040000000301080005000000",
-	"0b0200000000050000000c0219001900030000001e000400000007010400",
-	"040000000701040081030000410b2000cc00180018000000000018001800",
-	"000000002800000018000000180000000100180000000000c00600000000",
-	"0000000000000000000000000000ad9c6bb5ad84ad9c73b5ad84ad9c6bb5",
-	"a584ad9c73b5ad84ad9c73b5a584ad9c73b5ad84ad9c73b5ad84ad9c73b5",
-	"ad84ad9c73b5ad84ad9c73b5ad84ad9c73b5ad84ad9c73b5ad84b5a573b5",
-	"ad8cb5a57bb5ad8cb5a57bb5ad84b5a57bb5ad8cb5a57bb5ad8cb5a57bb5",
-	"ad8cb5a57bb5ad8cb5a57bb5ad8cb5a57bb5ad8cb5a57bb5ad8cb5a57bb5",
-	"ad8cb5a57bb5ad8c9c8442a58c529c8442a58c529c8442a58c529c8442a5",
-	"8c529c8442a58c529c8442a58c529c8442a58c529c8442a58c529c8442a5",
-	"8c529c8442a58c529c8442a58c529c8442a58c529c7b29947321947b2994",
-	"7321947b29947b21947b29947321947b29947321947b29947321947b2994",
-	"7321947b29947321947b29947321947b29947321947b29947321947b2194",
-	"7321947321947b29947329947b29947321947b29947321947b2994732194",
-	"7b299473219c7b29947321947b29947321947b29947b21947b2994732194",
-	"7b29947b21947b29947321947b29947b29947b219c7b29947b29947b2994",
-	"73219c7b29947b29947b299473219c7b29947b299c7b29947321947b2994",
-	"7b299c7b29947b299c7b29947b29947b29947b299c7b29947b2994732994",
-	"7b29947321947b29947329947b29947321947b29947321947b2994732194",
-	"7b29947321947b29947321947b29947321947b29947321947b2994732194",
-	"7b29947321947b299c7b29947b29947b29947b299c7b29947b29947b2994",
-	"73219c7b29947b299c7b29947321947b29947b299c7b29947b29947b2994",
-	"7b299c7b29947b29947b299473299c7b29947b29947321947b2994732194",
-	"7b29947321947b298c7321947b29947318947b29947329947b2994731894",
-	"7b29947b29947b29947318947b29947329947b29947318947b2994732994",
-	"7b29947b298c73299c7b2184844a5a9cbd5a94b584845a9473217b8c735a",
-	"94b552a5d65a94bd7b8c6b947329947b298c7b29738c7b5a94bd52a5d65a",
-	"94ad84845a947321947b29947329846b218c73298c6b18737b6331adff39",
-	"adff6b84738c6b184a9cd639adff39a5ff39adff39adff6b847b846b185a",
-	"94bd39adff39adff39a5ff39adff39a5ff6b8c848c6b18847329846b2984",
-	"6b218c6b18737b5a42adff42a5ff6b84738c63107384736b847b73846b4a",
-	"9ce739b5ff5294b573847339a5ff42adff5a8ca56b84734a9cd642adff42",
-	"9ce7847339846b21846b21846b29846b18737b6339a5ff42adff6b7b738c",
-	"6b1873734a529cc642a5f739adff31adff638c945a8c9439adff42a5ef7b",
-	"73425294b539adff31adff39adff6b7b638c6b18846b29846b218c6b2173",
-	"7b5a39adff39a5ff6b84738c6b10529cce39adff42adff4a9cce638c9484",
-	"6b29638c9439adff42adff737b637384635a94ad638c946384847b7b4a84",
-	"6b18846b218c6b185a8c9c4aa5e739a5ff42a5ff429cef638c944a94c639",
-	"adff429ce7638c945a8c9c84733973734a42a5ff39adff4aa5e7528cad52",
-	"9cce4a94ce6b846b846318846b298c7b29947310529cd631adff39adff39",
-	"adff31b5ff529cbd7b846342a5ef39adff39adff39adff7384739473186b",
-	"8c8c42adff39adff39b5ff31adff4aadff738c7b9473218c73298c732994",
-	"7b2173846b6b8c8c6b8c846b8c8c6b8c8c7b8c6b94732184844a6b8c8c63",
-	"949c6b847b8c7b39947321947b217b7b526b8c8c638c9c738c84847b3994",
-	"7b218c7329947b29947b298c73299c7b219c73109c73189473109c731894",
-	"7318947b299473219c7b189473189c7b18947321947b29947b299c7b2194",
-	"73189c7b21947318947b21947329947b29947b298c7321947b298c732994",
-	"7b298c7329947b298c7329947b29947321947b298c7329947b2994732994",
-	"7b298c7321947b29947329947b298c7321947b298c7329947b298c732194",
-	"7b29947b29947b29947b29947329947b29947321947b29947321947b2994",
-	"7321947b29947321947b29947329947b29947b21947b29947b29947b2994",
-	"7321947b29947b29947b299473218c7321947b298c7321947b298c732194",
-	"7b298c7321947b298c7321947b29947321947b298c7321947b2994732194",
-	"7b298c7321947b298c7321947b298c7321947b29947321947b29947b2994",
-	"73219c7b29947b29947b29947321947b29947b29947b29947321947b2994",
-	"7321947b29947b21947b29947321947b29947b29947b29947321947b2994",
-	"7329947b29947b29947321947b29947321947b298c7321947b2994732194",
-	"7b298c7321947b29947321947b29947321947b29947321947b2994732194",
-	"7b298c7321947b29947321947b298c7321947b299c7b29947b29947b298c",
-	"7321947b29947b29947b298c7321947b29947b219c7b29947321947b2994",
-	"7321947b29947b29947b29947321947b29947b29947b29947321947b2994",
-	"7321040000002701ffff030000000000",
-};
-const int icon_length = (sizeof(icon_data)/sizeof(icon_data[0]));
+#include "icons.h"
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
+const int T_inch = 72 * 20;		// 1 inch in twips
+const int T_billingtab = 72 * 20 * 5 / 10;  // .5 inches
 const int T_space = 5 * 20;  // 5pt space in twips
 	// point sizes of various elements (in half points)
 const int ps_def = 11*2;
 const int ps_title = 11*2;
 const int ps_exam = 8*2;
+const int ps_billing = 8*2;
 const int ps_heading = 11*2;
+const int ps_subheading = 9*2+1;
 const int ps_link = 10*2;
 const int ps_warning = 12*2;
 
@@ -97,7 +35,9 @@ enum colors_t {
 	c_ignore = 0, c_black=1, c_white, c_gray, 
 	c_hyperlink, c_highlight_req, c_highlight_comp, 
 	c_foreground_req, c_foreground_comp, c_background,
-	c_sepbar_a, c_sepbar_b, c_heading, c_warning,
+	c_sepbar_a, c_sepbar_b, c_heading, c_subheading,
+	c_billing,
+	c_warning,
 	/*
 		IMPORTANT: These next two colors need to always
 		end the enumeration.  c_bar_inc is the gray
@@ -115,25 +55,24 @@ int rgb_colors[][3] = {
 		// c_hyperlink, c_highlight_req, c_highlight_comp
 	{0,0,0}, {160, 160, 160}, {241,217,198},
 		// c_foreground_req, c_foreground_comp, c_background
-	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {255,0,0},
-		// sepbar_a = gray50, sepbar_b = gray60, heading, warning
+	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {160,160,160},
+		// sepbar_a, sepbar_b, heading, subheading
+	{0,0,0},
+		// billing_element,
+	{255,0,0},
+		// warning foreground
 };
 int bar_colors[][3] = {
 	// now the list of the colors for the progress bar
 	//  ... but no explicit enum names for any past c_bar_0,
 	//  ... so these must stay at the end of the colortbl
 	{229,229,229},  // c_bar_inc == gray90
-	{0,0,0}, // c_bar_0 == 0% done == black
-	{115,115,115}, {127,127,127}, {140,140,140}, {153,153,153}, 
-		// 10%, 20%, 30%, 40% = gray45, gray50, gray55, gray60
-	{166,166,166}, {179,179,179}, {191,191,191}, 
-		// 50%, 60%, 70% = gray65, gray70, gray75,
-	{0,139,0}, {0,170,0},  // 80%, 90% == green4, arbitrary
-	// {193,255,193}, {84,255,159},
-		// 80%, 90% == DarkSeaGreen, SeaGreen
-	// {0,139,0}, {152,251,152},
-		// 80%, 90% = green4, green3
-	{0,255,0}	// 100% = green1
+		// the colors are a progression through HSL space
+		// of (h, 100%, 50%) for (h=0; h<=120; h+=12),
+		// but with a deeper green for 100%
+	{255,0,0}, {255,50,0}, {255,102,0}, {255,153,0},
+	{255,204,0}, {255,255,0}, {204,255,0}, {153,255,0},
+	{101,255,0}, {50,255,0}, {0,170,0}
 };
 
 	// RTF encoding for the background color
@@ -143,7 +82,7 @@ const int cc_background = rgb_colors[c_background][c_red] * 256 * 256
 const int color_count = (sizeof(rgb_colors)/sizeof(rgb_colors[0]));
 const int bar_count = (sizeof(bar_colors)/sizeof(bar_colors[0]));
 
-void R_prolog(void)
+void D_prolog(void)
 {
 	fprintf(outf, "{\\rtf1\\ansi\\ansicpg1252\\lang1033\\deff0");
 	fprintf(outf, "\\fs%d\\sl24\\slmult0\\viewbksp1\\margr%d\n", 
@@ -169,32 +108,32 @@ void R_prolog(void)
 	fprintf(outf, "}\n");
 }
 
-void R_icon(void)
+void D_icon(void)
 {
 	// int wid = 240, ht = 225;
 	int wid = 288, ht = 270; 
 	fprintf(outf, 
-		"{\\pict\\wmetafile8\\picw423\\pich397\\picwgoal%d\\pichgoal%d\n",
-		wid, ht);
-	for (int i = 0;  i < icon_length;  i++)
-		fprintf(outf, "%s\n", icon_data[i]);
+		"{\\pict\\wmetafile8\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
+		tsg_picw, tsg_pich, wid, ht);
+	for (int i = 0;  i < tsg_icon_length;  i++)
+		fprintf(outf, "%s\n", tsg_icon[i]);
 	fprintf(outf, "}");
 }
 
-void R_title(void)
+void D_title(void)
 {
 	fprintf(outf, "{\\pard\\fs%d\n", ps_title);
-	R_icon();
+	D_icon();
 	fprintf(outf, "{ }\\b RSQ{\\super \\'a9} Guidance\\sa200\\par}");
 	fprintf(outf, "\\fs%d\n", ps_def);
 }
 
-void R_epilog()
+void D_epilog()
 {
 	fprintf(outf, "}\n");
 }
 
-void R_separator(int color)
+void D_separator(int color)
 {
 	// example:
 	// {\pard\fs10\sl20{ }\par}
@@ -206,7 +145,7 @@ void R_separator(int color)
 	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void R_hyperlinks(void)
+void D_hyperlinks(void)
 {
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
@@ -220,25 +159,32 @@ void R_hyperlinks(void)
 	}
 }
 
-void R_heading(char *head, int color)
+void D_heading(char *head, int color)
 {
 	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b %s}\\par\n", 
 		ps_heading, color, head);
 }
 
-void R_line(void)
+void D_subheading(char *head, int color)
+{
+	fprintf(outf, "{\\pard\\s0{  }\\fs%d\\cf%d\\b %s}\\par\n", 
+		ps_subheading, color, head);
+}
+
+
+void D_line(void)
 {
 	// fprintf(outf, "\\line");
 }
 
 	// provide a little vertical space
-void R_vertspace(int points)
+void D_vertspace(int points)
 {
 	fprintf(outf, "{\\pard\\fs%d\\sl0\\sa0\\par}\n", points*2);
 }
 
 
-void R_group(char *hdr, list<char *> L, int color)
+void D_group(char *hdr, list<char *> L, int color)
 {
 	// example:
 	// {\pard\fs16\sl0\sa0\par}
@@ -254,7 +200,7 @@ void R_group(char *hdr, list<char *> L, int color)
 }
 
 
-void R_complaints(void)
+void D_complaints(void)
 {
 	list<char *>::iterator i;
 	for (i = _complaint.begin();  i != _complaint.end();  i++)
@@ -270,7 +216,7 @@ void R_complaints(void)
 }
 
 
-void R_progressbar(char *title, int documented, int needed)
+void D_progressbar(char *title, int documented, int needed)
 {
 	// example:
 	// {\tx477\tx4340\tx4380\tx5040
@@ -288,7 +234,7 @@ void R_progressbar(char *title, int documented, int needed)
 
 	if (strlen(title) > 0)
 	{
-		R_heading(title, c_heading);
+		D_heading(title, c_heading);
 	}
 	if (percent == 0)  barused = barstop;
 	// fprintf(outf, "{\\tx%d\\tx%d\\tx%d\\tx%d\n", 
@@ -303,10 +249,10 @@ void R_progressbar(char *title, int documented, int needed)
 		fprintf(outf, "\\highlight%d\\tab", barcolor);
 	}
 	fprintf(outf, "\\highlight%d{ %d%%}\\tab\\par}\n", c_ignore, percent);
-	R_vertspace(5);
+	D_vertspace(5);
 }
 
-void S_testColorBars(void)
+void D_testColorBars(void)
 {
 		// for grins, let's check the bar colors:
 		//  add some blank space and a number of sample colors
@@ -317,19 +263,228 @@ void S_testColorBars(void)
 		fprintf(outf, (i && (i%10)==0) ? "\\line\n" : "\\line");
 	fprintf(outf, "\n");
 
-	R_separator(c_black);
-	R_heading("Progress bar color samples....", c_black);
+	D_separator(c_black);
+	D_heading("Progress bar color samples....", c_black);
 
 	for (int i = 0;  i <= samples;  i++)
-		R_progressbar("", i, samples);
-	R_vertspace(20);
+		D_progressbar("", i, samples);
+	D_vertspace(20);
 }
 
+
+void D_backgroundColor(int r, int g, int b)
+{
+	fprintf(outf, "{\\*\\background {\\shp{\\*\\shpinst\\shpleft0\\shptop0");
+	fprintf(outf, "\\shpright0\\shpbottom0\\shpfhdr0\\shpbxmargin\n");
+	fprintf(outf, "\\shpbxignore\\shpbymargin\\shpbyignore\\shpwr0");
+	fprintf(outf, "\\shpwrk0\\shpfblwtxt1\\shpz0\\shplid1025\n");
+	fprintf(outf, "{\\sp{\\sn shapeType}{\\sv 1}}");
+	fprintf(outf, "{\\sp{\\sn fFlipH}{\\sv 0}}");
+	fprintf(outf, "{\\sp{\\sn fFlipV}{\\sv 0}}\n");
+	fprintf(outf, "{\\sp{\\sn fillColor}{\\sv %d}}",
+		256*256*r + 256*g + b);
+	fprintf(outf, "{\\sp{\\sn fFilled}{\\sv 1}}\n");
+	fprintf(outf, "{\\sp{\\sn lineWidth}{\\sv 0}}");
+	fprintf(outf, "{\\sp{\\sn fLine}{\\sv 0}}\n");
+	fprintf(outf, "{\\sp{\\sn bWMode}{\\sv 9}}");
+	fprintf(outf, "{\\sp{\\sn fBackground}{\\sv 1}}");
+	fprintf(outf, "{\\sp{\\sn fLayoutInCell}{\\sv 1}}}}}\n");
+}
+
+/******************************************************************************
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
+
+	/*
+	 * these next few functions generate the billing data on the dashboard
+	 *  (strictly, this should be a separate module, but
+	 *   we need a lot of the dashboard data, so having it
+	 *   local to the other dashboard functions makes sense
+	 *   for the moment)
+	 */
+void D_billingElement(char *head, int count, char *score)
+{
+	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
+		T_billingtab, T_inch+T_space, T_inch+3*T_space);
+	fprintf(outf, "\\fs%d\\cf%d { }%s\\tab %d %s\\tab %s\\par}\n",
+		ps_billing, c_billing, head, 
+		count, (count == 1) ? "item" : "items", score);
+}
+
+void D_billingSummary(char *head, int score)
+{
+	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
+		T_billingtab, T_width-3*T_space, T_width);
+	fprintf(outf, "\\b\\fs%d\\cf%d {   }%s\\tab %d\\par}\n",
+		ps_billing, c_billing, head, score);
+}
+
+	// these next couple handle the scores in the various categories
+	// -- we could have set these up in tables
+	// like the vital sign validation, but this is more maleable
+	// as we hone the algorithms
+		// naming conventions:
+		//   score_XX -- the function to generate the score
+		//   XX_t -- the enum for the score names, which are XX_name
+		//   XX_score -- the value of the score recorded in D_billingScore
+		//   but see D_billingScore(), below, for more
+enum HPI_t { HPI_none, HPI_BRF, HPI_EXT };
+char *score_HPI(int count, int *score)
+{
+	if (count == 0)
+	{
+		*score = HPI_none;
+		return "None";
+	}
+	if (count <= 3)
+	{
+		*score = HPI_BRF;
+		return "Brief (1-3)";
+	}
+	*score = HPI_EXT;
+	return "Extended (>3)";
+}
+
+enum ROS_t { ROS_none, ROS_PP, ROS_EXT, ROS_COM };
+char *score_ROS(int count, int *score)
+{
+	if (count == 0)
+	{
+		*score = ROS_none;
+		return "None";
+	}
+	if (count == 1)
+	{
+		*score = ROS_PP;
+		return "Problem Pertinent (1)";
+	}
+	if (count <= 9)
+	{
+		*score = ROS_EXT;
+		return "Extended (2-9)";
+	}
+	*score = ROS_COM;
+	return "Complete (>9)";
+}
+
+enum PFSH_t { PFSH_none, PFSH_PP, PFSH_COM };
+char *score_PFSH(int count, int *score)
+{
+	if (count == 0)
+	{
+		*score = 0;
+		return "None";
+	}
+	if (count == 1)
+	{
+		*score = 1;
+		return "Problem Pertinent (1)";
+	}
+	*score = 2;
+	return "Complete (>1)";
+}
+
+enum EX_t { EX_none, EX_PF, EX_EPF, EX_DET, EX_COM };
+char *score_exam(int count, int *score)
+{
+	if (count == 0)
+	{
+		*score = EX_none;
+		return "None";
+	}
+	if (count == 1)
+	{
+		*score = EX_PF;
+		return "Problem Focussed (1)";
+	}
+#if 0
+			// this next should pivot on whether
+			// the exam is cursory or detailed
+			// we assume detailed for the moment
+	{
+		*score = EX_EPF;
+		return "Extended Problem Focused (2-7)";
+	}
+#endif
+	if (count <= 7)
+	{
+		*score = EX_DET;
+		return "Detailed (2-7)";
+	}
+	*score = EX_COM;
+	return "Complete (>7)";
+}
+
+enum HX_t { HX_none, HX_PF, HX_EPF, HX_DET, HX_COM };
+char *score_HX(int HPI_score, int ROS_count, int PFSH_count, int *hx_total)
+{
+	if (HPI_score >= HPI_EXT && ROS_count >= ROS_COM && PFSH_count >= PFSH_COM)
+	{
+		*hx_total = HX_COM;
+		return "Comprehensive";
+	}
+	if (HPI_score >= HPI_EXT && ROS_count >= ROS_EXT && PFSH_count >= PFSH_PP)
+	{
+		*hx_total = HX_DET;
+		return "Detailed";
+	}
+	if (HPI_score >= HPI_BRF && ROS_count >= ROS_PP && PFSH_count >= PFSH_none)
+	{
+		*hx_total = HX_EPF;
+		return "Ext Problem Focused";
+	}
+	if (HPI_score >= HPI_BRF && ROS_count >= ROS_none && PFSH_count >= PFSH_none)
+	{
+		*hx_total = HX_PF;
+		return "Problem Focused";
+	}
+	*hx_total = HX_none;
+	return "None";
+}
+
+
+
+void D_billingScore(void)
+{
+	int HPI_score, ROS_score, PFSH_score, EX_score;
+	int HPI_count = _bill_hpi.size();
+	int ROS_count = _bill_ros.size();
+	int PFSH_count = _bill_pfsh.size();
+	int hx_total;
+		// yeah, that's confusing: the routine to determine the
+		// score is verb_noun, but the score variable is noun_noun
+		// and the element count is XX_count, but the billing score
+		// is XX_score
+	D_heading("Billing Advice", c_heading);
+	D_vertspace(5);
+	D_billingElement("HPI", HPI_count, score_HPI(HPI_count, &HPI_score));
+	D_billingElement("ROS", ROS_count, score_ROS(ROS_count, &ROS_score));
+	D_billingElement("PFSH", PFSH_count, score_PFSH(PFSH_count, &PFSH_score));
+	char *hx_level = score_HX(HPI_score, ROS_score, PFSH_score, &hx_total);
+	D_billingSummary("History total", hx_total);
+	D_billingElement("Exam", _max_exam_level, 
+		score_exam(_max_exam_level, &EX_score));
+	D_billingSummary("Maximum billing level", __min(hx_total, EX_score));
+}
+
+
+
+/******************************************************************************
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
+
+	/********************************************************************/
+	/*
+	 * this is the parent routine for generating the dashboard,
+	 *  calling all the utilities above named D_xxx
+	 */
 void S_generateDash(void)
 {
 	S_sortStatus();
 
-	// open the dashboard
+		// open the dashboard
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");
@@ -341,52 +496,55 @@ void S_generateDash(void)
 		exit(1);
 	}
 
-	R_prolog();
+	D_prolog();
 		// header
-	R_title();
+	D_title();
 		// presenting complaint(s)
-	R_complaints();
+	D_complaints();
 
-	R_line();
+	D_line();
 
 		// resource links
-	R_hyperlinks();
-	R_line();
-	R_separator(c_sepbar_b);
+	D_hyperlinks();
+	D_line();
+	D_separator(c_sepbar_b);
 
 		// required components
 	int n_req_still_need = _req_hpi.size() + _req_exam.size() + _assess.size();
-	R_progressbar("Required", _comp_req.size(),
+	D_progressbar("Recommended", _comp_req.size(),
 		n_req_still_need + _comp_req.size());
-	R_heading("Incomplete", c_heading);
-	R_vertspace(5);
-	R_group("HPI", _req_hpi, c_foreground_req);
-	R_group("Exam", _req_exam, c_foreground_req);
-	R_group("Assessment", _assess, c_foreground_req);
-	R_vertspace(2);
-	R_line();
-	R_separator(c_sepbar_a);
-	R_heading("Completed", c_heading);
-	R_vertspace(5);
-	R_group("", _comp_req, c_foreground_comp);
-	// R_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
-	// R_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);
-	// R_group("Assessment", comp_assess, n_c_assess, c_foreground_comp);
-	R_vertspace(2);
-	R_line();
-	R_separator(c_sepbar_b);
+	D_heading("Incomplete", c_heading);
+	D_vertspace(5);
+	D_group("HPI", _req_hpi, c_foreground_req);
+	D_group("Exam", _req_exam, c_foreground_req);
+	D_group("Assessment", _assess, c_foreground_req);
+	D_vertspace(2);
+	D_line();
+	D_separator(c_sepbar_a);
+	D_heading("Completed", c_heading);
+	D_vertspace(5);
+	D_group("", _comp_req, c_foreground_comp);
+	// D_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
+	// D_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);
+	// D_group("Assessment", comp_assess, n_c_assess, c_foreground_comp);
+	D_vertspace(2);
+	D_line();
+	D_separator(c_sepbar_b);
 
+	/*********
+	......... now eliding the "recommended" progress bar
 		// recommended components -- only a progress bar
 	int n_rec_still_need = _rec_hpi.size() + _rec_exam.size();
-	R_progressbar("Recommended",
+	D_progressbar("Recommended",
 		_comp_rec.size(), n_rec_still_need + _comp_rec.size());
-	R_line();
+	D_line();
+	**********/
 
 		// differential diagnoses
-	if (differential)
+	if (_differential)
 	{
 		fprintf(outf, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}", 
-			differential);
+			_differential);
 #if 0	// say nothing if there's no differential diagnosis
 	} else
 	{
@@ -395,22 +553,88 @@ void S_generateDash(void)
 #endif
 	}
 
-	// S_testColorBars();
+	D_billingScore();
 
 		// finish
-	R_epilog();
+	D_epilog();
 	fclose(outf);
 	outf = NULL;
+
+		// once we've finished generating the dashboard, call
+		// S_Validate() to generate a warning box, if necessary
+	S_Validate();
 }
 
 
+/******************************************************************************
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
+
 	/*
-	 * generate an extra RTF box containing a warning
-	 * (with the specified text) to be added to the bottom
+	 * the next clump are the utilities to generate the
+	 * warning box on the dashboard:
+	 * if there are warnings, we generate an extra RTF box
+	 * containing them to be added to the bottom
 	 * of the dashboard
 	 */
-void S_generateWarn(char *warn)
+
+	// list of warnings for the dashboard
+list<char *> _warnings;
+
+	// clear the warnings list
+void D_clearWarnings(void)
 {
+	_warnings.clear();
+}
+
+	// add a warning to the list to be displayed in the warning box
+void D_addWarning(char *s)
+{
+	_warnings.push_back(scopy(s));
+}
+
+
+void D_one_warn_icon(int wid, int ht)
+{
+	fprintf(outf,
+		"{\\pict\\wmetafile8\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
+		warn_picw, warn_pich, wid, ht);
+	for (int i = 0;  i < warn_icon_length;  i++)
+		fprintf(outf, "%s\n", warn_icon[i]);
+	fprintf(outf, "}");
+}
+
+void D_warning_icons(void)
+{
+	int wid = 450, ht = 420; 
+	int lasttab = T_width+300;
+	// int midtab = lasttab / 2;
+	int gap = (lasttab - 3*wid)/3 - 20;
+	// fprintf(outf, "{\\tx%d\\tx%d", midtab, lasttab);
+	fprintf(outf, "{\\tx%d\\tx%d\\tx%d",
+		wid+gap, 2*(wid+gap), 3*(wid+gap));
+	D_one_warn_icon(wid, ht);
+	fprintf(outf, "\\tab");
+	D_one_warn_icon(wid, ht);
+	fprintf(outf, "\\tab");
+	D_one_warn_icon(wid, ht);
+	fprintf(outf, "\\tab");
+	D_one_warn_icon(wid, ht);
+	fprintf(outf, "\\par}\n");
+
+}
+
+	// now produce the warning box if we have any warnings in the list
+void S_generateWarnBox(void)
+{
+		// we've got nothing to say
+	if (_warnings.empty())
+	{
+		D_removeWarningBox();
+		return;
+	}
+
 	if (outf != NULL)
 	{		// already open!?!?
 		fprintf(stderr, "already have an output file!!!!!\n");
@@ -421,11 +645,25 @@ void S_generateWarn(char *warn)
 		fprintf(stderr, "cannot open warning file!!!!!");
 		exit(1);
 	}
-	R_prolog();
-	R_vertspace(20);
-	fprintf(outf, "\\pard\\s0{\\fs%d\\cf%d\\b\\i %s}\\par\n",
-		ps_warning, c_warning, warn);
-	R_epilog();
+	D_prolog();
+		// we add a background color, even though the DotNet
+		// RTF control doesn't honor it, and the background
+		// color must be supplied by the dashboard program
+	D_backgroundColor(0,255,255);
+	D_warning_icons();
+	D_vertspace(10);
+	list<char *>::iterator i;
+	for (i = _warnings.begin();  i != _warnings.end();  i++)
+	{
+		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
+			ps_warning, c_warning, T_space*2, T_space*2, *i);
+		D_vertspace(2);
+
+	}
+	D_vertspace(10);
+	// D_vertspace(21);
+	// D_warning_icons();
+	D_epilog();
 	fclose(outf);
 	outf = NULL;
 }

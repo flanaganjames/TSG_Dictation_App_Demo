@@ -24,9 +24,9 @@ namespace EHRNarrative
         public struct COPYDATASTRUCT
         {
             //ULONG_PTR The data to be passed to the receiving application
-            public int dwData;
+            public ulong dwData;
             //DWORD The size, in bytes, of the data pointed to by the lpData member
-            public int cbData;
+            public ulong cbData;
             //PVOID (void pointer) The data to be passed to the receiving application. This member can be NULL
             //However, we are using it differently to just store a string.
             [MarshalAs(UnmanagedType.LPStr)]
@@ -57,6 +57,7 @@ namespace EHRNarrative
         private List<EHRLine> topLevelLines = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
+        private string complaint;
 
         #region Window Messaging Helpers
         public void bringAppToFront(int hWnd)
@@ -85,7 +86,7 @@ namespace EHRNarrative
                 int len = msgArray.Length;
                 COPYDATASTRUCT cds;
                 cds.dwData = 0;
-                cds.cbData = len + 1;
+                cds.cbData = (ulong)len + 1;
                 cds.lpData = msg;
                 result = SendMessage(hWnd, WM_COPYDATA, wParam, ref cds);
             }
@@ -120,13 +121,13 @@ namespace EHRNarrative
             switch (msg.Msg)
             {
                 case WM_USER:
-                    MessageBox.Show("Message received from external program: " + msg.WParam + " - " + msg.LParam);
+                    break;
+                case (WM_USER + 0x1):
                     break;
                 case WM_COPYDATA:
                     COPYDATASTRUCT msgCarrier = new COPYDATASTRUCT();
                     Type type = msgCarrier.GetType();
                     msgCarrier = (COPYDATASTRUCT)msg.GetLParam(type);
-                    //MessageBox.Show("String Message Received: " + msgCarrier.lpData + ", " + msgCarrier.dwData + ", " + msgCarrier.cbData);
                     String msgString = msgCarrier.lpData;
 
                     ParseVBACommand(msgString);
@@ -136,9 +137,18 @@ namespace EHRNarrative
             base.WndProc(ref msg);
         }
 
+        [Conditional("DEBUG")]
+        private void EnableTestingButtons()
+        {
+            mockDragonButton.Visible = true;
+            mockDragonButton.Enabled = true;
+        }
+
         public EHRNarrative()
         {
             InitializeComponent();
+
+            EnableTestingButtons();
 
             dashboardTimer.Stop();
 
@@ -149,6 +159,18 @@ namespace EHRNarrative
             ParseLabels();
 
             HealthRecordText.TextChanged += hrTextChanged;
+        }
+
+        public void ReplaceKeyword(String commandStr)
+        {
+            this.HealthRecordText.TextChanged -= hrTextChanged;
+
+            string command_str = "";
+            ParseReplaceCommand(ref command_str, commandStr.Trim());
+
+            //NotifySLC(command_str);
+
+            this.HealthRecordText.TextChanged += hrTextChanged;
         }
 
         private void ParseVBACommand(String commandStr)
@@ -172,7 +194,12 @@ namespace EHRNarrative
                         break;
                     case "LOAD_TEMPLATE":
                         char[] separator = new char[] { ' ' };
-                        LoadTemplate(command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1]);
+                        this.complaint = command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+                        LoadTemplate(complaint);
+                        break;
+                    case "DIALOG":
+                        var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+                        new ExamDialog(this, dialogName, this.complaint).Show();
                         break;
                     default:
                         ParseReplaceCommand(ref command_str, command);
@@ -289,7 +316,7 @@ namespace EHRNarrative
             return command_str;
         }
 
-        private void NotifySLC(string command_str)
+        public void NotifySLC(string command_str)
         {
             if (command_str != "")
             {
@@ -304,6 +331,15 @@ namespace EHRNarrative
                 }
 
                 dashboardTimer.Start();
+            }
+        }
+
+        private void NotifySLC(List<String> command_list)
+        {
+            if (command_list.Any())
+            {
+                string command_string = String.Join(" ! ", command_list);
+                NotifySLC(command_string);
             }
         }
 
@@ -360,6 +396,25 @@ namespace EHRNarrative
                 }
             }
             return list;
+        }
+
+        private List<String> CheckForVitals()
+        {
+            List<String> commands = new List<String>();
+            foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
+            {
+                Regex pulse = new Regex(@"\b(Pulse|P|Heart Rate|HR)\b ?(\w+ )?(?<value>\d{2,3})\b( bpm\b| per minute\b| beats per minute\b)?", RegexOptions.IgnoreCase);
+                Match pulse_match = pulse.Match(line);
+                while (pulse_match.Success)
+                {
+                    if (Convert.ToInt32(pulse_match.Groups["value"].Value) >= 30)
+                    {
+                        commands.Add("VS p " + pulse_match.Groups["value"]);
+                    }
+                    pulse_match = pulse_match.NextMatch();
+                }
+            }
+            return commands;
         }
 
         private void HealthRecordText_TextChanged(object sender, EventArgs e)
@@ -425,12 +480,11 @@ namespace EHRNarrative
                     command_strings.Add("del " + keyword);
                 }
             }
-            
-            if (command_strings.Any())
-            {
-                string command_string = String.Join(" ! ", command_strings);
-                NotifySLC(command_string);
-            }
+
+            //check for vitals
+            command_strings.AddRange(CheckForVitals());
+
+            NotifySLC(command_strings);
 
             topLevelLines = lines;
         }
@@ -484,6 +538,11 @@ namespace EHRNarrative
                 dashboardTimer.Stop();
                 bringAppToFront(dashboardHWnd);
             }
+        }
+
+        private void mockDragonButton_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("MockDragon.exe");
         }
     }
 }

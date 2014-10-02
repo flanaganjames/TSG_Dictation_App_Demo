@@ -150,7 +150,8 @@ namespace TestWindowsMessage
 
         private void cleanTemplateButton_Click(object sender, EventArgs e)
         {
-
+            sendCustomMessage(getEHRWindow(), 0, ":%cCLEAN");
+            SetForegroundWindow(getEHRWindow());
         }
     }
 }

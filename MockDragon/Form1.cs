@@ -116,9 +116,16 @@ namespace TestWindowsMessage
             }
         }
 
-        private void sendButton_Click(object sender, EventArgs e)
+        private void sendToEHRButton_Click(object sender, EventArgs e)
         {
-            sendCustomMessage(getEHRWindow(), 0, commandInput.Text);
+            sendCustomMessage(getEHRWindow(), 0, ehrCommandInput.Text);
+            SetForegroundWindow(getEHRWindow());
+        }
+
+        private void sendToSLCButton_Click(object sender, EventArgs e)
+        {
+            NotifySLC(slcCommandInput.Text);
+            SetForegroundWindow(getEHRWindow());
         }
 
         private void chestPainButton_Click(object sender, EventArgs e)
@@ -127,7 +134,7 @@ namespace TestWindowsMessage
             System.Threading.Thread.Sleep(250);
             System.Diagnostics.Process.Start("Dashboard.exe");
 
-            sendCustomMessage(getEHRWindow(), 0, ":%cLOAD_TEMPLATE Chest Pain Template :%cSTART");
+            sendCustomMessage(getEHRWindow(), 0, ":%cLOAD_TEMPLATE Chest pain over 40:%cSTART");
         }
 
         private void nextFieldButton_Click(object sender, EventArgs e)

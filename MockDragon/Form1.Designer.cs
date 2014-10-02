@@ -31,15 +31,19 @@
             this.chestPainButton = new System.Windows.Forms.Button();
             this.nextFieldButton = new System.Windows.Forms.Button();
             this.showDialogButton = new System.Windows.Forms.Button();
-            this.commandInput = new System.Windows.Forms.TextBox();
-            this.sendButton = new System.Windows.Forms.Button();
+            this.ehrCommandInput = new System.Windows.Forms.TextBox();
+            this.sendToEHRButton = new System.Windows.Forms.Button();
             this.dialogInput = new System.Windows.Forms.TextBox();
             this.cleanTemplateButton = new System.Windows.Forms.Button();
+            this.slcCommandInput = new System.Windows.Forms.TextBox();
+            this.sendToSLCButton = new System.Windows.Forms.Button();
+            this.customCommandsGroup = new System.Windows.Forms.GroupBox();
+            this.customCommandsGroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // chestPainButton
             // 
-            this.chestPainButton.Location = new System.Drawing.Point(13, 13);
+            this.chestPainButton.Location = new System.Drawing.Point(12, 12);
             this.chestPainButton.Name = "chestPainButton";
             this.chestPainButton.Size = new System.Drawing.Size(75, 23);
             this.chestPainButton.TabIndex = 0;
@@ -49,7 +53,7 @@
             // 
             // nextFieldButton
             // 
-            this.nextFieldButton.Location = new System.Drawing.Point(95, 13);
+            this.nextFieldButton.Location = new System.Drawing.Point(93, 12);
             this.nextFieldButton.Name = "nextFieldButton";
             this.nextFieldButton.Size = new System.Drawing.Size(75, 23);
             this.nextFieldButton.TabIndex = 1;
@@ -59,7 +63,7 @@
             // 
             // showDialogButton
             // 
-            this.showDialogButton.Location = new System.Drawing.Point(13, 42);
+            this.showDialogButton.Location = new System.Drawing.Point(12, 39);
             this.showDialogButton.Name = "showDialogButton";
             this.showDialogButton.Size = new System.Drawing.Size(85, 23);
             this.showDialogButton.TabIndex = 2;
@@ -67,26 +71,26 @@
             this.showDialogButton.UseVisualStyleBackColor = true;
             this.showDialogButton.Click += new System.EventHandler(this.showDialogButton_Click);
             // 
-            // commandInput
+            // ehrCommandInput
             // 
-            this.commandInput.Location = new System.Drawing.Point(12, 71);
-            this.commandInput.Name = "commandInput";
-            this.commandInput.Size = new System.Drawing.Size(240, 20);
-            this.commandInput.TabIndex = 3;
+            this.ehrCommandInput.Location = new System.Drawing.Point(6, 37);
+            this.ehrCommandInput.Name = "ehrCommandInput";
+            this.ehrCommandInput.Size = new System.Drawing.Size(222, 20);
+            this.ehrCommandInput.TabIndex = 3;
             // 
-            // sendButton
+            // sendToEHRButton
             // 
-            this.sendButton.Location = new System.Drawing.Point(61, 97);
-            this.sendButton.Name = "sendButton";
-            this.sendButton.Size = new System.Drawing.Size(140, 23);
-            this.sendButton.TabIndex = 4;
-            this.sendButton.Text = "Send Custom Command";
-            this.sendButton.UseVisualStyleBackColor = true;
-            this.sendButton.Click += new System.EventHandler(this.sendButton_Click);
+            this.sendToEHRButton.Location = new System.Drawing.Point(27, 63);
+            this.sendToEHRButton.Name = "sendToEHRButton";
+            this.sendToEHRButton.Size = new System.Drawing.Size(180, 23);
+            this.sendToEHRButton.TabIndex = 4;
+            this.sendToEHRButton.Text = "Send Command to EHRNarrative";
+            this.sendToEHRButton.UseVisualStyleBackColor = true;
+            this.sendToEHRButton.Click += new System.EventHandler(this.sendToEHRButton_Click);
             // 
             // dialogInput
             // 
-            this.dialogInput.Location = new System.Drawing.Point(105, 42);
+            this.dialogInput.Location = new System.Drawing.Point(100, 41);
             this.dialogInput.Name = "dialogInput";
             this.dialogInput.Size = new System.Drawing.Size(147, 20);
             this.dialogInput.TabIndex = 5;
@@ -94,7 +98,7 @@
             // 
             // cleanTemplateButton
             // 
-            this.cleanTemplateButton.Location = new System.Drawing.Point(177, 13);
+            this.cleanTemplateButton.Location = new System.Drawing.Point(172, 12);
             this.cleanTemplateButton.Name = "cleanTemplateButton";
             this.cleanTemplateButton.Size = new System.Drawing.Size(75, 23);
             this.cleanTemplateButton.TabIndex = 6;
@@ -102,20 +106,51 @@
             this.cleanTemplateButton.UseVisualStyleBackColor = true;
             this.cleanTemplateButton.Click += new System.EventHandler(this.cleanTemplateButton_Click);
             // 
+            // slcCommandInput
+            // 
+            this.slcCommandInput.Location = new System.Drawing.Point(6, 99);
+            this.slcCommandInput.Name = "slcCommandInput";
+            this.slcCommandInput.Size = new System.Drawing.Size(222, 20);
+            this.slcCommandInput.TabIndex = 7;
+            // 
+            // sendToSLCButton
+            // 
+            this.sendToSLCButton.Location = new System.Drawing.Point(48, 125);
+            this.sendToSLCButton.Name = "sendToSLCButton";
+            this.sendToSLCButton.Size = new System.Drawing.Size(139, 23);
+            this.sendToSLCButton.TabIndex = 8;
+            this.sendToSLCButton.Text = "Send Command to SLC";
+            this.sendToSLCButton.UseVisualStyleBackColor = true;
+            this.sendToSLCButton.Click += new System.EventHandler(this.sendToSLCButton_Click);
+            // 
+            // customCommandsGroup
+            // 
+            this.customCommandsGroup.Controls.Add(this.ehrCommandInput);
+            this.customCommandsGroup.Controls.Add(this.sendToSLCButton);
+            this.customCommandsGroup.Controls.Add(this.sendToEHRButton);
+            this.customCommandsGroup.Controls.Add(this.slcCommandInput);
+            this.customCommandsGroup.Location = new System.Drawing.Point(13, 78);
+            this.customCommandsGroup.Name = "customCommandsGroup";
+            this.customCommandsGroup.Size = new System.Drawing.Size(234, 160);
+            this.customCommandsGroup.TabIndex = 9;
+            this.customCommandsGroup.TabStop = false;
+            this.customCommandsGroup.Text = "Custom Commands";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(264, 129);
+            this.ClientSize = new System.Drawing.Size(264, 252);
+            this.Controls.Add(this.customCommandsGroup);
             this.Controls.Add(this.cleanTemplateButton);
             this.Controls.Add(this.dialogInput);
-            this.Controls.Add(this.sendButton);
-            this.Controls.Add(this.commandInput);
             this.Controls.Add(this.showDialogButton);
             this.Controls.Add(this.nextFieldButton);
             this.Controls.Add(this.chestPainButton);
             this.Name = "Form1";
             this.Text = "Dragon Commands";
+            this.customCommandsGroup.ResumeLayout(false);
+            this.customCommandsGroup.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -126,10 +161,13 @@
         private System.Windows.Forms.Button chestPainButton;
         private System.Windows.Forms.Button nextFieldButton;
         private System.Windows.Forms.Button showDialogButton;
-        private System.Windows.Forms.TextBox commandInput;
-        private System.Windows.Forms.Button sendButton;
+        private System.Windows.Forms.TextBox ehrCommandInput;
+        private System.Windows.Forms.Button sendToEHRButton;
         private System.Windows.Forms.TextBox dialogInput;
         private System.Windows.Forms.Button cleanTemplateButton;
+        private System.Windows.Forms.TextBox slcCommandInput;
+        private System.Windows.Forms.Button sendToSLCButton;
+        private System.Windows.Forms.GroupBox customCommandsGroup;
 
     }
 }

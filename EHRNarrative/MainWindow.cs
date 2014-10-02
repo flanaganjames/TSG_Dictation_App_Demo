@@ -193,6 +193,7 @@ namespace EHRNarrative
                         NextField();
                         break;
                     case "LOAD_TEMPLATE":
+                        System.Diagnostics.Process.Start("Dashboard.exe");
                         char[] separator = new char[] { ' ' };
                         this.complaint = command.Trim().Split(separator, 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
                         LoadTemplate(complaint);

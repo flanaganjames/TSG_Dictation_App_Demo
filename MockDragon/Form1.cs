@@ -132,7 +132,7 @@ namespace TestWindowsMessage
         {
             NotifySLC("state Chest Pain Over Forty ! req HPI [Onset], [Movement], [TAD Risk Factors], [CAD Risk Factors], [***PE Risk Factors***] ! req Exam [Constitutional Exam], [Cardiovascular Exam], [Upper Extremity BP Equality Exam], [Chest Exam], [Calf Exam] ! link TSG-chest-pain ");
             System.Threading.Thread.Sleep(250);
-            System.Diagnostics.Process.Start("Dashboard.exe");
+            //System.Diagnostics.Process.Start("Dashboard.exe");
 
             sendCustomMessage(getEHRWindow(), 0, ":%cLOAD_TEMPLATE Chest pain over 40:%cSTART");
         }

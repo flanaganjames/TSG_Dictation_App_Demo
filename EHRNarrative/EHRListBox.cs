@@ -123,6 +123,7 @@ namespace EHRNarrative
     {
         private StringFormat _fmt;
         private Font _font;
+        private bool displayingSubMenu;
 
         public EHRListBox(Font font, StringAlignment aligment, StringAlignment lineAligment)
         {
@@ -193,9 +194,12 @@ namespace EHRNarrative
             this.ItemHeight = Math.Max(30, (int)this._font.GetHeight() + this.Margin.Vertical);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(MouseSelectItem);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(MouseHoverItem);
+            this.MouseLeave += new System.EventHandler(ClearAllSubmenus);
 
             this.BackColor = SystemColors.Control;
             this.BorderStyle = BorderStyle.None;
+
+            this.displayingSubMenu = false;
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)
@@ -260,13 +264,45 @@ namespace EHRNarrative
             }
             catch
             {
+                ClearAllSubmenus();
                 return;
             }
 
-            group.Popover.Location = new System.Drawing.Point(group.Bounds.Location.X, group.Bounds.Location.Y);
-            this.Controls.Add(group.Popover);
-            group.Popover.Enabled = true;
-            group.Popover.Show();
+            if (!this.displayingSubMenu)
+            {
+                this.displayingSubMenu = true;
+
+                group.Popover.Location = new System.Drawing.Point(group.Bounds.Location.X, group.Bounds.Location.Y);
+                this.Controls.Add(group.Popover);
+                group.Popover.Enabled = true;
+                group.Popover.Show();
+
+                this.Refresh();
+            }
+        }
+
+        private void ClearAllSubmenus(object sender, EventArgs e)
+        {
+            ClearAllSubmenus();
+        }
+
+        private void ClearAllSubmenus()
+        {
+            EHRListBoxGroup group;
+            foreach (var item in this.Items)
+            {
+                try
+                {
+                    group = (EHRListBoxGroup)item;
+                    group.Popover.Hide();
+                    group.Popover.Enabled = false;
+                }
+                catch
+                {
+                }
+            }
+            this.Refresh();
+            this.displayingSubMenu = false;
         }
     }
 }

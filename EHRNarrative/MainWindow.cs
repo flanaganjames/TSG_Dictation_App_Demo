@@ -201,6 +201,9 @@ namespace EHRNarrative
                         var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1];
                         new ExamDialog(this, dialogName, this.complaint).Show();
                         break;
+                    case "CLEAN":
+                        CleanCurrentTemplate();
+                        break;
                     default:
                         ParseReplaceCommand(ref command_str, command);
                         break;
@@ -314,6 +317,21 @@ namespace EHRNarrative
                 //Do Error!!!
             }
             return command_str;
+        }
+
+        private void CleanCurrentTemplate()
+        {
+            List<EHRLine> lines = FindEHRLines();
+
+            foreach (EHRLine line in lines)
+            {
+                if (String.IsNullOrWhiteSpace(line.text))
+                {
+                    int start = HealthRecordText.Rtf.IndexOf(line.label);
+                    int end = HealthRecordText.Rtf.IndexOf(System.Environment.NewLine, start);
+                    HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
+                }
+            }
         }
 
         public void NotifySLC(string command_str)

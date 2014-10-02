@@ -51,6 +51,12 @@ namespace EHRNarrative
                                                  e.Bounds.Width - margin.Right - margin.Horizontal,
                                                  (int)font.GetHeight() + 2);
 
+
+            if (this.Element.Recommended && this.Element.selected == null)
+                textColor = Brushes.DarkRed;
+            else if (this.Element.Recommended)
+                textColor = Brushes.DarkSlateBlue;
+
             // draw the text within the bounds
             e.Graphics.DrawString(this.Element.Name, font, textColor, textBounds, aligment);
 

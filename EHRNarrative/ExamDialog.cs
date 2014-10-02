@@ -128,6 +128,10 @@ namespace EHRNarrative
                 heading.Text = item.group.Name;
                 heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
+                if (item.group.Recommended && item.group.RecommendedActive)
+                    heading.ForeColor = Color.FromName("DarkRed");
+                else if (item.group.Recommended && !item.group.RecommendedActive)
+                    heading.ForeColor = Color.FromName("DarkSlateBlue");
                 this.Controls.Add(heading);
 
                 //draw multiselects

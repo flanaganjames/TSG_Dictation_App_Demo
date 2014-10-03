@@ -69,11 +69,11 @@ int bar_colors[][3] = {
 	//  ... so these must stay at the end of the colortbl
 	{229,229,229},  // c_bar_inc == gray90
 		// the colors are a progression through HSL space
-		// of (h, 100%, 50%) for (h=0; h<=120; h+=12),
+		// of (h, 100%, 50%) for (h=0; h<=63; h+=7),
 		// but with a deeper green for 100%
-	{255,0,0}, {255,50,0}, {255,102,0}, {255,153,0},
-	{255,204,0}, {255,255,0}, {204,255,0}, {153,255,0},
-	{101,255,0}, {50,255,0}, {0,170,0}
+	{255,0,0}, {255,29,0}, {255,59,0}, {255,89,0},
+	{255,119,0}, {255,148,0}, {255,178,0}, {255,208,0},
+	{255,229,0}, {242,255,0}, {0,170,0},
 };
 
 	// RTF encoding for the background color

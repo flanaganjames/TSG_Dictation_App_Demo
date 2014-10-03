@@ -14,13 +14,14 @@ The main entry point is S_generatedash.
 
 const int T_width = 72 * 20 * 2;	// 2 inches in RTF twips
 const int T_inch = 72 * 20;		// 1 inch in twips
-const int T_billingtab = 72 * 20 * 5 / 10;  // .5 inches
+const int T_billingtab = T_inch;  // .5 inches
 const int T_space = 5 * 20;  // 5pt space in twips
 	// point sizes of various elements (in half points)
 const int ps_def = 11*2;
 const int ps_title = 11*2;
 const int ps_exam = 8*2;
 const int ps_billing = 8*2;
+const int ps_bill_lvl = 6*2;
 const int ps_heading = 11*2;
 const int ps_subheading = 9*2+1;
 const int ps_link = 10*2;
@@ -36,7 +37,7 @@ enum colors_t {
 	c_hyperlink, c_highlight_req, c_highlight_comp, 
 	c_foreground_req, c_foreground_comp, c_background,
 	c_sepbar_a, c_sepbar_b, c_heading, c_subheading,
-	c_billing,
+	c_billing, c_billhdr,
 	c_warning,
 	/*
 		IMPORTANT: These next two colors need to always
@@ -57,8 +58,8 @@ int rgb_colors[][3] = {
 		// c_foreground_req, c_foreground_comp, c_background
 	{192, 192, 192}, {160, 160, 160}, {127,127,127}, {160,160,160},
 		// sepbar_a, sepbar_b, heading, subheading
-	{0,0,0},
-		// billing_element,
+	{0,0,0}, {0,0,0}, // {0, 192, 192},
+		// billing_element, billing_element_hdr
 	{255,0,0},
 		// warning foreground
 };
@@ -147,15 +148,25 @@ void D_separator(int color)
 
 void D_hyperlinks(void)
 {
+	char *www, *l;
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
 	{
-			// do we need to prepend "www."?
-		char *www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
+			// is it a local file link?
+			// (though this may not work correctly in the RTF)
+		if (strncmp(*i, "local:", 6) == 0)
+		{
+			www = "";
+			l = (*i)+6;
+		} else {
+				// do we need to prepend "www."?
+			www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
+			l = *i;
+		}
 		fprintf(outf, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
-			T_space, www, *i);
+			T_space, www, l);
 		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
-			ps_link, c_hyperlink, www, *i);
+			ps_link, c_hyperlink, www, l);
 	}
 }
 
@@ -293,189 +304,142 @@ void D_backgroundColor(int r, int g, int b)
 
 /******************************************************************************
 *******************************************************************************
+	E/M panel
 *******************************************************************************
 ******************************************************************************/
 
 	/*
-	 * these next few functions generate the billing data on the dashboard
+	 * naming conventions (where XX is one of HPI, ROS, PFSH, Exam):
+	 *    (.... however: Exam is reported out in the E/M advice as "PE")
+	 * score_XX -- the function to generate the score
+	 * XX_items -- table of minimum items per billing level
+	 * XX_levels -- the names of the billing levels
+	 * Level_t -- the enum for the score levels, which are Ln
+	 * XX_score -- the value of the score recorded in D_billingScore
+	 * but see D_billingScore(), below, for more
+	 */
+
+	// we have a list of the billing levels
+enum Level_t { L0 = 0, L1, L2, L3, L4, L5 };
+
+	// the minimum number of items to enter each level
+	// (we report the max level possible)
+	//              L0, L1, L2, L3, L4, L5
+int HPI_items[]  = { 0,  1,  1,  1,  4,  4};
+int ROS_items[]  = { 0,  0,  1,  2,  2, 10};
+int PFSH_items[] = { 0,  0,  0,  0,  1,  2};
+int Exam_items[] = { 0,  1,  1,  2,  6,  8};
+
+	/*
+	 * here are the names for the billing levels for each category
+	 * (we may not need these in production, but some test scenarios
+	 *  want to use them)
+	 */
+char *HPI_levels[] = { "", "", "None", "Brief", "", "Extended" };
+char *ROS_levels[] = { "", "none", "PP", "", "Extended", "Complete" };
+char *PFSH_levels[] = { "", "", "", "none", "Problem Pertinent", "Complete" };
+char *Exam_levels[] = { "none", "Problem Focused", "", "EPF", "Detailed", "Complete" };
+
+	// take the array of minimum items per level, and a count of items
+	//  and return the level
+int EM_score(int *items, int count)
+{
+	int level = L0;
+	int i;
+	for (i = L0;  i <= L5;  i++)
+	{
+		if (items[i] == -1) continue;
+		if (count >= items[i]) level = i;
+	}
+	return level;
+}
+
+	/*
+	 * these next few functions format the billing data on the dashboard
 	 *  (strictly, this should be a separate module, but
 	 *   we need a lot of the dashboard data, so having it
 	 *   local to the other dashboard functions makes sense
 	 *   for the moment)
 	 */
-void D_billingElement(char *head, int count, char *score)
+		// use the same set of tabstops for the billing panel
+		//  (headline & summary should use some right justified tabs,
+		//   but the .Net RTF control doesn't honor \\tqr)
+void D_billingTabs(bool right)
 {
-	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d", 
-		T_billingtab, T_inch+T_space, T_inch+3*T_space);
-	fprintf(outf, "\\fs%d\\cf%d { }%s\\tab %d %s\\tab %s\\par}\n",
-		ps_billing, c_billing, head, 
-		count, (count == 1) ? "item" : "items", score);
+	fprintf(outf, "{\\pard\\tx%d\\tx%d", 
+		T_inch+1*T_space, 2*T_inch-2*T_space);
 }
 
-void D_billingSummary(char *head, int score)
+void D_billingHeading(void)
 {
-	fprintf(outf, "{\\pard\\tx%d\\tx%d\\tx%d",
-		T_billingtab, T_width-3*T_space, T_width);
-	fprintf(outf, "\\b\\fs%d\\cf%d {   }%s\\tab %d\\par}\n",
-		ps_billing, c_billing, head, score);
+	D_billingTabs(true);
+	fprintf(outf, "\\fs%d\\cf%d { }{\\b %s} {\\fs%d %s}",
+		ps_billing, c_billhdr, "Level",
+		ps_bill_lvl, "(1/2/3/4/5)");
+	fprintf(outf, "\\tab %s\\tab %s\\par}\n",
+		"Elements", "E/M Level");
 }
 
-	// these next couple handle the scores in the various categories
-	// -- we could have set these up in tables
-	// like the vital sign validation, but this is more maleable
-	// as we hone the algorithms
-		// naming conventions:
-		//   score_XX -- the function to generate the score
-		//   XX_t -- the enum for the score names, which are XX_name
-		//   XX_score -- the value of the score recorded in D_billingScore
-		//   but see D_billingScore(), below, for more
-enum HPI_t { HPI_none, HPI_BRF, HPI_EXT };
-char *score_HPI(int count, int *score)
+void D_billingElement(char *head, char *levels, int count, int score)
 {
-	if (count == 0)
-	{
-		*score = HPI_none;
-		return "None";
-	}
-	if (count <= 3)
-	{
-		*score = HPI_BRF;
-		return "Brief (1-3)";
-	}
-	*score = HPI_EXT;
-	return "Extended (>3)";
+	D_billingTabs(false);
+	fprintf(outf, "\\fs%d\\cf%d { }{\\cf%d\\b %s} {\\fs%d %s}",
+		ps_billing, c_billing, c_billhdr, head, 
+		ps_bill_lvl, levels);
+	fprintf(outf, "\\tab {      }%d\\tab {  }", count);
+	fprintf(outf, (score == 0) ? "NA\\par}\n" : " %d\\par}\n", score);
 }
 
-enum ROS_t { ROS_none, ROS_PP, ROS_EXT, ROS_COM };
-char *score_ROS(int count, int *score)
+void D_billingSummary(int score)
 {
-	if (count == 0)
-	{
-		*score = ROS_none;
-		return "None";
-	}
-	if (count == 1)
-	{
-		*score = ROS_PP;
-		return "Problem Pertinent (1)";
-	}
-	if (count <= 9)
-	{
-		*score = ROS_EXT;
-		return "Extended (2-9)";
-	}
-	*score = ROS_COM;
-	return "Complete (>9)";
+	D_billingTabs(false);
+	fprintf(outf, "\\b\\fs%d\\cf%d { }%s\\tab {  }",
+		ps_billing, c_billhdr, "    Potential E/M Level");
+	fprintf(outf, "\\line{}                 c/w Hx and PE:\\tab {  }");
+	fprintf(outf, (score == 0) ? "NA" : " %d", score);
+	fprintf(outf, "\\par}\n");
+	//   uncomment these next two to see tab positions
+	// D_billingTabs(false);
+	// fprintf(outf, "|\\tab|\\tab|\\tab|\\par}\n");
 }
-
-enum PFSH_t { PFSH_none, PFSH_PP, PFSH_COM };
-char *score_PFSH(int count, int *score)
-{
-	if (count == 0)
-	{
-		*score = 0;
-		return "None";
-	}
-	if (count == 1)
-	{
-		*score = 1;
-		return "Problem Pertinent (1)";
-	}
-	*score = 2;
-	return "Complete (>1)";
-}
-
-enum EX_t { EX_none, EX_PF, EX_EPF, EX_DET, EX_COM };
-char *score_exam(int count, int *score)
-{
-	if (count == 0)
-	{
-		*score = EX_none;
-		return "None";
-	}
-	if (count == 1)
-	{
-		*score = EX_PF;
-		return "Problem Focussed (1)";
-	}
-#if 0
-			// this next should pivot on whether
-			// the exam is cursory or detailed
-			// we assume detailed for the moment
-	{
-		*score = EX_EPF;
-		return "Extended Problem Focused (2-7)";
-	}
-#endif
-	if (count <= 7)
-	{
-		*score = EX_DET;
-		return "Detailed (2-7)";
-	}
-	*score = EX_COM;
-	return "Complete (>7)";
-}
-
-enum HX_t { HX_none, HX_PF, HX_EPF, HX_DET, HX_COM };
-char *score_HX(int HPI_score, int ROS_count, int PFSH_count, int *hx_total)
-{
-	if (HPI_score >= HPI_EXT && ROS_count >= ROS_COM && PFSH_count >= PFSH_COM)
-	{
-		*hx_total = HX_COM;
-		return "Comprehensive";
-	}
-	if (HPI_score >= HPI_EXT && ROS_count >= ROS_EXT && PFSH_count >= PFSH_PP)
-	{
-		*hx_total = HX_DET;
-		return "Detailed";
-	}
-	if (HPI_score >= HPI_BRF && ROS_count >= ROS_PP && PFSH_count >= PFSH_none)
-	{
-		*hx_total = HX_EPF;
-		return "Ext Problem Focused";
-	}
-	if (HPI_score >= HPI_BRF && ROS_count >= ROS_none && PFSH_count >= PFSH_none)
-	{
-		*hx_total = HX_PF;
-		return "Problem Focused";
-	}
-	*hx_total = HX_none;
-	return "None";
-}
-
 
 
 void D_billingScore(void)
 {
-	int HPI_score, ROS_score, PFSH_score, EX_score;
 	int HPI_count = _bill_hpi.size();
+	int HPI_score = EM_score(HPI_items, HPI_count);
+	int max_level = HPI_score;
 	int ROS_count = _bill_ros.size();
+	int ROS_score = EM_score(ROS_items, ROS_count);
+	max_level = __min(max_level, ROS_score);
 	int PFSH_count = _bill_pfsh.size();
-	int hx_total;
+	int PFSH_score = EM_score(PFSH_items, PFSH_count);
+	max_level = __min(max_level, PFSH_score);
+	int Exam_count = _bill_exam.size();
+	int Exam_score = EM_score(Exam_items, Exam_count);
+	max_level = __min(max_level, Exam_score);
 		// yeah, that's confusing: the routine to determine the
 		// score is verb_noun, but the score variable is noun_noun
 		// and the element count is XX_count, but the billing score
 		// is XX_score
-	D_heading("Billing Advice", c_heading);
-	D_vertspace(5);
-	D_billingElement("HPI", HPI_count, score_HPI(HPI_count, &HPI_score));
-	D_billingElement("ROS", ROS_count, score_ROS(ROS_count, &ROS_score));
-	D_billingElement("PFSH", PFSH_count, score_PFSH(PFSH_count, &PFSH_score));
-	char *hx_level = score_HX(HPI_score, ROS_score, PFSH_score, &hx_total);
-	D_billingSummary("History total", hx_total);
-	D_billingElement("Exam", _max_exam_level, 
-		score_exam(_max_exam_level, &EX_score));
-	D_billingSummary("Maximum billing level", __min(hx_total, EX_score));
+	D_heading("E/M Review", c_heading);
+	D_vertspace(2);  // D_vertspace(5);
+	D_billingHeading();
+	D_billingElement("HPI", "(1/1/1/4/4)", HPI_count, HPI_score);
+	D_billingElement("ROS", "(0/1/2/2/10)", ROS_count, ROS_score);
+	D_billingElement("PFSH", "(0/0/0/1/2)", PFSH_count, PFSH_score);
+	D_billingElement("PE", "(1/1/2/6/8)", Exam_count, Exam_score);
+	D_billingSummary(max_level);
 }
 
 
 
 /******************************************************************************
 *******************************************************************************
+	overall dashboard generation
 *******************************************************************************
 ******************************************************************************/
 
-	/********************************************************************/
 	/*
 	 * this is the parent routine for generating the dashboard,
 	 *  calling all the utilities above named D_xxx
@@ -509,20 +473,20 @@ void S_generateDash(void)
 	D_line();
 	D_separator(c_sepbar_b);
 
-		// required components
+		// required components -- now called "Recommended"
 	int n_req_still_need = _req_hpi.size() + _req_exam.size() + _assess.size();
 	D_progressbar("Recommended", _comp_req.size(),
 		n_req_still_need + _comp_req.size());
 	D_heading("Incomplete", c_heading);
-	D_vertspace(5);
+	D_vertspace(2);  // D_vertspace(5);
 	D_group("HPI", _req_hpi, c_foreground_req);
 	D_group("Exam", _req_exam, c_foreground_req);
 	D_group("Assessment", _assess, c_foreground_req);
-	D_vertspace(2);
+	D_vertspace(2);  // D_vertspace(2);
 	D_line();
 	D_separator(c_sepbar_a);
 	D_heading("Completed", c_heading);
-	D_vertspace(5);
+	D_vertspace(2);  // D_vertspace(5);
 	D_group("", _comp_req, c_foreground_comp);
 	// D_group("HPI", comp_req_hpi, n_c_req_hpi, c_foreground_comp);
 	// D_group("Exam", comp_req_exam, n_c_req_exam, c_foreground_comp);
@@ -568,6 +532,7 @@ void S_generateDash(void)
 
 /******************************************************************************
 *******************************************************************************
+	warning box below the dashboard
 *******************************************************************************
 ******************************************************************************/
 
@@ -650,12 +615,13 @@ void S_generateWarnBox(void)
 		// RTF control doesn't honor it, and the background
 		// color must be supplied by the dashboard program
 	D_backgroundColor(0,255,255);
-	D_warning_icons();
-	D_vertspace(10);
+	// D_warning_icons();
+	D_vertspace(5);
 	list<char *>::iterator i;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
-		fprintf(outf, "{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
+		D_one_warn_icon(225, 210);
+		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
 		D_vertspace(2);
 
@@ -666,6 +632,7 @@ void S_generateWarnBox(void)
 	D_epilog();
 	fclose(outf);
 	outf = NULL;
+	return;
 }
 
 

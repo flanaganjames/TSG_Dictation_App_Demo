@@ -234,6 +234,13 @@ void addWords(list<char *> &in, char *add)
 		addWords(_bill_exam, ss+le);
 		addWordsExam(ss+le);
 	}
+		// parallel special case: if this was ROS data,
+		// add the keywords to _bill_ros
+	const size_t lr = strlen("ros ");
+	if (_strnicmp(ss, "ROS ", lr) == 0)
+	{
+		addWords(_bill_ros, ss+lr);
+	}
 
 	free(ss);
 }

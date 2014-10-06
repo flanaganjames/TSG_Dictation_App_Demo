@@ -175,35 +175,6 @@ void addWords(list<char *> &in, char *add)
 {
 	char *s, *t;
 
-#if 0
-		// we need to strip the decorations
-		// do this in a quick-and-dirty way by copying
-		// the input string
-		// also ignore digits -- we don't want counts from the ROS reporting
-	char *ss = (char *) malloc(strlen(add)+1);
-	s = ss;
-	for (char *p = add;  p && *p;  p++)
-	{
-			// skip RTF markup: anything beginning with backslash up to a blank
-		if (*p == '\\')
-		{
-			while (*p != ' ' && *p != '\0') { p++; }
-			continue;
-		}
-		if (*p != '['  &&  *p != ']'  &&  *p != '*' &&  !isdigit(*p))
-			*s++ = *p;
-	}
-	*s = 0;
-#endif
-
-#if 0
-	// casefold the input string
-	for (s = add;  *s;  s++)
-	{
-	 *s = tolower(*s);
-	}
-#endif
-
 	// now add to the array
 	s = add;
 	while (s && *s)
@@ -233,6 +204,7 @@ void addWords(list<char *> &in, char *add)
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
 	}
 
+////////////////////////// move this to mainline parser
 		// special case:  if this was exam data, recursively 
 		// also add the keywords to the _bill_exam list
 		// also recursively add to the completed exams list
@@ -249,10 +221,7 @@ void addWords(list<char *> &in, char *add)
 	{
 		addWords(_bill_ros, add+lr);
 	}
-
-#if 0
-	free(ss);
-#endif
+//////////////////////////
 }
 
 
@@ -306,6 +275,7 @@ bool completeCommand(char *s, size_t n)
 	return (s[n] == '\0' || s[n] == ' ');
 }
 
+#if 0
 	// parse the substatus of the dataqual keywords
 void addDataQual(char *t)
 {
@@ -347,6 +317,7 @@ void addDataQual(char *t)
 		break;
 	};
 }
+#endif
 
 
 void S_parseStatus(void)
@@ -423,10 +394,12 @@ void S_parseStatus(void)
 		case data_t:
 			addWords(_all_complete, s);
 			break;
+#if 0
 		case dataqual_t:
 			// for dataqual, we have to further parse the qualifier
 			addDataQual(s);
 			break;
+#endif
 		case dataqual_exam_t:
 			addWords(_bill_exam, s);
 			addWordsExam(s);

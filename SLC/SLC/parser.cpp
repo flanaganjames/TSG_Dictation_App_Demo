@@ -47,8 +47,8 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
 	//// data_hpi_t, data_exam_t, // unused - should be removed
 	data_t, 
-	// dataqual_exam_t, dataqual_pfsh_t, dataqual_ros_t,
-	// dataqual_ros2_t,
+	dataqual_exam_t, dataqual_pfsh_t, dataqual_ros_t,
+	dataqual_ros2_t,
 	dataqual_t,
 	bill_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t, 
@@ -60,8 +60,8 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	//// "data hpi", "data exam", // unused - should be removed
 	"data", 
-	// "dataqual exam", "dataqual pfsh", "dataqual ros",
-	// "dataqual review of systems",
+	"dataqual exam", "dataqual pfsh", "dataqual ros",
+	"dataqual review of systems",
 	"dataqual",
 	"bill", "link", "delete", "del",
 	"end", "end_of_script",	"reset",
@@ -175,6 +175,7 @@ void addWords(list<char *> &in, char *add)
 {
 	char *s, *t;
 
+#if 0
 		// we need to strip the decorations
 		// do this in a quick-and-dirty way by copying
 		// the input string
@@ -193,6 +194,7 @@ void addWords(list<char *> &in, char *add)
 			*s++ = *p;
 	}
 	*s = 0;
+#endif
 
 #if 0
 	// casefold the input string
@@ -203,7 +205,7 @@ void addWords(list<char *> &in, char *add)
 #endif
 
 	// now add to the array
-	s = ss;
+	s = add;
 	while (s && *s)
 	{
 		int l; 
@@ -235,20 +237,22 @@ void addWords(list<char *> &in, char *add)
 		// also add the keywords to the _bill_exam list
 		// also recursively add to the completed exams list
 	const size_t le = strlen("exam ");
-	if (_strnicmp(ss, "exam ", le) == 0)
+	if (_strnicmp(add, "exam ", le) == 0)
 	{
-		addWords(_bill_exam, ss+le);
-		addWordsExam(ss+le);
+		addWords(_bill_exam, add+le);
+		addWordsExam(add+le);
 	}
 		// parallel special case: if this was ROS data,
 		// add the keywords to _bill_ros
 	const size_t lr = strlen("ROS ");
-	if (_strnicmp(ss, "ROS ", lr) == 0)
+	if (_strnicmp(add, "ROS ", lr) == 0)
 	{
-		addWords(_bill_ros, ss+lr);
+		addWords(_bill_ros, add+lr);
 	}
 
+#if 0
 	free(ss);
+#endif
 }
 
 
@@ -260,6 +264,23 @@ void chomp(char *s)
 	t = strpbrk(s, "\r\n");
 	if (t)  *t-- = '\0';
 	while (t && *t == ' ')  *t-- = '\0';
+}
+
+	// strip decorations out of the input string in place
+void undecorate(char *s)
+{
+	char *t;
+	for (t = s;  s && *s;  s++)
+	{
+		if (*s == '\\')
+		{
+			while (*s != ' '  &&  *s != '\0') { s++; }
+			continue;
+		}
+		if (*s != '['  &&  *s != ']'  &&  *s != '*'  &&  !isdigit(*s))
+			*t++ = *s;
+	}
+	*t = '\0';
 }
 
 void convert_blanks(char *s)
@@ -276,10 +297,11 @@ bool no_complaint(void)
 }
 
 
-	// return the length of the command part of the line
-	// (allows us to check if we've only got the subword
-	//  at the beginning of the command -- e.g., data vs dataqual)
-bool lengthOfCommand(char *s, size_t n)
+	// is the command complete?  does the command we've
+	// recognized actually end where we expect?
+	// (prevents us mistaking substring at the beginning of
+	//  the command for a full one -- e.g., data vs dataqual)
+bool completeCommand(char *s, size_t n)
 {
 	return (s[n] == '\0' || s[n] == ' ');
 }
@@ -293,7 +315,7 @@ void addDataQual(char *t)
 	for (i = 0;  i < qualifier_count; i++ )
 	{
 		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0
-			&& lengthOfCommand(s, strlen(qualifier_names[i])))
+			&& completeCommand(s, strlen(qualifier_names[i])))
 		{
 			s += strlen(qualifier_names[i]); // skip the qualifier text
 			s += strspn(s, " ");  // skip the blanks after qualifier
@@ -352,6 +374,7 @@ void S_parseStatus(void)
 		int i;
 
 		chomp(s);  // strip the EOL characters
+		undecorate(s);
 		
 #ifdef TESTING
 		printf("line: %s\n", line);
@@ -360,7 +383,7 @@ void S_parseStatus(void)
 		for (i = 0;  i < command_count; i++ )
 		{
 			if (_strnicmp(s, command_names[i], strlen(command_names[i])) == 0
-				&& lengthOfCommand(s, strlen(command_names[i])))
+				&& completeCommand(s, strlen(command_names[i])))
 			{
 				s += strlen(command_names[i]); // skip the command
 				s += strspn(s, " ");  // skip the blanks after command
@@ -404,7 +427,6 @@ void S_parseStatus(void)
 			// for dataqual, we have to further parse the qualifier
 			addDataQual(s);
 			break;
-#if 0
 		case dataqual_exam_t:
 			addWords(_bill_exam, s);
 			addWordsExam(s);
@@ -416,7 +438,6 @@ void S_parseStatus(void)
 		case dataqual_ros2_t:
 			addWords(_bill_ros, s);
 			break;
-#endif
 		case delete_t:
 		case del_t:
 			// currently informational and ignored

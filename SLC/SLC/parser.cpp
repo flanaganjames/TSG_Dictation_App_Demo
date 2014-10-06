@@ -46,7 +46,10 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	req_hpi_t, req_exam_t, assess_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
 	//// data_hpi_t, data_exam_t, // unused - should be removed
-	data_t, dataqual_t,
+	data_t, 
+	// dataqual_exam_t, dataqual_pfsh_t, dataqual_ros_t,
+	// dataqual_ros2_t,
+	dataqual_t,
 	bill_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t, 
 	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
@@ -56,7 +59,10 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	//// "data hpi", "data exam", // unused - should be removed
-	"data", "dataqual",
+	"data", 
+	// "dataqual exam", "dataqual pfsh", "dataqual ros",
+	// "dataqual review of systems",
+	"dataqual",
 	"bill", "link", "delete", "del",
 	"end", "end_of_script",	"reset",
 	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
@@ -236,7 +242,7 @@ void addWords(list<char *> &in, char *add)
 	}
 		// parallel special case: if this was ROS data,
 		// add the keywords to _bill_ros
-	const size_t lr = strlen("ros ");
+	const size_t lr = strlen("ROS ");
 	if (_strnicmp(ss, "ROS ", lr) == 0)
 	{
 		addWords(_bill_ros, ss+lr);
@@ -398,6 +404,19 @@ void S_parseStatus(void)
 			// for dataqual, we have to further parse the qualifier
 			addDataQual(s);
 			break;
+#if 0
+		case dataqual_exam_t:
+			addWords(_bill_exam, s);
+			addWordsExam(s);
+			break;
+		case dataqual_pfsh_t:
+			addWords(_bill_pfsh, s);
+			break;
+		case dataqual_ros_t:
+		case dataqual_ros2_t:
+			addWords(_bill_ros, s);
+			break;
+#endif
 		case delete_t:
 		case del_t:
 			// currently informational and ignored

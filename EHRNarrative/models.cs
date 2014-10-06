@@ -56,7 +56,7 @@ namespace EHRNarrative
         public int Dialog_id { get; set; }
 
         public bool Recommended { get; set; }
-        public bool RecommendedActive { get; set; }
+        public bool RecommendedActive = false;
 
         public List<int> Complaints(Collection data)
         {

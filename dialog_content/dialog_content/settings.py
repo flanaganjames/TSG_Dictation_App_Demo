@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'complaint',
     'django.contrib.admin',
     'django_production_server',
+    'south',
 )
 
 MIDDLEWARE_CLASSES = (

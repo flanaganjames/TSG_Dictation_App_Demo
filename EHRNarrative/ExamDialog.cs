@@ -132,7 +132,7 @@ namespace EHRNarrative
                     listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data)));
                 
                 //draw headings
-                var heading = new GroupLabel(listbox);
+                var heading = new GroupLabel(listbox, item.group);
                 heading.Text = item.group.Name;
                 heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
@@ -154,12 +154,6 @@ namespace EHRNarrative
                 //clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 //clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 heading.Controls.Add(clearbutton);
-
-                //check if group or any elements recommended
-                if (item.group.Recommended && item.group.RecommendedActive)
-                    heading.ForeColor = Color.FromName("DarkRed");
-                else if (item.group.Recommended && !item.group.RecommendedActive)
-                    heading.ForeColor = Color.FromName("DarkSlateBlue");
             }
 
             //draw extra group column:
@@ -200,12 +194,11 @@ namespace EHRNarrative
             UpdateSLC();
             this.Close();
         }
-
-
     }
 
     public partial class GroupLabel : GroupBox {
         private EHRListBox _listBox;
+        private Group _group;
 
         public EHRListBox ListBox
         {
@@ -213,16 +206,50 @@ namespace EHRNarrative
             set { }
         }
 
-        public GroupLabel(EHRListBox ListBox)
+        public GroupLabel(EHRListBox ListBox, Group group)
         {
             Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
             ForeColor = SystemColors.WindowFrame;
             Width = 200;
 
             this._listBox = ListBox;
+            this._group = group;
             this.Controls.Add(this._listBox);
         }
+
+        public void CheckRecommended()
+        {
+            this._group.RecommendedActive = false;
+
+            foreach (var item in this._listBox.Items)
+            {
+                if (item is EHRListBoxItem)
+                {
+                    EHRListBoxItem itemItem = (EHRListBoxItem)item;
+
+                    if (itemItem.Element.Recommended && itemItem.Element.selected == null)
+                    {
+                        this._group.RecommendedActive = true;
+                    }
+                }
+                else if (item is EHRListBoxGroup)
+                {
+                    EHRListBoxGroup groupItem = (EHRListBoxGroup)item;
+
+                    //TODO: Search elements in the subgroup and see if we need to mark this group as recommended?
+                }
+            }
+
+            //set group coloring if either the group is recommended or any Elements are actively recommended
+            if (this._group.Recommended && this._group.RecommendedActive)
+                this.ForeColor = Color.FromName("DarkRed");
+            else if (this._group.Recommended && !this._group.RecommendedActive)
+                this.ForeColor = Color.FromName("DarkSlateBlue");
+
+            this.Refresh();
+        }
     }
+
     public partial class SelectAllButton : Button
     {
         private EHRListBox _group;

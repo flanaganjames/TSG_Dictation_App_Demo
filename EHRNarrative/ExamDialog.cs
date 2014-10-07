@@ -141,23 +141,23 @@ namespace EHRNarrative
                 listbox.AddGroups(item.group.Subgroups(data), data);
                 if (item.group.ElementsAdditional(data).Count() > 0)
                     listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data)));
-                listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                listbox.Width = columnWidth;
-                listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
+                //listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                //listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                //listbox.Width = columnWidth;
+                //listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
                 this.Controls.Add(listbox);
 
                 //draw select alls
                 var button = new SelectAllButton(listbox);
-                button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                //button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                //button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 this.Controls.Add(button);
                 var clearbutton = new ClearAllButton(listbox);
-                clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                //clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                //clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 this.Controls.Add(clearbutton);
-
             }
+
             //draw extra group column:
             //foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
             //{
@@ -200,7 +200,7 @@ namespace EHRNarrative
 
     }
 
-    public partial class GroupLabel : Label {
+    public partial class GroupLabel : GroupBox {
         public GroupLabel()
         {
             Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);

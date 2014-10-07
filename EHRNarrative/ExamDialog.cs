@@ -123,8 +123,16 @@ namespace EHRNarrative
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
+                //create listbox for this group
+                var listbox = new EHRListBox();
+                item.group.SetAllDefaults(data);
+                listbox.AddElements(item.group.ElementsForComplaint(data));
+                listbox.AddGroups(item.group.Subgroups(data), data);
+                if (item.group.ElementsAdditional(data).Count() > 0)
+                    listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data)));
+                
                 //draw headings
-                var heading = new GroupLabel();
+                var heading = new GroupLabel(listbox);
                 heading.Text = item.group.Name;
                 heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
@@ -134,28 +142,22 @@ namespace EHRNarrative
                     heading.ForeColor = Color.FromName("DarkSlateBlue");
                 this.Controls.Add(heading);
 
-                //draw multiselects
-                var listbox = new EHRListBox();
-                item.group.SetAllDefaults(data);
-                listbox.AddElements(item.group.ElementsForComplaint(data));
-                listbox.AddGroups(item.group.Subgroups(data), data);
-                if (item.group.ElementsAdditional(data).Count() > 0)
-                    listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data)));
+                //position listbox under heading
                 //listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 //listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 //listbox.Width = columnWidth;
                 //listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
-                this.Controls.Add(listbox);
 
                 //draw select alls
                 var button = new SelectAllButton(listbox);
                 //button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 //button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                this.Controls.Add(button);
+                heading.Controls.Add(button);
+
                 var clearbutton = new ClearAllButton(listbox);
                 //clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 //clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                this.Controls.Add(clearbutton);
+                heading.Controls.Add(clearbutton);
             }
 
             //draw extra group column:
@@ -201,11 +203,16 @@ namespace EHRNarrative
     }
 
     public partial class GroupLabel : GroupBox {
-        public GroupLabel()
+        EHRListBox ListBox;
+
+        public GroupLabel(EHRListBox ListBox)
         {
             Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
             ForeColor = SystemColors.WindowFrame;
             Width = 200;
+
+            this.ListBox = ListBox;
+            this.Controls.Add(this.ListBox);
         }
     }
     public partial class SelectAllButton : Button

@@ -136,10 +136,6 @@ namespace EHRNarrative
                 heading.Text = item.group.Name;
                 heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
-                if (item.group.Recommended && item.group.RecommendedActive)
-                    heading.ForeColor = Color.FromName("DarkRed");
-                else if (item.group.Recommended && !item.group.RecommendedActive)
-                    heading.ForeColor = Color.FromName("DarkSlateBlue");
                 this.Controls.Add(heading);
 
                 //position listbox under heading
@@ -158,6 +154,12 @@ namespace EHRNarrative
                 //clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 //clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
                 heading.Controls.Add(clearbutton);
+
+                //check if group or any elements recommended
+                if (item.group.Recommended && item.group.RecommendedActive)
+                    heading.ForeColor = Color.FromName("DarkRed");
+                else if (item.group.Recommended && !item.group.RecommendedActive)
+                    heading.ForeColor = Color.FromName("DarkSlateBlue");
             }
 
             //draw extra group column:
@@ -203,7 +205,13 @@ namespace EHRNarrative
     }
 
     public partial class GroupLabel : GroupBox {
-        EHRListBox ListBox;
+        private EHRListBox _listBox;
+
+        public EHRListBox ListBox
+        {
+            get { return this._listBox; }
+            set { }
+        }
 
         public GroupLabel(EHRListBox ListBox)
         {
@@ -211,8 +219,8 @@ namespace EHRNarrative
             ForeColor = SystemColors.WindowFrame;
             Width = 200;
 
-            this.ListBox = ListBox;
-            this.Controls.Add(this.ListBox);
+            this._listBox = ListBox;
+            this.Controls.Add(this._listBox);
         }
     }
     public partial class SelectAllButton : Button

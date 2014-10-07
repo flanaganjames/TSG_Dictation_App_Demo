@@ -203,25 +203,6 @@ void addWords(list<char *> &in, char *add)
 		if (t)  s = ++t;
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
 	}
-
-////////////////////////// move this to mainline parser
-		// special case:  if this was exam data, recursively 
-		// also add the keywords to the _bill_exam list
-		// also recursively add to the completed exams list
-	const size_t le = strlen("exam ");
-	if (_strnicmp(add, "exam ", le) == 0)
-	{
-		addWords(_bill_exam, add+le);
-		addWordsExam(add+le);
-	}
-		// parallel special case: if this was ROS data,
-		// add the keywords to _bill_ros
-	const size_t lr = strlen("ROS ");
-	if (_strnicmp(add, "ROS ", lr) == 0)
-	{
-		addWords(_bill_ros, add+lr);
-	}
-//////////////////////////
 }
 
 
@@ -236,16 +217,24 @@ void chomp(char *s)
 }
 
 	// strip decorations out of the input string in place
-void undecorate(char *s)
+void undecorate(char *in)
 {
-	char *t;
+	char *t, *s;
+
+		// skip ahead to the first char we want to strip out
+		// (which may short-circuit the whole scan)
+	size_t n = strcspn(in, "\\[]*0123456789");
+	s = in+n;
 	for (t = s;  s && *s;  s++)
 	{
+			// strip RTF -- backslash to a blank
 		if (*s == '\\')
 		{
 			while (*s != ' '  &&  *s != '\0') { s++; }
 			continue;
 		}
+			// strip the decoration around something like [**foo**]
+			// also remove digits, which are exam counts from dialogs
 		if (*s != '['  &&  *s != ']'  &&  *s != '*'  &&  !isdigit(*s))
 			*t++ = *s;
 	}
@@ -323,6 +312,7 @@ void addDataQual(char *t)
 void S_parseStatus(void)
 {
 	char line[MAX_PATH], *s;
+	size_t le, lr;
 
 #ifdef TESTING
 	printf("entering parser...........\n");
@@ -393,6 +383,25 @@ void S_parseStatus(void)
 			break;
 		case data_t:
 			addWords(_all_complete, s);
+				// special case:  if this was exam data, recursively 
+				// also add the keywords to the _bill_exam list
+				// also recursively add to the completed exams list
+				// though the latter requires a special routine
+			le = strlen("exam ");
+			if (_strnicmp(s, "exam ", le) == 0)
+			{
+				addWords(_bill_exam, s+le);
+				addWordsExam(s+le);
+			}
+				// parallel special case: if this was ROS data,
+				// we may not have gotten the same keywords in
+				// a "dataqual ROS" command, so add the keywords 
+				// to _bill_ros
+			lr = strlen("ROS ");
+			if (_strnicmp(s, "ROS ", lr) == 0)
+			{
+				addWords(_bill_ros, s+lr);
+			}
 			break;
 #if 0
 		case dataqual_t:

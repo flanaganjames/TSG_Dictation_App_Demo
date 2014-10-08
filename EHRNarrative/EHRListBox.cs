@@ -279,11 +279,11 @@ namespace EHRNarrative
 
                 int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
                 int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height/2 - group.Popover.Height/2);
-                if (top + group.Popover.Height > this.Parent.Height - 10)
-                    top = this.Parent.Height - group.Popover.Height - 10;
+                if (top + group.Popover.Height > this.FindForm().Height - 10)
+                    top = this.FindForm().Height - group.Popover.Height - 10;
 
                 group.Popover.Location = new System.Drawing.Point(left, top);
-                this.Parent.Controls.Add(group.Popover);
+                this.FindForm().Controls.Add(group.Popover);
                 group.Popover.Enabled = true;
                 group.Popover.BringToFront();
                 group.Popover.Show();

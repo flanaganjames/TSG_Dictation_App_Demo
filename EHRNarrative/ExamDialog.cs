@@ -102,29 +102,37 @@ namespace EHRNarrative
         private void RenderElements(Collection data) {
             int columnWidth = 200;
             int columnGutter = 20;
-            int itemHeight = 35;
             int columns = data.dialog.GroupsForComplaint(data).Count();
+            int screenWidth = System.Windows.Forms.Screen.GetWorkingArea(this).Width;
 
-            int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter) / (columnWidth + columnGutter);
+            int columnsPerRow = (screenWidth - columnGutter) / (columnWidth + columnGutter);
 
             this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
             this.CenterToScreen();
 
-            List<AccordianRow> rows = new List<AccordianRow>();
+            Accordian rows = new Accordian();
+            rows.Width = this.Width - columnGutter;
+            rows.Height = this.Height - columnGutter;
+            rows.RowCount = 1;
+            rows.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            rows.ColumnCount = columnsPerRow;
+            for (int i = 0; i < columnsPerRow; i++)
+            {
+                rows.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 200F));
+            }
+            rows.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            this.Controls.Add(rows);
 
+            int currentColumn = 0;
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
                 int row = item.i / columnsPerRow;
-                AccordianRow currentPanel;
 
-                try
+                if (rows.RowCount < row + 1)
                 {
-                    currentPanel = rows[row];
-                }
-                catch
-                {
-                    rows.Add(new AccordianRow());
-                    currentPanel = rows[row];
+                    currentColumn = 0;
+                    rows.RowCount++;
+                    rows.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
                 }
 
                 //create listbox for this group
@@ -138,10 +146,8 @@ namespace EHRNarrative
                 //draw headings
                 var heading = new GroupLabel(listbox, item.group);
                 heading.Heading = item.group.Name;
-                heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                heading.Height = listbox.Height + listbox.Top;
-                currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
-                currentPanel.Controls.Add(heading);
+
+                rows.MaxRowHeight = Math.Max(rows.MaxRowHeight, listbox.Height);
 
                 //draw select alls
                 var button = new SelectAllButton(listbox);
@@ -153,21 +159,14 @@ namespace EHRNarrative
                 clearbutton.Top = 18;
                 clearbutton.Left = 100;
                 heading.Controls.Add(clearbutton);
+
+                rows.Controls.Add(heading, currentColumn, row);
+
+                currentColumn++;
             }
 
-            rows[0].Open();
-
-            int lastBottom = 0;
-            foreach (AccordianRow row in rows)
-            {
-                row.Width = columnsPerRow * (columnWidth + columnGutter) + columnGutter;
-                row.Top = lastBottom;
-                lastBottom += row.Height;
-
-                this.Controls.Add(row);
-            }
-
-            this.Height = lastBottom + 50;
+            this.Height = rows.MaxRowHeight + 50;
+            rows.RowStyles[0].Height = rows.MaxRowHeight;
 
             //draw extra group column:
             //foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
@@ -209,26 +208,19 @@ namespace EHRNarrative
         }
     }
 
-    public partial class AccordianRow : Panel
+    public partial class Accordian : TableLayoutPanel
     {
-        public int MaxHeight { get; set; }
-        public int MinHeight = 20;
-        public bool Opened { get; set; }
+        public int MaxRowHeight { get; set; }
+        public const int MinRowHeight = 20;
 
-        public AccordianRow()
+        public Accordian()
         {
-            //this.Opened = false;
-            //this.Height = this.MinHeight;
-        }
+            // Make sure we are starting with a fresh new table with no rows or anything
+            this.RowCount = 0;
+            this.RowStyles.Clear();
 
-        public void Open()
-        {
-            this.Height = this.MaxHeight;
-        }
-
-        public void Close()
-        {
-            this.Height = MinHeight;
+            this.ColumnCount = 0;
+            this.ColumnStyles.Clear();
         }
     }
 
@@ -268,6 +260,17 @@ namespace EHRNarrative
             this._listBox.Top = 45;
 
             this.Controls.Add(this._listBox);
+
+            this.Height = ListBox.Height;
+
+            this.heading.Click += new System.EventHandler(ClickHeader);
+        }
+
+        public void ClickHeader(object sender, EventArgs e)
+        {
+            //AccordianRow thisRow = (AccordianRow)this.Parent;
+
+            //thisRow.Open();
         }
 
         public void CheckRecommended()

@@ -105,24 +105,28 @@ namespace EHRNarrative
             int itemHeight = 35;
             int columns = data.dialog.GroupsForComplaint(data).Count();
 
-            int rows;
-            if ((columns) * (columnWidth + columnGutter) < System.Windows.Forms.Screen.GetWorkingArea(this).Width)
-                rows = 1;
-            else
-                rows = 2;
-
-            
-            int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height/rows - 100;
-            int maxListBoxItems = data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max();
-
-            int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
+            int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter) / (columnWidth + columnGutter);
 
             this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
-            this.Height = (85 + Math.Min(maxListBoxItems * itemHeight, maxListBoxHeight)) * rows;
             this.CenterToScreen();
+
+            List<AccordianRow> rows = new List<AccordianRow>();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
+                int row = item.i / columnsPerRow;
+                AccordianRow currentPanel;
+
+                try
+                {
+                    currentPanel = rows[row];
+                }
+                catch
+                {
+                    rows.Add(new AccordianRow());
+                    currentPanel = rows[row];
+                }
+
                 //create listbox for this group
                 var listbox = new EHRListBox();
                 item.group.SetAllDefaults(data);
@@ -133,28 +137,37 @@ namespace EHRNarrative
                 
                 //draw headings
                 var heading = new GroupLabel(listbox, item.group);
-                heading.Text = item.group.Name;
+                heading.Heading = item.group.Name;
                 heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
-                this.Controls.Add(heading);
-
-                //position listbox under heading
-                //listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                //listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                //listbox.Width = columnWidth;
-                //listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
+                heading.Height = listbox.Height + listbox.Top;
+                currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
+                currentPanel.Controls.Add(heading);
 
                 //draw select alls
                 var button = new SelectAllButton(listbox);
-                //button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                //button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                button.Top = 18;
+                button.Left = 0;
                 heading.Controls.Add(button);
 
                 var clearbutton = new ClearAllButton(listbox);
-                //clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                //clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
+                clearbutton.Top = 18;
+                clearbutton.Left = 100;
                 heading.Controls.Add(clearbutton);
             }
+
+            rows[0].Open();
+
+            int lastBottom = 0;
+            foreach (AccordianRow row in rows)
+            {
+                row.Width = columnsPerRow * (columnWidth + columnGutter) + columnGutter;
+                row.Top = lastBottom;
+                lastBottom += row.Height;
+
+                this.Controls.Add(row);
+            }
+
+            this.Height = lastBottom + 50;
 
             //draw extra group column:
             //foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
@@ -196,9 +209,40 @@ namespace EHRNarrative
         }
     }
 
-    public partial class GroupLabel : GroupBox {
+    public partial class AccordianRow : Panel
+    {
+        public int MaxHeight { get; set; }
+        public int MinHeight = 20;
+        public bool Opened { get; set; }
+
+        public AccordianRow()
+        {
+            //this.Opened = false;
+            //this.Height = this.MinHeight;
+        }
+
+        public void Open()
+        {
+            this.Height = this.MaxHeight;
+        }
+
+        public void Close()
+        {
+            this.Height = MinHeight;
+        }
+    }
+
+    public partial class GroupLabel : Panel {
         private EHRListBox _listBox;
         private Group _group;
+
+        private Label heading;
+
+        public string Heading
+        {
+            get { return this.heading.Text; }
+            set { this.heading.Text = value; }
+        }
 
         public EHRListBox ListBox
         {
@@ -208,12 +252,21 @@ namespace EHRNarrative
 
         public GroupLabel(EHRListBox ListBox, Group group)
         {
-            Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
-            ForeColor = SystemColors.WindowFrame;
-            Width = 200;
+            this.Width = 200;
+            this.BorderStyle = BorderStyle.None;
+
+            heading = new Label();
+            heading.Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
+            heading.ForeColor = SystemColors.WindowFrame;
+            this.Controls.Add(heading);
 
             this._listBox = ListBox;
             this._group = group;
+
+            this._listBox.Width = this.Width;
+            this._listBox.Height = Math.Min(this._listBox.Items.Count * this._listBox.ItemHeight, 600);
+            this._listBox.Top = 45;
+
             this.Controls.Add(this._listBox);
         }
 

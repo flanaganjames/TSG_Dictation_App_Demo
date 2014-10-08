@@ -100,7 +100,12 @@ namespace EHRNarrative
         public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
         {
             this._bounds = e.Bounds;
-            e.Graphics.FillRectangle(SystemBrushes.Control, e.Bounds);
+            var backcolor = SystemBrushes.Control;
+            if (this.Popover.Enabled)
+            {
+                backcolor = Brushes.LightGray;
+            }
+            e.Graphics.FillRectangle(backcolor, e.Bounds);
 
             // draw some item separator
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
@@ -272,9 +277,15 @@ namespace EHRNarrative
             {
                 this.displayingSubMenu = true;
 
-                group.Popover.Location = new System.Drawing.Point(group.Bounds.Location.X, group.Bounds.Location.Y);
-                this.Controls.Add(group.Popover);
+                int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
+                int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height/2 - group.Popover.Height/2);
+                if (top + group.Popover.Height > this.Parent.Height - 10)
+                    top = this.Parent.Height - group.Popover.Height - 10;
+
+                group.Popover.Location = new System.Drawing.Point(left, top);
+                this.Parent.Controls.Add(group.Popover);
                 group.Popover.Enabled = true;
+                group.Popover.BringToFront();
                 group.Popover.Show();
 
                 this.Refresh();

@@ -17,6 +17,13 @@ namespace EHRNarrative
     {
         Collection data;
         EHRNarrative narrative_window;
+        private List<AccordianRow> rows;
+
+        public List<AccordianRow> Rows
+        {
+            get { return this.rows; }
+            set { }
+        }
 
         public ExamDialog(EHRNarrative parent, string dialog_name, string complaint_name)
         {
@@ -110,7 +117,7 @@ namespace EHRNarrative
             this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
             this.CenterToScreen();
 
-            List<AccordianRow> rows = new List<AccordianRow>();
+            rows = new List<AccordianRow>();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
@@ -155,7 +162,7 @@ namespace EHRNarrative
                 heading.Controls.Add(clearbutton);
             }
 
-            rows[0].Open();
+            rows[0].Height = rows[0].MaxHeight;
 
             int lastBottom = 0;
             foreach (AccordianRow row in rows)
@@ -217,12 +224,19 @@ namespace EHRNarrative
 
         public AccordianRow()
         {
-            //this.Opened = false;
-            //this.Height = this.MinHeight;
+            this.Opened = false;
+            this.Height = this.MinHeight;
         }
 
         public void Open()
         {
+            ExamDialog d = (ExamDialog)this.Parent;
+
+            foreach (AccordianRow row in d.Rows)
+            {
+                row.Close();
+            }
+
             this.Height = this.MaxHeight;
         }
 
@@ -267,7 +281,16 @@ namespace EHRNarrative
             this._listBox.Height = Math.Min(this._listBox.Items.Count * this._listBox.ItemHeight, 600);
             this._listBox.Top = 45;
 
+            this.heading.Click += new System.EventHandler(this.ClickHeader);
+
             this.Controls.Add(this._listBox);
+        }
+
+        private void ClickHeader(object Sender, EventArgs e)
+        {
+            AccordianRow row = (AccordianRow)this.Parent;
+
+            row.Open();
         }
 
         public void CheckRecommended()

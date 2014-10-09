@@ -174,8 +174,11 @@ void addWordsExam(char *s)
 void addWords(list<char *> &in, char *add)
 {
 	char *s, *t;
+	void undecorate(char *, bool);
 
-	// now add to the array
+		// strip out digits -- presumably exam counts
+	undecorate(add, true);
+		// now add to the array
 	s = add;
 	while (s && *s)
 	{
@@ -217,13 +220,14 @@ void chomp(char *s)
 }
 
 	// strip decorations out of the input string in place
-void undecorate(char *in)
+	// (digits is true if we also want to strip out numbers)
+void undecorate(char *in, bool digits)
 {
 	char *t, *s;
 
 		// skip ahead to the first char we want to strip out
 		// (which may short-circuit the whole scan)
-	size_t n = strcspn(in, "\\[]*0123456789");
+	size_t n = strcspn(in, digits ? "\\[]*0123456789" : "\\[]*");
 	s = in+n;
 	for (t = s;  s && *s;  s++)
 	{
@@ -235,7 +239,8 @@ void undecorate(char *in)
 		}
 			// strip the decoration around something like [**foo**]
 			// also remove digits, which are exam counts from dialogs
-		if (*s != '['  &&  *s != ']'  &&  *s != '*'  &&  !isdigit(*s))
+		if (*s != '['  &&  *s != ']'  &&  *s != '*'
+			&&  (!digits || !isdigit(*s)))
 			*t++ = *s;
 	}
 	*t = '\0';
@@ -335,7 +340,7 @@ void S_parseStatus(void)
 		int i;
 
 		chomp(s);  // strip the EOL characters
-		undecorate(s);
+		undecorate(s, false);
 		
 #ifdef TESTING
 		printf("line: %s\n", line);

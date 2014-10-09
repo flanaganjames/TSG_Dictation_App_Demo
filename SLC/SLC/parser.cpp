@@ -22,7 +22,6 @@ list<char *> _rec_hpi, _rec_exam;
 list<char *> _all_complete, _comp_req, _comp_rec;
 	// billing lists
 list<char *> _bill_hpi, _bill_ros, _bill_pfsh, _bill_exam;
-int _max_exam_level = 0;
 	// resource links
 list<char *> _links;
 	// vital signs -- one item per category
@@ -74,7 +73,7 @@ char *qualifier_names[] = {
 const int qualifier_count = (sizeof(qualifier_names)/sizeof(qualifier_names[0]));
 
 	// forward declaration
-void addwords(list<char *> &, char *);
+void addWords(list<char *> &, char *);
 
 
 // ********************************************************
@@ -95,9 +94,9 @@ void clobberState(void)
 	//  this outlines a general way of knowing the hpi billing criteria, 
 	//    but we'll hardcode in S_sortStatus()
 	// _bill_hpi_base.clear();
-	// addwords(_bill_hpi_base, "location, current severity, onset");
-	// addwords(_bill_hpi_base, "quality, duration, context");
-	// addwords(_bill_hpi_base, "relievers, associated symptoms");
+	// addWords(_bill_hpi_base, "location, current severity, onset");
+	// addWords(_bill_hpi_base, "quality, duration, context");
+	// addWords(_bill_hpi_base, "relievers, associated symptoms");
 	_bill_ros.clear();
 	_bill_pfsh.clear();
 	_bill_exam.clear();
@@ -145,6 +144,23 @@ list<char *>::iterator findword(list<char *> &L, char *s)
 	return L.end();
 }
 
+	// if we had a line like "Exam Constitutional", we want to
+	// also credit it as "Constitutional Exam" as though we'd
+	// seen "data Constitutional Exam".
+	// This function assumes it's called with just "Constitutional",
+	// and that we're only called with one exam keyword
+void addWordsExam(char *s)
+{
+		// this assumes that there's only one exam keyword on line
+	const size_t le = strlen("Exam ");
+	const size_t ls = strlen(s);
+	char *sss = (char *) malloc(ls+le+1);
+	strncpy(sss, s, ls+1);
+	strncat(sss, " Exam", ls+1);
+	addWords(_all_complete, sss);
+	free(sss);
+}
+
 
 	// given list class instance and a string containing a list of words, 
 	// split the string at commas, and add the words that aren't already
@@ -161,6 +177,12 @@ void addWords(list<char *> &in, char *add)
 	s = ss;
 	for (char *p = add;  p && *p;  p++)
 	{
+			// skip RTF markup: anything beginning with backslash up to a blank
+		if (*p == '\\')
+		{
+			while (*p != ' ' && *p != '\0') { p++; }
+			continue;
+		}
 		if (*p != '['  &&  *p != ']'  &&  *p != '*' &&  !isdigit(*p))
 			*s++ = *p;
 	}
@@ -202,45 +224,27 @@ void addWords(list<char *> &in, char *add)
 		if (t)  s = ++t;
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
 	}
+
+		// special case:  if this was exam data, recursively 
+		// also add the keywords to the _bill_exam list
+		// also recursively add to the completed exams list
+	const size_t le = strlen("exam ");
+	if (_strnicmp(ss, "exam ", le) == 0)
+	{
+		addWords(_bill_exam, ss+le);
+		addWordsExam(ss+le);
+	}
+		// parallel special case: if this was ROS data,
+		// add the keywords to _bill_ros
+	const size_t lr = strlen("ros ");
+	if (_strnicmp(ss, "ROS ", lr) == 0)
+	{
+		addWords(_bill_ros, ss+lr);
+	}
+
 	free(ss);
 }
 
-
-void addDataQual(char *t)
-{
-	int i, n;
-	int count = 0;
-	char *s = t;
-	for (i = 0;  i < qualifier_count; i++ )
-	{
-		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0)
-		{
-			s += strlen(qualifier_names[i]); // skip the qualifier text
-			s += strspn(s, " ");  // skip the blanks after qualifier
-			break;
-		}
-	}
-	if (s == t)
-		return;  // unrecognized qualifier: ignore
-
-		// find a count, if we've got one
-	if ((n = strcspn(t, "0123456789")) > 0)
-		count = atoi(t+n);
-
-	switch(i) {
-	case ros_t:
-	case ros2_t:
-		_max_exam_level = __max(count, _max_exam_level);
-		addWords(_bill_ros, s);
-		break;
-	case pfsh_t:
-		addWords(_bill_pfsh, s);
-		break;
-	case exam_t:
-		addWords(_bill_exam, s);
-		break;
-	};
-}
 
 
 	// strip off the line-ending characters & trailing blanks
@@ -273,6 +277,49 @@ bool lengthOfCommand(char *s, size_t n)
 {
 	return (s[n] == '\0' || s[n] == ' ');
 }
+
+	// parse the substatus of the dataqual keywords
+void addDataQual(char *t)
+{
+	int i, n;
+	int count = 0;
+	char *s = t;
+	for (i = 0;  i < qualifier_count; i++ )
+	{
+		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0
+			&& lengthOfCommand(s, strlen(qualifier_names[i])))
+		{
+			s += strlen(qualifier_names[i]); // skip the qualifier text
+			s += strspn(s, " ");  // skip the blanks after qualifier
+			break;
+		}
+	}
+	if (s == t)
+		return;  // unrecognized qualifier: ignore
+
+		// find a count, if we've got one, then strip it
+	if ((n = strcspn(t, "0123456789")) > 0)
+	{
+		count = atoi(t+n);
+		for (char *q = t+n;  isspace(*q) || isdigit(*q);  q--)
+			*q = '\0';
+	}
+
+	switch(i) {
+	case ros_t:
+	case ros2_t:
+		addWords(_bill_ros, s);
+		break;
+	case pfsh_t:
+		addWords(_bill_pfsh, s);
+		break;
+	case exam_t:
+		addWords(_bill_exam, s);
+		addWordsExam(s);
+		break;
+	};
+}
+
 
 void S_parseStatus(void)
 {
@@ -485,12 +532,31 @@ void sortHPIBilling(char *s)
 	}
 }
 
+#if DEBUG
+void debug_list(FILE *pp, char *title, list<char *> &in)
+{
+	list<char *>::iterator i;
+	fprintf(pp, "...... %s:  ", title);
+	for (i = in.begin();  i != in.end();  i++)
+		fprintf(pp, "%s, ", *i);
+	fprintf(pp, "\n");
+}
+#endif
+
 
 void S_sortStatus(void)
 {
 	list<char *>::iterator i, ii;
 	char *s;
 
+#if DEBUG
+	FILE *pp = fopen("status.err", "w");
+	debug_list(pp, "_all_complete before", _all_complete);
+	debug_list(pp, "_req_hpi", _req_hpi);
+	debug_list(pp, "_req_exam", _req_exam);
+	debug_list(pp, "_assess", _assess);
+	fclose(pp);
+#endif
 		// run through the combined list of completed exams --
 		//  this assumes we are keeping only a combined list
 		//  from the input commands -- and splits them up into

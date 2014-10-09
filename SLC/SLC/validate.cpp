@@ -184,7 +184,7 @@ void validateVitalF(float vital, rangeF Range[], int nn)
 
 #if 0
 		// Easter Egg for Sean
-	if (_VVS_p == 115  &&  _VVS_r == 25)
+	if (_VVS_p == 107)
 		D_addWarning("Go Bears!!");
 #endif
 
@@ -230,8 +230,23 @@ void S_Validate(void)
 	list<char *>::iterator i;
 	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
 	{
-		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0
-			|| _strnicmp(*i, "TAD risk factors", strlen(*i)) == 0)
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		{
+			D_addWarning("Check TAD Risk!");
+			break;
+		}
+	}
+	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
+	{
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		{
+			D_addWarning("Check TAD Risk!");
+			break;
+		}
+	}
+	for (i = _assess.begin();  i != _assess.end();  i++)
+	{
+		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
 		{
 			D_addWarning("Check TAD Risk!");
 			break;
@@ -252,15 +267,4 @@ void S_Validate(void)
 	***********/
 
 	S_generateWarnBox();
-#if 0
-	if (!warning)
-	{
-		_unlink(WARN_PATH);
-		SendWinMsg(LOWER_WARNING);
-	} else {
-		S_generateWarnBox();
-		SendWinMsg(RAISE_WARNING);
-	}
-	return warning;
-#endif
 }

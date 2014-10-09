@@ -280,8 +280,6 @@ namespace EHRNarrative
                 groupData.Add("dataqual " + data.dialog.Name + " " + group.Name + " " + group.SelectedItemCount(data).ToString());
             }
 
-
-            var blah = data.elements.Where(x => x.SLC_command != null);
             foreach (String SLC_command in data.elements
                 .Where(x => x.selected != null && x.SLC_command != null)
                 .Select(x => x.SLC_command).Distinct()

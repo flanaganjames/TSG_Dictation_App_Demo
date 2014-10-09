@@ -83,6 +83,26 @@ const int cc_background = rgb_colors[c_background][c_red] * 256 * 256
 const int color_count = (sizeof(rgb_colors)/sizeof(rgb_colors[0]));
 const int bar_count = (sizeof(bar_colors)/sizeof(bar_colors[0]));
 
+void D_openoutput(char *path, char *name)
+{
+	if (outf != NULL)
+	{		// already open!?!?
+		fprintf(stderr, "already have an output file!!!!!\n");
+		exit(2);
+	}
+	if ((outf = fopen(path, "w")) == NULL)
+	{
+		fprintf(stderr, "cannot open %s file!!!!!\n", name);
+		exit(1);
+	}
+}
+
+void D_closeoutput(void)
+{
+	fclose(outf);
+	outf = NULL;
+}
+
 void D_prolog(void)
 {
 	fprintf(outf, "{\\rtf1\\ansi\\ansicpg1252\\lang1033\\deff0");
@@ -163,8 +183,12 @@ void D_hyperlinks(void)
 			www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
 			l = *i;
 		}
-		fprintf(outf, "\\pard\\li%d{\\field{\\*\\fldinst{HYPERLINK %s%s}}\n", 
-			T_space, www, l);
+		fprintf(outf, "\\pard\\li%d{\\field", T_space);
+			// fldinst is ignored by .Net's RTF, so we don't output it;
+			// the abbreviated link is actually interpreted by the
+			// dashboard display program -- yes, that's a little
+			// Rube Goldberg but allows us to use short link names
+		// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
 		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
 			ps_link, c_hyperlink, www, l);
 	}
@@ -406,6 +430,7 @@ void D_billingSummary(int score)
 
 void D_billingScore(void)
 {
+		// begin by calculating the scores
 	int HPI_count = _bill_hpi.size();
 	int HPI_score = EM_score(HPI_items, HPI_count);
 	int max_level = HPI_score;
@@ -422,6 +447,10 @@ void D_billingScore(void)
 		// score is verb_noun, but the score variable is noun_noun
 		// and the element count is XX_count, but the billing score
 		// is XX_score
+
+		// open the RTF file to contain the E/M panel
+	D_openoutput(EM_PATH, "e/m panel");
+	D_prolog();
 	D_heading("E/M Review", c_heading);
 	D_vertspace(2);  // D_vertspace(5);
 	D_billingHeading();
@@ -430,6 +459,8 @@ void D_billingScore(void)
 	D_billingElement("PFSH", "(0/0/0/1/2)", PFSH_count, PFSH_score);
 	D_billingElement("PE", "(1/1/2/6/8)", Exam_count, Exam_score);
 	D_billingSummary(max_level);
+	D_epilog();
+	D_closeoutput();
 }
 
 
@@ -449,17 +480,7 @@ void S_generateDash(void)
 	S_sortStatus();
 
 		// open the dashboard
-	if (outf != NULL)
-	{		// already open!?!?
-		fprintf(stderr, "already have an output file!!!!!\n");
-		exit(2);
-	}
-	if ((outf = fopen(DASHBOARD_PATH, "w")) == NULL)
-	{
-		fprintf(stderr, "cannot open dashboard file!!!!!\n");
-		exit(1);
-	}
-
+	D_openoutput(DASHBOARD_PATH, "dashboard");
 	D_prolog();
 		// header
 	D_title();
@@ -493,7 +514,7 @@ void S_generateDash(void)
 	// D_group("Assessment", comp_assess, n_c_assess, c_foreground_comp);
 	D_vertspace(2);
 	D_line();
-	D_separator(c_sepbar_b);
+
 
 	/*********
 	......... now eliding the "recommended" progress bar
@@ -507,22 +528,24 @@ void S_generateDash(void)
 		// differential diagnoses
 	if (_differential)
 	{
+		D_separator(c_sepbar_b);
 		fprintf(outf, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}", 
 			_differential);
 #if 0	// say nothing if there's no differential diagnosis
 	} else
 	{
+		D_separator(c_sepbar_b);
 		fprintf(outf, "{\\pard{\\b Differential:} %s\\sb200\\sa200\\par}",
 			"no differential diagnosis");
 #endif
 	}
 
-	D_billingScore();
-
-		// finish
+		// finish main status panel in the dashboard
 	D_epilog();
-	fclose(outf);
-	outf = NULL;
+	D_closeoutput();
+
+		// now generate the E/M score panel
+	D_billingScore();
 
 		// once we've finished generating the dashboard, call
 		// S_Validate() to generate a warning box, if necessary
@@ -600,16 +623,7 @@ void S_generateWarnBox(void)
 		return;
 	}
 
-	if (outf != NULL)
-	{		// already open!?!?
-		fprintf(stderr, "already have an output file!!!!!\n");
-		exit(2);
-	}
-	if ((outf = fopen(WARN_PATH, "w")) == NULL)
-	{
-		fprintf(stderr, "cannot open warning file!!!!!");
-		exit(1);
-	}
+	D_openoutput(WARN_PATH, "warning");
 	D_prolog();
 		// we add a background color, even though the DotNet
 		// RTF control doesn't honor it, and the background
@@ -624,14 +638,12 @@ void S_generateWarnBox(void)
 		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
 		D_vertspace(2);
-
 	}
 	D_vertspace(10);
 	// D_vertspace(21);
 	// D_warning_icons();
 	D_epilog();
-	fclose(outf);
-	outf = NULL;
+	D_closeoutput();
 	return;
 }
 

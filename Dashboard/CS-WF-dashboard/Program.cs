@@ -29,20 +29,28 @@ namespace Dashboard
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        private const int dashht = 550;
-        private const int warnht = 250;
-        private const int dashwid = 255;
-        private System.Drawing.Size dsize = new System.Drawing.Size(dashwid, dashht);
-        private System.Drawing.Size wsize = new System.Drawing.Size(dashwid, warnht);
-        private System.Drawing.Size tsize = new System.Drawing.Size(dashwid, dashht+warnht);
-        private System.Drawing.Point wpos = new System.Drawing.Point(0, dashht);
-        private System.Drawing.Point dpos = new System.Drawing.Point(0, 0);
-        public String dashpath = "dashboard.rtf";
-        public String warnpath = "dashwarn.rtf";
+            /*
+             * We have three stacked panels: status, E/M, warning.
+             * The RTF boxes for them are named dashST, dashEM, dashW,
+             * and their heights, positions & sizes are XXXht, XXXpos, XXXsz
+             * (where we need explicit variables for them)
+             * Overall dash variables for the dash form are just dashXX,
+             * dashOXX for the overall size (including non-client elements),
+             * and dashTXX for the overall size with warning panel
+             */
+        public WindowsFormsApplication1.Form1 dash; 
+        public RichTextBox dashST, dashEM, dashW;
+        private System.Drawing.Size dashOsz, dashTsz, dashWsz;
+        private System.Drawing.Point dashWpos;
+        private int dashOht, dashOwid, dashht, dashwid;
+        private int dashSTht, dashEMht, dashWht;
+
+        public String dashSTpath = "dashboard.rtf";
+        public String dashEMpath = "dashem.rtf";
+        public String dashWpath = "dashwarn.rtf";
         public String rtfmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
-        public WindowsFormsApplication1.Form1 dash;
-        public RichTextBox dashrtf, warnrtf;
-        public String rtfcontents;
+
+        public String dashSTrtf, dashEMrtf;
         private bool DASHfail = false;
         private int dashboards_running = 0;
         private int updates = 0;
@@ -54,25 +62,59 @@ namespace Dashboard
  
         public Dashboard()
         {
-                // the overall dashboard window 
+                // these are the fixed sizes -- others are calculated from these
+            dashOht = 550;
+            dashOwid = 255;
+            dashWht = 200;
+            dashEMht = 125;
+
+                // create the overall dashboard window 
             dash = new WindowsFormsApplication1.Form1(); // dash = new Form();
-            dash.Size = dsize;
+            dash.Size = dashOsz = new System.Drawing.Size(dashOwid, dashOht);
             // dash.Visible = true; //  this appears to steal focus
             dash.Text = "The Sullivan Group dashboard";
-                // the dashboard RTF control
-            dashrtf = new RichTextBox();
-            dashrtf.Size = dsize;
-            dashrtf.Location = dpos;
-            dashrtf.ReadOnly = true;
-            dashrtf.DetectUrls = true;
-            dashrtf.BackColor = Color.White;
-            dash.Controls.Add(dashrtf);
-                // basic parameters for the warning box RTF control
-            warnrtf = new RichTextBox();
-            warnrtf.Size = wsize;
-            warnrtf.Location = wpos;
-            warnrtf.ReadOnly = true;
-            warnrtf.BackColor = Color.Yellow;
+                    // what's the usable size, minus window decoration? 
+            dashht = dash.ClientSize.Height;
+            dashwid = dash.ClientSize.Width;
+                    // now calculate the RTF panel sizes & positions
+            dashSTht = dashht - dashEMht;
+                    // need to declare warning panel size & position objects
+                    // now, since they're used later, external to the constructor
+            dashWpos = new System.Drawing.Point(0, dashht);
+            dashWsz = new System.Drawing.Size(dashwid, dashWht);
+            dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
+
+                // the dashboard status panel
+            dashST = new RichTextBox();
+            dashST.Location = new System.Drawing.Point(0,0);
+            dashST.Size = new System.Drawing.Size(dashwid, dashSTht);
+            dashST.ReadOnly = true;
+            dashST.DetectUrls = true;
+            dashST.BackColor = Color.White;
+            dash.Controls.Add(dashST);
+
+                // the E/M panel
+            dashEM = new RichTextBox();
+            dashEM.Size = new System.Drawing.Size(dashwid, dashEMht);
+            dashEM.Location = new System.Drawing.Point(0, dashSTht);
+            dashEM.ReadOnly = true;
+            dashEM.BackColor = Color.White;
+            dash.Controls.Add(dashEM);
+
+                // the warning box
+            dashW = new RichTextBox();
+            dashW.Size = dashWsz;
+            dashW.Location = dashWpos;
+            dashW.ReadOnly = true;
+            dashW.BackColor = Color.Yellow;
+                // tooltip for the E/M panel
+            String tooltiptext;
+            tooltiptext = "Actual E/M code should be assigned by\n";
+            tooltiptext += "billing professionals and based on medical\n";
+            tooltiptext += "necessity and is not necessarily based on\n";
+            tooltiptext += "levels supported by documentation.";
+            ToolTip dashtip = new ToolTip();
+            dashtip.SetToolTip(dashEM, tooltiptext);
         }
 
             // we can invoke failnote if we're already running,
@@ -96,65 +138,76 @@ namespace Dashboard
             ////  .... for test purposes ....
             //// flash the background so we know the update loop is running
             //this.dash.Refresh();
-            //this.dashrtf.BackColor = Color.LightGray;
-            //this.dashrtf.Clear(); this.dashrtf.Refresh(); this.dash.Refresh();
+            //this.dashST.BackColor = Color.LightGray;
+            //this.dashST.Clear(); this.dashST.Refresh(); this.dash.Refresh();
             //Thread.Sleep(100);
+            //this.dashST.BackColor = Color.White;
 
                 // update with the real contents of the main dashboard
-            this.dashrtf.Rtf = RTFcontents();
-            this.dashrtf.Refresh();
-                // are we showing the warning box, but shouldn't?
-            if (showing_warning && !File.Exists(warnpath))
-            {
-                    // remove warning box and resize the dashboard
-                this.dash.Size = dsize;
-                this.dash.Controls.Remove(warnrtf);
-                showing_warning = false;
-            }
-                // are we not showing the warning box, but should?
-            if (!showing_warning && File.Exists(warnpath))
-            {
-                    // expand the dashboard and add the warning box
-                this.dash.Size = tsize;
-                this.dash.Controls.Add(warnrtf);
-                showing_warning = true;
-            }
-                // update the warning box contents if necessary
-            if (File.Exists(warnpath))
-            {
-                this.warnrtf.Rtf = File.ReadAllText(this.warnpath);
-                this.warnrtf.Refresh();
-            }
-                // now do the refresh of the whole window
+            this.dashST.Rtf = dashSTcontents();
+            this.dashST.Refresh();
+            this.dashEM.Rtf = dashEMcontents();
+            this.dashEM.Refresh();
+                // handle the warning panel
+            dashWarn();
+                // now refresh of the whole window
             this.dash.Refresh();
      
             updates++;  // number of times we've updated
-            //    // this following stuff is to ensure focus & foregrounding
-            //    //  .... now handled by the MU pulling the window into the foreground
-            //if (!this.dash.CanFocus) this.dashrtf.BackColor = Color.Red;
-            //this.dash.Visible = true; this.dash.Enabled = true; this.dash.TopMost = true;
-            //// this.dash.Focus();  
-            //this.dash.BringToFront();
-            //this.dashrtf.Visible = true; this.dashrtf.Enabled = true; 
-            //// this.dashrtf.Focus(); 
-            //this.dashrtf.BringToFront();
-            //this.dash.Show();
-            // IntPtr wHnd = this.dash.Handle;
-            // SetForegroundWindow(wHnd);
         }
 
-        public string RTFcontents()
+        public void dashWarn()
         {
-            if (File.Exists(this.dashpath))  // we should only be reading the file if it's been updated
+            // are we showing the warning box, but shouldn't?
+            if (showing_warning && !File.Exists(dashWpath))
             {
-                rtfcontents = File.ReadAllText(this.dashpath);
+                // remove warning box and resize the dashboard
+                this.dash.Size = dashOsz;
+                this.dash.Controls.Remove(dashW);
+                showing_warning = false;
+            }
+            // are we not showing the warning box, but should?
+            if (!showing_warning && File.Exists(dashWpath))
+            {
+                // expand the dashboard and add the warning box
+                this.dash.Size = dashTsz;
+                this.dash.Controls.Add(dashW);
+                showing_warning = true;
+            }
+            // update the warning box contents if necessary
+            if (File.Exists(dashWpath))
+            {
+                this.dashW.Rtf = File.ReadAllText(this.dashWpath);
+                this.dashW.Refresh();
+            }
+        }
+
+        public string dashSTcontents()
+        {
+            if (File.Exists(this.dashSTpath))  // we should only be reading the file if it's been updated
+            {
+                dashSTrtf = File.ReadAllText(this.dashSTpath);
             }
             else
             {
-                rtfcontents = this.rtfmissing;
+                dashSTrtf = this.rtfmissing;
             }
-            if (DASHfail) rtfcontents = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
-            return rtfcontents;
+            if (DASHfail) dashSTrtf = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
+            return dashSTrtf;
+        }
+
+        public string dashEMcontents()
+        {
+            if (File.Exists(this.dashEMpath))  // we should only be reading the file if it's been updated
+            {
+                dashEMrtf = File.ReadAllText(this.dashEMpath);
+            }
+            else
+            {
+                dashEMrtf = this.rtfmissing;
+            }
+            if (DASHfail) dashEMrtf = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
+            return dashEMrtf;
         }
     }
 
@@ -182,13 +235,17 @@ namespace Dashboard
 
                 Dashboard D = new Dashboard();
 
-                // dashrtf = new RichTextBox(); // RichTextBox dashrtf = new RichTextBox();
-                // D.dashrtf.BackColor = Color.White; // Color.LightBlue;
+                // dashST = new RichTextBox(); // RichTextBox dashST = new RichTextBox();
+                // D.dashST.BackColor = Color.White; // Color.LightBlue;
 
                     // event handlers for mouse clicks
-                D.dashrtf.LinkClicked += new LinkClickedEventHandler(dashrtf_LinkClicked);
-                D.dashrtf.MouseClick += new MouseEventHandler((sender,e) 
-                    => dashrtf_MouseClick(sender,e,D));
+                //D.dashST.AutoWordSelection = true;
+                D.dashST.LinkClicked += new LinkClickedEventHandler(dashST_LinkClicked);
+                D.dashST.MouseClick += new MouseEventHandler((sender, e)
+                    => dashST_MouseClick(sender, e, D));
+                // D.dashST.MouseHover += new EventHandler(dashST_MouseHover);
+                //D.dashST.MouseDoubleClick += new MouseEventHandler((sender, e)
+                //    => dashST_MouseDoubleClick(sender, e, D));
 
                     // update timer event
                     // (like with the RichTextBox class, annoyingly there are
@@ -204,7 +261,7 @@ namespace Dashboard
                 // System.Windows.Forms.Application.Exit();
             }
         }
-        
+
         static void timer_Tick(object sender, EventArgs e, Dashboard D)
         {
             D.RefreshDash();
@@ -247,7 +304,7 @@ namespace Dashboard
             return (howmany);
         }
 
-        static void dashrtf_LinkClicked(object sender, LinkClickedEventArgs e)
+        static void dashST_LinkClicked(object sender, LinkClickedEventArgs e)
         {
             string link = e.LinkText;
 
@@ -262,10 +319,21 @@ namespace Dashboard
              * RTF to extract that list, which will resolve to the link label,
              * which is the argument to doLink().
              */      
-        static void dashrtf_MouseClick(object sender, MouseEventArgs e, Dashboard D)
+        static void dashST_MouseClick(object sender, MouseEventArgs e, Dashboard D)
         {
-            string contents = D.RTFcontents();
+            string contents = D.dashSTcontents();
+        }
 
+        static void dashST_MouseHover(object sender, EventArgs e)
+        {
+            int x = 10;
+            // throw new NotImplementedException();
+        }
+
+        static void dashST_MouseDoubleClick(object sender, MouseEventArgs e, Dashboard D)
+        {
+            string contents = D.dashSTcontents();
+            // throw new NotImplementedException();
         }
 
         static void doLink(string link)

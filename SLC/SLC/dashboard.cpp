@@ -638,7 +638,6 @@ void S_generateWarnBox(void)
 		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
 		D_vertspace(2);
-
 	}
 	D_vertspace(10);
 	// D_vertspace(21);

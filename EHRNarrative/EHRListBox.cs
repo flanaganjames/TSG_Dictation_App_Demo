@@ -62,6 +62,15 @@ namespace EHRNarrative
 
     public class EHRListBoxGroup
     {
+        public bool HasMouse { get; set; }
+        
+        private EHRListBox _parent;
+        public EHRListBox Parent
+        {
+            get { return this._parent; }
+            set { }
+        }
+
         private Subgroup _group;
 
         private SubmenuPopover _popover;
@@ -78,14 +87,18 @@ namespace EHRNarrative
             set { }
         }
 
-        public EHRListBoxGroup(Subgroup group, Collection data)
+        public EHRListBoxGroup(Subgroup group, Collection data, EHRListBox parent)
         {
             this._group = group;
             this._popover = new SubmenuPopover(this, this._group, data);
+
+            this._parent = parent;
         }
-        public EHRListBoxGroup(IEnumerable<Element> elements)
+        public EHRListBoxGroup(IEnumerable<Element> elements, EHRListBox parent)
         {
             this._popover = new SubmenuPopover(this, elements);
+
+            this._parent = parent;
         }
         public String Name
         {
@@ -163,7 +176,7 @@ namespace EHRNarrative
         {
             foreach (Subgroup group in groups)
             {
-                this.Items.Add(new EHRListBoxGroup(group, data));
+                this.Items.Add(new EHRListBoxGroup(group, data, this));
             }
         }
         public void SelectAllNL()
@@ -201,7 +214,7 @@ namespace EHRNarrative
             this.ItemHeight = Math.Max(30, (int)this._font.GetHeight() + this.Margin.Vertical);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(MouseSelectItem);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(MouseHoverItem);
-            this.MouseLeave += new System.EventHandler(ClearAllSubmenus);
+            this.MouseLeave += new System.EventHandler(LeaveMenu);
 
             this.BackColor = SystemColors.Control;
             this.BorderStyle = BorderStyle.None;
@@ -266,65 +279,56 @@ namespace EHRNarrative
             try
             {
                 group = (EHRListBoxGroup)this.Items[IndexFromPoint(e.X, e.Y)];
+                group.HasMouse = true;
+
+                if (this.displayedGroup != group && this.displayedGroup != null)
+                {
+                    this.displayedGroup.HasMouse = false;
+                    this.displayedGroup.Popover.Hide();
+                }
+
+                if (this.displayedGroup == null || this.displayedGroup != group)
+                {
+                    this.displayedGroup = group;
+
+                    int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
+                    int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height / 2 - group.Popover.Height / 2);
+                    if (top + group.Popover.Height > this.FindForm().Height - 10)
+                        top = this.FindForm().Height - group.Popover.Height - 10;
+
+                    group.Popover.Location = new System.Drawing.Point(left, top);
+                    this.FindForm().Controls.Add(group.Popover);
+                    group.Popover.BringToFront();
+                    group.Popover.Show();
+
+                    this.Refresh();
+                }
             }
             catch
             {
                 if (this.displayedGroup != null)
                 {
-                    ClearAllSubmenus();
+                    this.displayedGroup.HasMouse = false;
+                    this.displayedGroup.Popover.Hide();
                 }
-                return;
             }
+        }
 
-            if (this.displayedGroup == null || this.displayedGroup != group)
+        public void SubmenuClosed(EHRListBoxGroup group)
+        {
+            if (this.displayedGroup == group)
             {
-                if (this.displayedGroup != null)
-                {
-                    ClearAllSubmenus();
-                }
-
-                this.displayedGroup = group;
-
-                int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
-                int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height/2 - group.Popover.Height/2);
-                if (top + group.Popover.Height > this.FindForm().Height - 10)
-                    top = this.FindForm().Height - group.Popover.Height - 10;
-
-                group.Popover.Location = new System.Drawing.Point(left, top);
-                this.FindForm().Controls.Add(group.Popover);
-                group.Popover.BringToFront();
-                group.Popover.Show();
-
+                this.displayedGroup = null;
                 this.Refresh();
             }
         }
 
-        private void ClearAllSubmenus(object sender, EventArgs e)
+        private void LeaveMenu(object sender, EventArgs e)
         {
-            ClearAllSubmenus();
-        }
-
-        private void ClearAllSubmenus()
-        {
-            EHRListBoxGroup group;
-            foreach (var item in this.Items)
+            if (this.displayedGroup != null)
             {
-                try
-                {
-                    group = (EHRListBoxGroup)item;
-                    if (group.Popover.Visible)
-                    {
-                        group.Popover.Hide();
-                        if (this.displayedGroup == group)
-                        {
-                            this.displayedGroup = null;
-                        }
-                        this.Refresh();
-                    }
-                }
-                catch
-                {
-                }
+                this.displayedGroup.HasMouse = false;
+                this.displayedGroup.Popover.Hide();
             }
         }
     }

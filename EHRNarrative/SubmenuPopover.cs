@@ -33,6 +33,8 @@ namespace EHRNarrative
         }
         private void initialize()
         {
+            this.timer1.Stop();
+
             this._listBox.Height = Math.Min(600, this._listBox.Items.Count * this._listBox.ItemHeight);
             this._listBox.Width = 190;
             this._listBox.Top = 5;
@@ -47,6 +49,32 @@ namespace EHRNarrative
             this.BackColor = Color.LightGray;
 
             this.Enabled = true;
+        }
+
+        new public void Hide()
+        {
+            this.timer1.Start();
+        }
+
+        private void HideIfShould()
+        {
+            if (!ClientRectangle.Contains(PointToClient(Control.MousePosition)) && !this._parentListItem.HasMouse)
+            {
+                base.Hide();
+
+                this._parentListItem.Parent.SubmenuClosed(this._parentListItem);
+            }
+        }
+
+        private void SubmenuPopover_MouseLeave(object sender, EventArgs e)
+        {
+            this.timer1.Start();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            this.timer1.Stop();
+            this.HideIfShould();
         }
     }
 }

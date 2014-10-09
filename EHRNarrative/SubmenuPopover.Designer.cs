@@ -28,7 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 300;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // SubmenuPopover
             // 
@@ -37,10 +45,13 @@
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.Name = "SubmenuPopover";
             this.Size = new System.Drawing.Size(216, 216);
+            this.MouseLeave += new System.EventHandler(this.SubmenuPopover_MouseLeave);
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+        private System.Windows.Forms.Timer timer1;
     }
 }

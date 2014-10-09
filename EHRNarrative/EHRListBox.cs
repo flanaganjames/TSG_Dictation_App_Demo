@@ -297,8 +297,12 @@ namespace EHRNarrative
                 {
                     this.displayedGroup = group;
 
-                    int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
-                    int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height / 2 - group.Popover.Height / 2);
+                    int leftEdge = this.Parent.Bounds.Left;
+                    int rightEdge = this.Parent.Bounds.Right;
+                    int topEdge = this.Parent.Bounds.Top + this.Bounds.Top + group.Bounds.Location.Y;
+
+                    int left = (rightEdge + group.Popover.Width) < this.FindForm().Width ? rightEdge : leftEdge - group.Popover.Width;
+                    int top = Math.Max(10, topEdge + group.Bounds.Height / 2 - group.Popover.Height / 2);
                     if (top + group.Popover.Height > this.FindForm().Height - 10)
                         top = this.FindForm().Height - group.Popover.Height - 10;
 

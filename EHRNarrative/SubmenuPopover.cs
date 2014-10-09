@@ -56,6 +56,12 @@ namespace EHRNarrative
             this.timer1.Start();
         }
 
+        public void HideNow()
+        {
+            base.Hide();
+            this._parentListItem.Parent.SubmenuClosed(this._parentListItem);
+        }
+
         private void HideIfShould()
         {
             if (!ClientRectangle.Contains(PointToClient(Control.MousePosition)) && !this._parentListItem.HasMouse)

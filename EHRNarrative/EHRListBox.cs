@@ -284,7 +284,7 @@ namespace EHRNarrative
                 if (this.displayedGroup != group && this.displayedGroup != null)
                 {
                     this.displayedGroup.HasMouse = false;
-                    this.displayedGroup.Popover.Hide();
+                    this.displayedGroup.Popover.HideNow();
                 }
 
                 if (this.displayedGroup == null || this.displayedGroup != group)

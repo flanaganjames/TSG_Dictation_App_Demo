@@ -194,7 +194,7 @@ namespace EHRNarrative
             listbox.AddElements(group.ElementsForComplaint(data));
             listbox.AddGroups(group.Subgroups(data), data);
             if (group.ElementsAdditional(data).Count() > 0)
-                listbox.Items.Add(new EHRListBoxGroup(group.ElementsAdditional(data)));
+                listbox.Items.Add(new EHRListBoxGroup(group.ElementsAdditional(data), listbox));
 
             //draw headings
             var heading = new GroupLabel(listbox, group);

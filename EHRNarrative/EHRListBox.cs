@@ -65,15 +65,27 @@ namespace EHRNarrative
         }
 
     }
+
     public class EHRListBoxGroup
     {
+        public bool HasMouse { get; set; }
+        
+        private EHRListBox _parent;
+        public EHRListBox Parent
+        {
+            get { return this._parent; }
+            set { }
+        }
+
         private Subgroup _group;
+
         private SubmenuPopover _popover;
         public SubmenuPopover Popover
         {
             get { return this._popover; }
             set { }
         }
+
         private Rectangle _bounds;
         public Rectangle Bounds
         {
@@ -81,14 +93,18 @@ namespace EHRNarrative
             set { }
         }
 
-        public EHRListBoxGroup(Subgroup group, Collection data)
+        public EHRListBoxGroup(Subgroup group, Collection data, EHRListBox parent)
         {
             this._group = group;
             this._popover = new SubmenuPopover(this, this._group, data);
+
+            this._parent = parent;
         }
-        public EHRListBoxGroup(IEnumerable<Element> elements)
+        public EHRListBoxGroup(IEnumerable<Element> elements, EHRListBox parent)
         {
             this._popover = new SubmenuPopover(this, elements);
+
+            this._parent = parent;
         }
         public String Name
         {
@@ -104,7 +120,12 @@ namespace EHRNarrative
         public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
         {
             this._bounds = e.Bounds;
-            e.Graphics.FillRectangle(SystemBrushes.Control, e.Bounds);
+            var backcolor = SystemBrushes.Control;
+            if (this.Popover.Visible)
+            {
+                backcolor = Brushes.LightGray;
+            }
+            e.Graphics.FillRectangle(backcolor, e.Bounds);
 
             // draw some item separator
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
@@ -127,6 +148,7 @@ namespace EHRNarrative
     {
         private StringFormat _fmt;
         private Font _font;
+        private EHRListBoxGroup displayedGroup;
 
         public EHRListBox(Font font, StringAlignment aligment, StringAlignment lineAligment)
         {
@@ -145,6 +167,7 @@ namespace EHRNarrative
             this._fmt.LineAlignment = StringAlignment.Center;
             this._font = new Font(this.Font, FontStyle.Bold);
             this.Cursor = Cursors.Hand;
+            this.displayedGroup = null;
             SetOptions();
         }
 
@@ -159,7 +182,7 @@ namespace EHRNarrative
         {
             foreach (Subgroup group in groups)
             {
-                this.Items.Add(new EHRListBoxGroup(group, data));
+                this.Items.Add(new EHRListBoxGroup(group, data, this));
             }
         }
         public void SelectAllNL()
@@ -197,6 +220,7 @@ namespace EHRNarrative
             this.ItemHeight = Math.Max(30, (int)this._font.GetHeight() + this.Margin.Vertical);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(MouseSelectItem);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(MouseHoverItem);
+            this.MouseLeave += new System.EventHandler(LeaveMenu);
 
             this.BackColor = SystemColors.Control;
             this.BorderStyle = BorderStyle.None;
@@ -261,15 +285,57 @@ namespace EHRNarrative
             try
             {
                 group = (EHRListBoxGroup)this.Items[IndexFromPoint(e.X, e.Y)];
+                group.HasMouse = true;
+
+                if (this.displayedGroup != group && this.displayedGroup != null)
+                {
+                    this.displayedGroup.HasMouse = false;
+                    this.displayedGroup.Popover.HideNow();
+                }
+
+                if (this.displayedGroup == null || this.displayedGroup != group)
+                {
+                    this.displayedGroup = group;
+
+                    int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
+                    int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height / 2 - group.Popover.Height / 2);
+                    if (top + group.Popover.Height > this.FindForm().Height - 10)
+                        top = this.FindForm().Height - group.Popover.Height - 10;
+
+                    group.Popover.Location = new System.Drawing.Point(left, top);
+                    this.FindForm().Controls.Add(group.Popover);
+                    group.Popover.BringToFront();
+                    group.Popover.Show();
+
+                    this.Refresh();
+                }
             }
             catch
             {
-                return;
+                if (this.displayedGroup != null)
+                {
+                    this.displayedGroup.HasMouse = false;
+                    this.displayedGroup.Popover.Hide();
+                }
             }
+        }
 
-            group.Popover.Location = new System.Drawing.Point(group.Bounds.Location.X, group.Bounds.Location.Y);
-            group.Popover.Show();
-            group.Popover.Refresh();
+        public void SubmenuClosed(EHRListBoxGroup group)
+        {
+            if (this.displayedGroup == group)
+            {
+                this.displayedGroup = null;
+                this.Refresh();
+            }
+        }
+
+        private void LeaveMenu(object sender, EventArgs e)
+        {
+            if (this.displayedGroup != null)
+            {
+                this.displayedGroup.HasMouse = false;
+                this.displayedGroup.Popover.Hide();
+            }
         }
     }
 }

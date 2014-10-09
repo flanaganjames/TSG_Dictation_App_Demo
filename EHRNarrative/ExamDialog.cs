@@ -38,8 +38,8 @@ namespace EHRNarrative
                 MessageBox.Show(e.Message);
                 data = null;
                 return;
-            } 
-            catch (BadImageFormatException) 
+            }
+            catch (BadImageFormatException)
             {
                 MessageBox.Show("Missing file: dialog_content.sqlite3");
                 data = null;
@@ -103,6 +103,12 @@ namespace EHRNarrative
                 }
                 conn.Close();
             }
+
+            foreach (int group_id in data.elements.Where(x => x.Recommended).Select(x => x.Group_id).Distinct())
+            {
+                data.groups.Where(x => x.Id == group_id).First().Recommended = true;
+            }
+
             return data;
         }
 
@@ -135,7 +141,6 @@ namespace EHRNarrative
             }
 
 
-            //draw extra group column
             if (data.dialog.GroupsAdditional(data).Count() > 0)
             {
                 Label addnlGroupLabel = RenderAddnlLabel(columnGutter);
@@ -199,17 +204,6 @@ namespace EHRNarrative
             heading.Height = listbox.Height + listbox.Top + 15;
             currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
             currentPanel.Controls.Add(heading);
-
-            //draw select alls
-            var button = new SelectAllButton(listbox);
-            button.Top = 18;
-            button.Left = 0;
-            heading.Controls.Add(button);
-
-            var clearbutton = new ClearAllButton(listbox);
-            clearbutton.Top = 18;
-            clearbutton.Left = 100;
-            heading.Controls.Add(clearbutton);
         }
 
         private Label RenderAddnlLabel(int columnGutter)
@@ -338,8 +332,10 @@ namespace EHRNarrative
             this.BorderStyle = BorderStyle.None;
 
             heading = new Label();
+            heading.Width = this.Width;
             heading.Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
-            heading.ForeColor = SystemColors.WindowFrame;
+            heading.ForeColor = Color.DarkSlateGray;
+
             this.Controls.Add(heading);
 
             this._listBox = ListBox;
@@ -349,9 +345,25 @@ namespace EHRNarrative
             this._listBox.Height = Math.Min(this._listBox.Items.Count * this._listBox.ItemHeight, 600);
             this._listBox.Top = 45;
 
+            //draw select alls
+            var button = new SelectAllButton(this._listBox);
+            button.Top = 18;
+            button.Left = 0;
+            this.Controls.Add(button);
+
+            var clearbutton = new ClearAllButton(this._listBox);
+            clearbutton.Top = 18;
+            clearbutton.Left = 100;
+            this.Controls.Add(clearbutton);
+
             this.heading.Click += new System.EventHandler(this.ClickHeader);
+            this._listBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.checkRecommended);
+            button.Click += new System.EventHandler(this.checkRecommended);
+            clearbutton.Click += new System.EventHandler(this.checkRecommended);
 
             this.Controls.Add(this._listBox);
+
+            CheckRecommended();
         }
 
         private void ClickHeader(object Sender, EventArgs e)
@@ -361,34 +373,45 @@ namespace EHRNarrative
             row.Open();
         }
 
+        private void checkRecommended(object Sender, MouseEventArgs e) { CheckRecommended(); }
+        private void checkRecommended(object Sender, EventArgs e) { CheckRecommended(); }
+
         public void CheckRecommended()
         {
+            if (!this._group.Recommended) return;
+            
             this._group.RecommendedActive = false;
 
+            List<Element> elements = new List<Element>();
             foreach (var item in this._listBox.Items)
             {
                 if (item is EHRListBoxItem)
                 {
                     EHRListBoxItem itemItem = (EHRListBoxItem)item;
-
-                    if (itemItem.Element.Recommended && itemItem.Element.selected == null)
-                    {
-                        this._group.RecommendedActive = true;
-                    }
+                    elements.Add(itemItem.Element);
                 }
-                else if (item is EHRListBoxGroup)
+            }
+            if (elements.Where(x => x.Recommended).Any())
+            {
+                if (elements.Where(x => x.Recommended && x.selected == null).Any())
+                    this._group.RecommendedActive = true;
+            }
+            else
+            {
+                IEnumerable<String> keywords = elements.Select(x => x.EHR_keyword).Distinct();
+                foreach (string keyword in keywords)
                 {
-                    EHRListBoxGroup groupItem = (EHRListBoxGroup)item;
-
-                    //TODO: Search elements in the subgroup and see if we need to mark this group as recommended?
+                    bool thereAreNoSelectedElementsForThisKeyword = !elements.Where(x => x.EHR_keyword == keyword && x.selected != null).Any();
+                    if (thereAreNoSelectedElementsForThisKeyword)
+                        this._group.RecommendedActive = true;
                 }
             }
 
             //set group coloring if either the group is recommended or any Elements are actively recommended
             if (this._group.Recommended && this._group.RecommendedActive)
-                this.ForeColor = Color.FromName("DarkRed");
+                heading.ForeColor = Color.FromName("DarkRed");
             else if (this._group.Recommended && !this._group.RecommendedActive)
-                this.ForeColor = Color.FromName("DarkSlateBlue");
+                heading.ForeColor = Color.FromName("DarkSlateBlue");
 
             this.Refresh();
         }

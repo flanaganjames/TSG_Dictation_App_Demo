@@ -48,7 +48,7 @@ namespace EHRNarrative
 
             this.Text = data.dialog.Name;
 
-            RenderElements(data);
+            RenderDialog(data);
         }
         new public void Show() {
             if (data == null)
@@ -106,60 +106,19 @@ namespace EHRNarrative
             return data;
         }
 
-        private void RenderElements(Collection data) {
+        private void RenderDialog(Collection data) {
             int columnWidth = 200;
             int columnGutter = 20;
-            int itemHeight = 35;
             int columns = data.dialog.GroupsForComplaint(data).Count();
-
-            int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter) / (columnWidth + columnGutter);
+            int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter-40) / (columnWidth + columnGutter);
 
             this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
-            this.CenterToScreen();
 
             rows = new List<AccordianRow>();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
-                int row = item.i / columnsPerRow;
-                AccordianRow currentPanel;
-
-                try
-                {
-                    currentPanel = rows[row];
-                }
-                catch
-                {
-                    rows.Add(new AccordianRow());
-                    currentPanel = rows[row];
-                }
-
-                //create listbox for this group
-                var listbox = new EHRListBox();
-                item.group.SetAllDefaults(data);
-                listbox.AddElements(item.group.ElementsForComplaint(data));
-                listbox.AddGroups(item.group.Subgroups(data), data);
-                if (item.group.ElementsAdditional(data).Count() > 0)
-                    listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data)));
-                
-                //draw headings
-                var heading = new GroupLabel(listbox, item.group);
-                heading.Heading = item.group.Name;
-                heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                heading.Height = listbox.Height + listbox.Top;
-                currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
-                currentPanel.Controls.Add(heading);
-
-                //draw select alls
-                var button = new SelectAllButton(listbox);
-                button.Top = 18;
-                button.Left = 0;
-                heading.Controls.Add(button);
-
-                var clearbutton = new ClearAllButton(listbox);
-                clearbutton.Top = 18;
-                clearbutton.Left = 100;
-                heading.Controls.Add(clearbutton);
+                RenderGroupListbox(rows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
             }
 
             rows[0].Height = rows[0].MaxHeight;
@@ -168,20 +127,126 @@ namespace EHRNarrative
             foreach (AccordianRow row in rows)
             {
                 row.Width = columnsPerRow * (columnWidth + columnGutter) + columnGutter;
-                row.Top = lastBottom;
+                row.Dock = DockStyle.Top;
                 lastBottom += row.Height;
 
                 this.Controls.Add(row);
+                this.Controls.SetChildIndex(row, 0);
             }
 
-            this.Height = lastBottom + 50;
 
-            //draw extra group column:
-            //foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
-            //{
-            //    AdditionalGroupsList.Items.Add(item.group.Name);
-            //}
+            //draw extra group column
+            if (data.dialog.GroupsAdditional(data).Count() > 0)
+            {
+                Label addnlGroupLabel = RenderAddnlLabel(columnGutter);
+                this.Controls.Add(addnlGroupLabel);
+                this.Controls.SetChildIndex(addnlGroupLabel, 0);
+
+                lastBottom += addnlGroupLabel.Height;
+
+                List<AccordianRow> addnlRows = new List<AccordianRow>();
+
+                foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
+                {
+                    RenderGroupListbox(addnlRows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
+                }
+
+                foreach (AccordianRow row in addnlRows)
+                {
+                    row.Width = columnsPerRow * (columnWidth + columnGutter) + columnGutter;
+                    row.Dock = DockStyle.Top;
+                    lastBottom += row.Height;
+
+                    this.Controls.Add(row);
+                    this.Controls.SetChildIndex(row, 0);
+                }
+                rows.AddRange(addnlRows);
+            }
+
+            RenderButtonBar();
                 
+            this.Height = lastBottom + (rows.Max(x => x.MaxHeight) - rows[0].Height) + 150;
+            this.CenterToScreen();
+        }
+
+        private void RenderGroupListbox(List<AccordianRow> rows, Group group, int i, int columnsPerRow, int columnGutter, int columnWidth) {
+            int row = i / columnsPerRow;
+            AccordianRow currentPanel;
+
+            try
+            {
+                currentPanel = rows[row];
+            }
+            catch
+            {
+                rows.Add(new AccordianRow());
+                currentPanel = rows[row];
+            }
+
+            //create listbox for this group
+            var listbox = new EHRListBox();
+            group.SetAllDefaults(data);
+            listbox.AddElements(group.ElementsForComplaint(data));
+            listbox.AddGroups(group.Subgroups(data), data);
+            if (group.ElementsAdditional(data).Count() > 0)
+                listbox.Items.Add(new EHRListBoxGroup(group.ElementsAdditional(data)));
+
+            //draw headings
+            var heading = new GroupLabel(listbox, group);
+            heading.Heading = group.Name;
+            heading.Top = 15;
+            heading.Left = columnGutter + (i % columnsPerRow) * (columnWidth + columnGutter);
+            heading.Height = listbox.Height + listbox.Top + 15;
+            currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
+            currentPanel.Controls.Add(heading);
+
+            //draw select alls
+            var button = new SelectAllButton(listbox);
+            button.Top = 18;
+            button.Left = 0;
+            heading.Controls.Add(button);
+
+            var clearbutton = new ClearAllButton(listbox);
+            clearbutton.Top = 18;
+            clearbutton.Left = 100;
+            heading.Controls.Add(clearbutton);
+        }
+
+        private Label RenderAddnlLabel(int columnGutter)
+        {
+            var addnlGroupLabel = new Label();
+            addnlGroupLabel.Text = "    Additional Groups:";
+            addnlGroupLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            addnlGroupLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            addnlGroupLabel.Height = 50;
+            addnlGroupLabel.TextAlign = ContentAlignment.BottomLeft;
+            addnlGroupLabel.Dock = DockStyle.Top;
+            return addnlGroupLabel;
+        }
+
+        private void RenderButtonBar()
+        {
+            Panel buttonBar = new Panel();
+            buttonBar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            buttonBar.Top = this.ClientSize.Height - 50;
+            buttonBar.Left = 0;
+            buttonBar.Height = 43;
+            buttonBar.Width = this.ClientSize.Width;
+
+            Button DoneButton = new Button();
+            DoneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            DoneButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            DoneButton.Name = "DoneButton";
+            DoneButton.Size = new System.Drawing.Size(181, 23);
+            DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - 10), 10);
+            DoneButton.TabIndex = 2;
+            DoneButton.Text = "Done";
+            DoneButton.UseVisualStyleBackColor = true;
+            DoneButton.Click += new System.EventHandler(this.DoneButton_Click);
+
+            buttonBar.Controls.Add(DoneButton);
+
+            this.Controls.Add(buttonBar);
         }
 
         private void InsertEHRText()
@@ -198,6 +263,7 @@ namespace EHRNarrative
                 narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
             }
         }
+
         private void UpdateSLC()
         {
             List<String> groupData = new List<String>();
@@ -219,7 +285,7 @@ namespace EHRNarrative
     public partial class AccordianRow : Panel
     {
         public int MaxHeight { get; set; }
-        public int MinHeight = 20;
+        public int MinHeight = 35;
         public bool Opened { get; set; }
 
         public AccordianRow()
@@ -238,11 +304,13 @@ namespace EHRNarrative
             }
 
             this.Height = this.MaxHeight;
+            this.Opened = true;
         }
 
         public void Close()
         {
             this.Height = MinHeight;
+            this.Opened = false;
         }
     }
 

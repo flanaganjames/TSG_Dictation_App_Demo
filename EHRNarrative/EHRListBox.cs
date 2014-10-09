@@ -102,7 +102,7 @@ namespace EHRNarrative
         {
             this._bounds = e.Bounds;
             var backcolor = SystemBrushes.Control;
-            if (this.Popover.Enabled)
+            if (this.Popover.Visible)
             {
                 backcolor = Brushes.LightGray;
             }
@@ -292,9 +292,10 @@ namespace EHRNarrative
 
                 group.Popover.Location = new System.Drawing.Point(left, top);
                 this.FindForm().Controls.Add(group.Popover);
-                group.Popover.Enabled = true;
                 group.Popover.BringToFront();
                 group.Popover.Show();
+
+                this.Refresh();
             }
         }
 
@@ -311,14 +312,20 @@ namespace EHRNarrative
                 try
                 {
                     group = (EHRListBoxGroup)item;
-                    group.Popover.Hide();
-                    group.Popover.Enabled = false;
+                    if (group.Popover.Visible)
+                    {
+                        group.Popover.Hide();
+                        if (this.displayedGroup == group)
+                        {
+                            this.displayedGroup = null;
+                        }
+                        this.Refresh();
+                    }
                 }
                 catch
                 {
                 }
             }
-            this.displayedGroup = null;
         }
     }
 }

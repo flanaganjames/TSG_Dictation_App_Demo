@@ -45,6 +45,8 @@ namespace EHRNarrative
             this.Visible = false;
             this.BorderStyle = BorderStyle.None;
             this.BackColor = Color.LightGray;
+
+            this.Enabled = true;
         }
     }
 }

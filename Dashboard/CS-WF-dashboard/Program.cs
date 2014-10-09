@@ -48,7 +48,9 @@ namespace Dashboard
         public String dashSTpath = "dashboard.rtf";
         public String dashEMpath = "dashem.rtf";
         public String dashWpath = "dashwarn.rtf";
-        public String rtfmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
+        public String STmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
+        public String EMmissing = "{\\rtf1\\ansi\\pard E/M advice unavailable!\\par}";
+        public String AlreadyRunning = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
 
         public String dashSTrtf, dashEMrtf;
         private bool DASHfail = false;
@@ -92,6 +94,13 @@ namespace Dashboard
             dashST.DetectUrls = true;
             dashST.BackColor = Color.White;
             dash.Controls.Add(dashST);
+            /*
+             * For future consideration, we could make the status panel dashSTht+dashEMht
+             * high, but not change the position of the E/M panel.  Then we could allow
+             * double-clicking on the E/M panel to hide it in case the status panel had
+             * more information than we could see at a glance.  This would be the 
+             * alternative to scroll bars on the status panel.
+             */
 
                 // the E/M panel
             dashEM = new RichTextBox();
@@ -190,9 +199,9 @@ namespace Dashboard
             }
             else
             {
-                dashSTrtf = this.rtfmissing;
+                dashSTrtf = this.STmissing;
             }
-            if (DASHfail) dashSTrtf = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
+            if (DASHfail) dashSTrtf = this.AlreadyRunning;
             return dashSTrtf;
         }
 
@@ -204,9 +213,9 @@ namespace Dashboard
             }
             else
             {
-                dashEMrtf = this.rtfmissing;
+                dashEMrtf = this.EMmissing;
             }
-            if (DASHfail) dashEMrtf = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
+            if (DASHfail) dashEMrtf = this.AlreadyRunning;
             return dashEMrtf;
         }
     }

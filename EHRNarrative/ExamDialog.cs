@@ -106,7 +106,7 @@ namespace EHRNarrative
             int columns = data.dialog.GroupsForComplaint(data).Count();
 
             int rows;
-            if ((columns + 1) * (columnWidth + columnGutter) < System.Windows.Forms.Screen.GetWorkingArea(this).Width)
+            if ((columns) * (columnWidth + columnGutter) < System.Windows.Forms.Screen.GetWorkingArea(this).Width)
                 rows = 1;
             else
                 rows = 2;
@@ -117,7 +117,7 @@ namespace EHRNarrative
 
             int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
 
-            this.Width = (columnsPerRow + 1) * (columnWidth + columnGutter);
+            this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
             this.Height = (85 + Math.Min(maxListBoxItems * itemHeight, maxListBoxHeight)) * rows;
             this.CenterToScreen();
 
@@ -134,11 +134,11 @@ namespace EHRNarrative
                 var listbox = new EHRListBox();
                 item.group.SetAllDefaults(data);
                 listbox.AddElements(item.group.ElementsForComplaint(data));
-                listbox.AddGroups(item.group.Subgroups(data));
+                listbox.AddGroups(item.group.Subgroups(data), data);
                 if (item.group.ElementsAdditional(data).Count() > 0)
-                    listbox.Items.Add(new EHRListBoxGroup());
+                    listbox.Items.Add(new EHRListBoxGroup(item.group.ElementsAdditional(data), listbox));
                 listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                listbox.Top = 5 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
+                listbox.Top = 25 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
                 listbox.Width = columnWidth;
                 listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
                 this.Controls.Add(listbox);
@@ -155,10 +155,10 @@ namespace EHRNarrative
 
             }
             //draw extra group column:
-            foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
-            {
-                AdditionalGroupsList.Items.Add(item.group.Name);
-            }
+            //foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
+            //{
+            //    AdditionalGroupsList.Items.Add(item.group.Name);
+            //}
                 
         }
 

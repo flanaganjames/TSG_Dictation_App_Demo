@@ -56,12 +56,13 @@
             this.AdditionalGroups.Name = "AdditionalGroups";
             this.AdditionalGroups.Size = new System.Drawing.Size(200, 337);
             this.AdditionalGroups.TabIndex = 1;
+            this.AdditionalGroups.Visible = false;
             // 
             // DoneButton
             // 
             this.DoneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.DoneButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DoneButton.Location = new System.Drawing.Point(7, 311);
+            this.DoneButton.Location = new System.Drawing.Point(16, 311);
             this.DoneButton.Name = "DoneButton";
             this.DoneButton.Size = new System.Drawing.Size(181, 23);
             this.DoneButton.TabIndex = 2;

@@ -3,6 +3,7 @@
 
 #define STATUS_PATH "status.txt"
 #define DASHBOARD_PATH "dashboard.rtf"
+#define EM_PATH "dashem.rtf"
 #define WARN_PATH "dashwarn.rtf"
 
 // prototypes in SLC

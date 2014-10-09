@@ -135,19 +135,11 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(ProjectDir)\..\Dashboard\CS-WF-dashboard\bin\x64\$(ConfigurationName)\Dashboard.exe $(ProjectDir)\$(OutDir)
-
-
 copy $(ProjectDir)\..\MockDragon\bin\x64\$(ConfigurationName)\MockDragon.exe $(ProjectDir)\$(OutDir)
-
-
 copy $(ProjectDir)\..\SLC\$(ConfigurationName)\SLC.exe $(ProjectDir)\$(OutDir)
-
-
-
 IF NOT EXIST $(ProjectDir)\$(OutDir)\Templates MKDIR $(ProjectDir)\$(OutDir)\Templates
-
-
-xcopy /D $(ProjectDir)\..\Templates\* $(ProjectDir)\$(OutDir)\Templates</PostBuildEvent>
+xcopy /D $(ProjectDir)\..\Templates\* $(ProjectDir)\$(OutDir)\Templates
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

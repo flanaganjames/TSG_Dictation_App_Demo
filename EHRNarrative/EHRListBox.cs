@@ -129,7 +129,7 @@ namespace EHRNarrative
     {
         private StringFormat _fmt;
         private Font _font;
-        private bool displayingSubMenu;
+        private EHRListBoxGroup displayedGroup;
 
         public EHRListBox(Font font, StringAlignment aligment, StringAlignment lineAligment)
         {
@@ -148,6 +148,7 @@ namespace EHRNarrative
             this._fmt.LineAlignment = StringAlignment.Center;
             this._font = new Font(this.Font, FontStyle.Bold);
             this.Cursor = Cursors.Hand;
+            this.displayedGroup = null;
             SetOptions();
         }
 
@@ -204,8 +205,6 @@ namespace EHRNarrative
 
             this.BackColor = SystemColors.Control;
             this.BorderStyle = BorderStyle.None;
-
-            this.displayingSubMenu = false;
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)
@@ -270,13 +269,21 @@ namespace EHRNarrative
             }
             catch
             {
-                ClearAllSubmenus();
+                if (this.displayedGroup != null)
+                {
+                    ClearAllSubmenus();
+                }
                 return;
             }
 
-            if (!this.displayingSubMenu)
+            if (this.displayedGroup == null || this.displayedGroup != group)
             {
-                this.displayingSubMenu = true;
+                if (this.displayedGroup != null)
+                {
+                    ClearAllSubmenus();
+                }
+
+                this.displayedGroup = group;
 
                 int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
                 int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height/2 - group.Popover.Height/2);
@@ -288,8 +295,6 @@ namespace EHRNarrative
                 group.Popover.Enabled = true;
                 group.Popover.BringToFront();
                 group.Popover.Show();
-
-                this.Refresh();
             }
         }
 
@@ -313,8 +318,7 @@ namespace EHRNarrative
                 {
                 }
             }
-            this.Refresh();
-            this.displayingSubMenu = false;
+            this.displayedGroup = null;
         }
     }
 }

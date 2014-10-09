@@ -297,11 +297,13 @@ namespace EHRNarrative
                 {
                     this.displayedGroup = group;
 
-                    int leftEdge = this.Parent.Bounds.Left;
-                    int rightEdge = this.Parent.Bounds.Right;
-                    int topEdge = this.Parent.Bounds.Top + this.Bounds.Top + group.Bounds.Location.Y;
+                    Point screenCoords = this.PointToScreen(Point.Empty);
+                    Point absoluteCoords = new Point(screenCoords.X - this.FindForm().Location.X-8, screenCoords.Y - this.FindForm().Location.Y-32);
 
-                    int left = (rightEdge + group.Popover.Width) < this.FindForm().Width ? rightEdge : leftEdge - group.Popover.Width;
+                    int rightEdge = absoluteCoords.X + this.Width;
+                    int topEdge = absoluteCoords.Y + group.Bounds.Top;
+
+                    int left = (rightEdge + group.Popover.Width) < this.FindForm().Width ? rightEdge : absoluteCoords.X - group.Popover.Width;
                     int top = Math.Max(10, topEdge + group.Bounds.Height / 2 - group.Popover.Height / 2);
                     if (top + group.Popover.Height > this.FindForm().Height - 10)
                         top = this.FindForm().Height - group.Popover.Height - 10;

@@ -153,5 +153,11 @@ namespace TestWindowsMessage
             sendCustomMessage(getEHRWindow(), 0, ":%cCLEAN");
             SetForegroundWindow(getEHRWindow());
         }
+
+        private void showTextDialogButton_Click(object sender, EventArgs e)
+        {
+            sendCustomMessage(getEHRWindow(), 0, ":%cTEXT_DIALOG");
+            SetForegroundWindow(getEHRWindow());
+        }
     }
 }

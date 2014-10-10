@@ -48,12 +48,12 @@ namespace EHRNarrative
 
             if (this.Element.Recommended && this.Element.selected == null)
             {
-                e.Graphics.DrawImage(Image.FromFile("Assets/exclamation.png"), new Rectangle(e.Bounds.X+1, e.Bounds.Y + 2, 14, 14));
+                e.Graphics.DrawImage(Image.FromFile("Assets/exclamation.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
                 textColor = Brushes.DarkRed;
             }
             else if (this.Element.Recommended)
             {
-                e.Graphics.DrawImage(Image.FromFile("Assets/checkmark.png"), new Rectangle(e.Bounds.X+1, e.Bounds.Y + 2, 14, 14));
+                e.Graphics.DrawImage(Image.FromFile("Assets/checkmark.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
 
                 textColor = Brushes.DarkSlateBlue;
             }
@@ -63,7 +63,7 @@ namespace EHRNarrative
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
                                                  e.Bounds.Width - margin.Right - margin.Horizontal,
-                                                 (int)font.GetHeight() + 2);
+                                                 (int)font.GetHeight() * 2);
 
             // draw the text within the bounds
             e.Graphics.DrawString(this.Element.Name, font, textColor, textBounds, aligment);
@@ -142,7 +142,7 @@ namespace EHRNarrative
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal,
                                                  e.Bounds.Y + margin.Top,
                                                  e.Bounds.Width - margin.Right - margin.Horizontal,
-                                                 (int)font.GetHeight() + 2);
+                                                 (int)font.GetHeight() * 2);
 
             // draw the text within the bounds
             e.Graphics.DrawString(this.Name, font, Brushes.DimGray, textBounds, aligment);

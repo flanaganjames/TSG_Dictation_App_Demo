@@ -168,7 +168,7 @@ void D_separator(int color)
 
 void D_hyperlinks(void)
 {
-	char *www, *l;
+	char *l;
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
 	{
@@ -176,11 +176,8 @@ void D_hyperlinks(void)
 			// (though this may not work correctly in the RTF)
 		if (strncmp(*i, "local:", 6) == 0)
 		{
-			www = "";
 			l = (*i)+6;
 		} else {
-				// do we need to prepend "www."?
-			www = (strncmp(*i, "www.", 4) == 0) ? "" : "www.";
 			l = *i;
 		}
 		fprintf(outf, "\\pard\\li%d{\\field", T_space);
@@ -189,8 +186,8 @@ void D_hyperlinks(void)
 			// dashboard display program -- yes, that's a little
 			// Rube Goldberg but allows us to use short link names
 		// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
-		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s%s}}}\\par\n", 
-			ps_link, c_hyperlink, www, l);
+		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
+			ps_link, c_hyperlink, l);
 	}
 }
 

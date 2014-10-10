@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 // using System.Windows.Controls;
 // using System.Windows.Documents;
@@ -40,15 +42,24 @@ namespace Dashboard
              */
         public WindowsFormsApplication1.Form1 dash; 
         public RichTextBox dashST, dashEM, dashW;
+        public RichTextBox dashButton1, dashButton2;
+        public ArrayList dashLinks = new ArrayList();
         private System.Drawing.Size dashOsz, dashTsz, dashWsz;
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
+        private float dashBht, dashBloc;    // dash button height & y-location
+                // dashBht & dashBloc are floats, since they're converted
+                // to pixels from points
+        private int dashBwid;   // dash button width within the status panel
+        private float dashRes;  // dashboard resolution
 
         public String dashSTpath = "dashboard.rtf";
         public String dashEMpath = "dashem.rtf";
         public String dashWpath = "dashwarn.rtf";
-        public String rtfmissing = "{\\rtf1\\ansi\\pard No dashboard available!\\par}";
+        public String STmissing = @"{\rtf1\ansi\pard No dashboard available!\par}";
+        public String EMmissing = @"{\rtf1\ansi\pard E/M advice unavailable!\par}";
+        public String AlreadyRunning = @"{\rtf1\ansi\pard ALREADY RUNNING!!!\par}";
 
         public String dashSTrtf, dashEMrtf;
         private bool DASHfail = false;
@@ -84,14 +95,22 @@ namespace Dashboard
             dashWsz = new System.Drawing.Size(dashwid, dashWht);
             dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
 
-                // the dashboard status panel
+                    // the dashboard status panel
             dashST = new RichTextBox();
             dashST.Location = new System.Drawing.Point(0,0);
             dashST.Size = new System.Drawing.Size(dashwid, dashSTht);
             dashST.ReadOnly = true;
-            dashST.DetectUrls = true;
+            dashST.DetectUrls = false;
             dashST.BackColor = Color.White;
             dash.Controls.Add(dashST);
+            dashBwid = dashST.ClientSize.Width;
+            /*
+             * For future consideration, we could make the status panel dashSTht+dashEMht
+             * high, but not change the position of the E/M panel.  Then we could allow
+             * double-clicking on the E/M panel to hide it in case the status panel had
+             * more information than we could see at a glance.  This would be the 
+             * alternative to scroll bars on the status panel.
+             */
 
                 // the E/M panel
             dashEM = new RichTextBox();
@@ -101,12 +120,13 @@ namespace Dashboard
             dashEM.BackColor = Color.White;
             dash.Controls.Add(dashEM);
 
-                // the warning box
+                // the warning box -- defined but not instantiated yet
             dashW = new RichTextBox();
             dashW.Size = dashWsz;
             dashW.Location = dashWpos;
             dashW.ReadOnly = true;
             dashW.BackColor = Color.Yellow;
+
                 // tooltip for the E/M panel
             String tooltiptext;
             tooltiptext = "Actual E/M code should be assigned by\n";
@@ -117,12 +137,19 @@ namespace Dashboard
             dashtip.SetToolTip(dashEM, tooltiptext);
         }
 
+        public void button_MouseClick(object sender, MouseEventArgs e, String l)
+        {
+            string contents = dashSTcontents();
+            doLink(l);
+        }
+
             // we can invoke failnote if we're already running,
             // though normally we'd just exit
         public void failnote()
         {
             DASHfail = true;
         }
+
             // and another debugging method, which adds a number
             // to window title bar, so we can note how many
             // instances of the program are running, or how
@@ -133,7 +160,7 @@ namespace Dashboard
             dash.Text = string.Format("Sullivan Group {0}", i);
         }
 
-        public void RefreshDash()
+        public void refreshDash()
         {
             ////  .... for test purposes ....
             //// flash the background so we know the update loop is running
@@ -142,21 +169,72 @@ namespace Dashboard
             //this.dashST.Clear(); this.dashST.Refresh(); this.dash.Refresh();
             //Thread.Sleep(100);
             //this.dashST.BackColor = Color.White;
-
                 // update with the real contents of the main dashboard
             this.dashST.Rtf = dashSTcontents();
             this.dashST.Refresh();
             this.dashEM.Rtf = dashEMcontents();
             this.dashEM.Refresh();
+                // update buttons for the links
+            refreshDashButtons();
                 // handle the warning panel
-            dashWarn();
+            refreshDashWarn();
                 // now refresh of the whole window
             this.dash.Refresh();
-     
+
             updates++;  // number of times we've updated
         }
 
-        public void dashWarn()
+        public void refreshDashButtons()
+        {
+                // basic parameters
+                    //!!! should actually extract resolution from the control
+            dashRes = 96.0f;
+            dashBht = 24f / 144f * dashRes;
+                    //!!! should actually find or calculate the height of the first link
+            dashBloc = 57.0F;
+
+                // clear out the old buttons
+            foreach (RichTextBox button in dashLinks)
+            {
+                this.dash.Controls.Remove(button);
+            }
+            dashLinks.Clear();
+
+                // find links in the dashboard and add buttons for them
+            Match m = Regex.Match(dashSTrtf, @"\\fldrslt\{.+?\}");
+            int n = 0;
+            while (m.Success)
+            {
+                    // isolate the link value
+                String v = m.Value;
+                v = v.Substring(v.IndexOf(' ') + 1);
+                v = v.Substring(0, v.Length - 1);
+                String t = @"{\rtf1\ansi";
+                t += @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}";
+                t += @"\ul\f0\fs20\li100 " + v + @"\par}";
+                    // make a button out of it
+                RichTextBox button = new RichTextBox();
+                dashLinks.Add(button);
+                SizeF ss = new SizeF(dashBwid, dashBht);
+                PointF pp = new PointF(0f, dashBloc + dashBht * n);
+                button.Size = System.Drawing.Size.Round(ss);
+                button.Location = System.Drawing.Point.Round(pp);
+                button.BackColor = Color.White;
+                    //!!! ForeColor doesn't count: need to select color in the RTF, so we need a colormap
+                button.ForeColor = Color.Blue;
+                button.Cursor = Cursors.Hand;
+                button.BorderStyle = BorderStyle.None;
+                button.ReadOnly = true;
+                button.Rtf = t;
+                button.Refresh();
+                dashST.Controls.Add(button);
+                button.MouseClick += new MouseEventHandler((sender, e) => button_MouseClick(sender, e, v));
+                n++;
+                m = m.NextMatch();
+            }
+        }
+
+        public void refreshDashWarn()
         {
             // are we showing the warning box, but shouldn't?
             if (showing_warning && !File.Exists(dashWpath))
@@ -190,9 +268,9 @@ namespace Dashboard
             }
             else
             {
-                dashSTrtf = this.rtfmissing;
+                dashSTrtf = this.STmissing;
             }
-            if (DASHfail) dashSTrtf = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
+            if (DASHfail) dashSTrtf = this.AlreadyRunning;
             return dashSTrtf;
         }
 
@@ -204,10 +282,68 @@ namespace Dashboard
             }
             else
             {
-                dashEMrtf = this.rtfmissing;
+                dashEMrtf = this.EMmissing;
             }
-            if (DASHfail) dashEMrtf = "{\\rtf1\\ansi ALREADY RUNNING!!!\\par}";
+            if (DASHfail) dashEMrtf = this.AlreadyRunning;
             return dashEMrtf;
+        }
+
+
+        void doLink(string link)
+        {
+            // this table really needs to be external to the program
+            String[] links = {
+            "TSG-chest-pain: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
+            "Chest_Pain_Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
+            "Chest Pain Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
+            "TSG-sore-throat: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "Sore_Throat_Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "Chest_Pain_Resources: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
+            "Differential_Diagnosis_Tool: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
+            "RSQ_Assist: www.thesullivangroup.com/RSQAssist/",
+            };
+
+            // strip off the required syntactic sugar
+            String[] sugar = { "http://", "http:", "www.", "www" };
+            foreach (string ss in sugar)
+            {
+                if (link.StartsWith(ss)) link = link.Replace(ss, "");
+            }
+
+            // find the link in the links list
+            foreach (string ss in links)
+            {
+                if (ss.StartsWith(link, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    int i = ss.IndexOf(':');
+                    link = ss.Substring(i + 1).Trim();
+                    // Char[] sep = {' ', ':'};
+                    // String[] elements = ss.Split(sep);
+                    //int n = elements.Length;
+                    // link = elements[n-1];
+                }
+            }
+
+            if (!(link.StartsWith("http://") || link.StartsWith("https://")
+                || link.StartsWith("file://")))
+            {
+                link = "http://" + link;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start("explorer.exe", link);
+            }
+            catch
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start("explorer.exe",
+                        "http://alumnus.caltech.edu/~copeland/oops.html");
+                }
+                catch { throw new NotImplementedException(); }
+            }
         }
     }
 
@@ -235,18 +371,6 @@ namespace Dashboard
 
                 Dashboard D = new Dashboard();
 
-                // dashST = new RichTextBox(); // RichTextBox dashST = new RichTextBox();
-                // D.dashST.BackColor = Color.White; // Color.LightBlue;
-
-                    // event handlers for mouse clicks
-                //D.dashST.AutoWordSelection = true;
-                D.dashST.LinkClicked += new LinkClickedEventHandler(dashST_LinkClicked);
-                D.dashST.MouseClick += new MouseEventHandler((sender, e)
-                    => dashST_MouseClick(sender, e, D));
-                // D.dashST.MouseHover += new EventHandler(dashST_MouseHover);
-                //D.dashST.MouseDoubleClick += new MouseEventHandler((sender, e)
-                //    => dashST_MouseDoubleClick(sender, e, D));
-
                     // update timer event
                     // (like with the RichTextBox class, annoyingly there are
                     //  three distinct Timer classes, so we fully qualify it)
@@ -256,7 +380,7 @@ namespace Dashboard
                 timer.Tick += new EventHandler((sender, e) => timer_Tick(sender, e, D));
 
                     // normal run
-                D.RefreshDash();
+                D.refreshDash();
                 System.Windows.Forms.Application.Run(D.dash);
                 // System.Windows.Forms.Application.Exit();
             }
@@ -264,7 +388,7 @@ namespace Dashboard
 
         static void timer_Tick(object sender, EventArgs e, Dashboard D)
         {
-            D.RefreshDash();
+            D.refreshDash();
         }
 
             // a simple utility routine
@@ -303,95 +427,6 @@ namespace Dashboard
             howmany += System.Diagnostics.Process.GetProcessesByName(op).Length;
             return (howmany);
         }
-
-        static void dashST_LinkClicked(object sender, LinkClickedEventArgs e)
-        {
-            string link = e.LinkText;
-
-            doLink(link);
-        }
-
-            /*
-             * this is here as a placeholder:  we may need to recognize arbitrary
-             * mouse clicks to activate links, in which case we will come here.
-             * This will require some additional information in the dashboard RTF
-             * to tell us the Y-axis of each link.  We'll then have to parse the 
-             * RTF to extract that list, which will resolve to the link label,
-             * which is the argument to doLink().
-             */      
-        static void dashST_MouseClick(object sender, MouseEventArgs e, Dashboard D)
-        {
-            string contents = D.dashSTcontents();
-        }
-
-        static void dashST_MouseHover(object sender, EventArgs e)
-        {
-            int x = 10;
-            // throw new NotImplementedException();
-        }
-
-        static void dashST_MouseDoubleClick(object sender, MouseEventArgs e, Dashboard D)
-        {
-            string contents = D.dashSTcontents();
-            // throw new NotImplementedException();
-        }
-
-        static void doLink(string link)
-        {
-                // this table really needs to be external
-            String[] links = {
-            "TSG-chest-pain: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
-            "Chest_Pain_Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
-            "Chest Pain Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
-            "TSG-sore-throat: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
-            "Sore_Throat_Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
-            "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
-            "Chest_Pain_Resources: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
-            "Differential_Diagnosis_Tool: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
-            "RSQ_Assist: www.thesullivangroup.com/RSQAssist/",
-            };
-
-                // strip off the required syntactic sugar
-            String[] sugar = { "http://", "http:", "www.", "www" };
-            foreach (string ss in sugar)
-            {
-                if (link.StartsWith(ss)) link = link.Replace(ss, "");
-            }
-            
-                // find the link in the links list
-            foreach (string ss in links)
-            {
-                if (ss.StartsWith(link, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    int i = ss.IndexOf(':');
-                    link = ss.Substring(i+1).Trim();
-                    // Char[] sep = {' ', ':'};
-                    // String[] elements = ss.Split(sep);
-                    //int n = elements.Length;
-                    // link = elements[n-1];
-                }
-            }
-
-            if (!(link.StartsWith("http://") || link.StartsWith("https://")
-                || link.StartsWith("file://")))
-            {
-                link = "http://" + link;
-            }
-
-            try
-            {
-                System.Diagnostics.Process.Start("explorer.exe", link);
-            }
-            catch
-            {
-                try {
-                    System.Diagnostics.Process.Start("explorer.exe",
-                        "http://alumnus.caltech.edu/~copeland/oops.html" ); 
-                }
-                catch { throw new NotImplementedException(); }
-            }
-        }
-
 
     } // end program
 

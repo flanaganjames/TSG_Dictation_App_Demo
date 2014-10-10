@@ -230,7 +230,7 @@ void S_Validate(void)
 	list<char *>::iterator i;
 	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
 	{
-		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
 		{
 			D_addWarning("Check TAD Risk!");
 			break;
@@ -238,7 +238,7 @@ void S_Validate(void)
 	}
 	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
 	{
-		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
 		{
 			D_addWarning("Check TAD Risk!");
 			break;
@@ -246,7 +246,7 @@ void S_Validate(void)
 	}
 	for (i = _assess.begin();  i != _assess.end();  i++)
 	{
-		if (_strnicmp(*i, "TAD risk impression", strlen(*i)) == 0)
+		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
 		{
 			D_addWarning("Check TAD Risk!");
 			break;

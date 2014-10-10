@@ -16,6 +16,9 @@ class Group(models.Model):
     name = models.CharField(max_length=250)
 
     dialog = models.ForeignKey('Dialog')
+
+    recommended = models.BooleanField(default=False)
+
     complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
     complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
 
@@ -50,6 +53,8 @@ class Element(models.Model):
     complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
     complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
 
+    recommended = models.BooleanField(default=False)
+
     all_complaints = models.BooleanField(default=False, help_text='Show for all complaints.')
     
     EHR_keyword = models.CharField(max_length=250, help_text='The keyword to be replaced by this element in the EHR.')
@@ -57,6 +62,8 @@ class Element(models.Model):
     default_present = models.BooleanField(default=False, help_text='Mark present by default. e.g. is part of the no-touch exam.')
     present_text = models.CharField(null=True, blank=True, max_length=500, help_text='Text to be inserted in the EHR if this element is present. If blank this state will be disabled.')
     not_present_text = models.CharField(null=True, blank=True, max_length=500, help_text='Text to be inserted in the EHR if this element is not present. If blank this state will be disabled.')
+    EHR_replace = models.CharField(null=True, blank=True, max_length=500, help_text='commandreplace/insert text into template if element is selected')
+    SLC_command = models.CharField(null=True, blank=True, max_length=500, help_text='Command to send to SLC if element is selected')
 
     class Meta:
         db_table = "element"

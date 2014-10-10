@@ -9,15 +9,19 @@ namespace EHRNarrative
     public class Collection
     {
         public Dialog dialog { get; set; }
+        public IEnumerable<Dialog> dialogs { get; set; }
         public IEnumerable<Group> groups { get; set; }
         public IEnumerable<Subgroup> subgroups { get; set; }
         public IEnumerable<Element> elements { get; set; }
+        public IEnumerable<DialogLinkElement> dialoglinkelements { get; set; }
         public IEnumerable<ComplaintGroup> complaintgroups { get; set; }
         public Complaint complaint { get; set; }
         public IEnumerable<Group_Complaints> group_complaints { get; set; }
         public IEnumerable<Group_Complaint_Groups> group_complaint_groups { get; set; }
         public IEnumerable<Element_Complaints> element_complaints { get; set; }
         public IEnumerable<Element_Complaint_Groups> element_complaint_groups { get; set; }
+        public IEnumerable<DialogElement_Complaints> dialogelement_complaints { get; set; }
+        public IEnumerable<DialogElement_Complaint_Groups> dialogelement_complaint_groups { get; set; }
     }
 
     public class Dialog
@@ -83,6 +87,10 @@ namespace EHRNarrative
         {
             return data.elements.Where(x => x.Group_id == this.Id);
         }
+        public IEnumerable<DialogLinkElement> DialogLinkElements(Collection data)
+        {
+            return data.dialoglinkelements.Where(x => x.Group_id == this.Id);
+        }
         public IEnumerable<Element> AllElements(Collection data)
         {
             IEnumerable<Element> elements = data.elements.Where(x => x.Group_id == this.Id);
@@ -106,9 +114,23 @@ namespace EHRNarrative
         {
             return this.Elements(data).Where(x => x.Subgroup_id == 0).Except(this.ElementsForComplaint(data));
         }
+        public IEnumerable<DialogLinkElement> DialogLinkElementsForComplaint(Collection data)
+        {
+            return this.DialogLinkElements(data).Where(
+                       x => x.All_complaints
+                    || x.Complaints(data).Contains(data.complaint.Id)
+                    || x.ComplaintGroups(data).Contains(data.complaint.Complaint_group_id));
+        }
+        public IEnumerable<DialogLinkElement> DialogLinkElementsAdditional(Collection data)
+        {
+            return this.DialogLinkElements(data).Where(x => x.Subgroup_id == 0).Except(this.DialogLinkElementsForComplaint(data));
+        }
         public int ItemCount(Collection data)
         {
-            return this.ElementsForComplaint(data).Count() + this.Subgroups(data).Count() + (this.ElementsAdditional(data).Any() ? 1 : 0);
+            return this.ElementsForComplaint(data).Count() 
+                + this.DialogLinkElementsForComplaint(data).Count() 
+                + this.Subgroups(data).Count() 
+                + (this.ElementsAdditional(data).Any() || this.DialogLinkElementsAdditional(data).Any() ? 1 : 0);
         }
         public int SelectedItemCount(Collection data)
         {
@@ -141,6 +163,10 @@ namespace EHRNarrative
             return data.elements.Where(x => x.Subgroup_id == this.Id);
         }
 
+        public IEnumerable<DialogLinkElement> DialogLinkElements(Collection data)
+        {
+            return data.dialoglinkelements.Where(x => x.Group_id == this.Id);
+        }
     }
 
     public class TextElement
@@ -241,6 +267,26 @@ namespace EHRNarrative
         }
     }
 
+    public class DialogLinkElement
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public int Group_id { get; set; }
+        public int Subgroup_id { get; set; }
+        public List<int> Complaints(Collection data)
+        {
+            return data.element_complaints.Where(x => x.Element_id == this.Id).Select(x => x.Complaint_id).ToList();
+        }
+        public List<int> ComplaintGroups(Collection data)
+        {
+            return data.element_complaint_groups.Where(x => x.Element_id == this.Id).Select(x => x.Complaintgroup_id).ToList();
+        }
+
+        public bool All_complaints { get; set; }
+        public int Linked_dialog_id { get; set; }
+    }
+
     public class ComplaintGroup
     {
         public int Id { get; set; }
@@ -272,6 +318,16 @@ namespace EHRNarrative
     public class Element_Complaint_Groups
     {
         public int Element_id { get; set; }
+        public int Complaintgroup_id { get; set; }
+    }
+    public class DialogElement_Complaints
+    {
+        public int Dialogelement_id { get; set; }
+        public int Complaint_id { get; set; }
+    }
+    public class DialogElement_Complaint_Groups
+    {
+        public int Dialogelement_id { get; set; }
         public int Complaintgroup_id { get; set; }
     }
 

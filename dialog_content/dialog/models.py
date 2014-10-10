@@ -3,6 +3,7 @@ from django.db import models
 
 class Dialog(models.Model):
     name = models.CharField(max_length=250, unique=True)
+    next_dialog = models.ForeignKey('Dialog', null=True, blank=True, help_text='The next dialog in the workflow.')
     # version (file version? format version?)
 
     class Meta:

@@ -65,17 +65,37 @@ namespace EHRNarrative
                 text.Top = 8;
                 text.Left = gutterWidth + e.i * (columnWidth + gutterWidth);
                 text.Width = columnWidth;
+                text.Multiline = true;
                 text.ReadOnly = true;
-                text.BorderStyle = BorderStyle.FixedSingle;
+                text.BorderStyle = BorderStyle.Fixed3D;
                 text.Cursor = System.Windows.Forms.Cursors.Hand;
-                text.Click += new EventHandler(text_Click);
                 text.Text = e.element.boiler_plate;
+                text.Select(0, 0);
                 text.Height = TextRenderer.MeasureText(text.Text, text.Font, new Size(text.Width, maxHeight), TextFormatFlags.WordBreak).Height;
+
+                text.Click += new EventHandler(text_Click);
+                text.MouseEnter += new EventHandler(text_MouseEnter);
+                text.MouseLeave += new EventHandler(text_MouseLeave);
+                
                 this.Controls.Add(text);
+
                 biggestHeight = Math.Max(biggestHeight, text.Height);
             }
 
             this.Height = biggestHeight + 56;
+            this.CenterToScreen();
+        }
+
+        void text_MouseLeave(object sender, EventArgs e)
+        {
+            TextBox t = (TextBox)sender;
+            t.BackColor = SystemColors.Control;
+        }
+
+        void text_MouseEnter(object sender, EventArgs e)
+        {
+            TextBox t = (TextBox)sender;
+            t.BackColor = SystemColors.ControlLight;
         }
 
         void text_Click(object sender, EventArgs e)

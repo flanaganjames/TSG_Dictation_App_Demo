@@ -42,12 +42,48 @@ namespace EHRNarrative
 
             this.Text = data.Name;
 
-            RenderElements(data);
+            Render(data.TextElements);
         }
 
-        private void RenderElements(TextDialog data)
+        private void Render(IList<TextElement> elements)
         {
-            throw new NotImplementedException();
+            int gutterWidth = 20;
+            int maxWidth = 500;
+            int minWidth = 200;
+            int maxHeight = 600;
+
+            int columns = elements.Count();
+            int columnWidth = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - gutterWidth - 16) / columns - gutterWidth;
+            columnWidth = Math.Max(Math.Min(columnWidth, maxWidth), minWidth);
+
+            this.Width = gutterWidth + columns * (columnWidth + gutterWidth) + 16;
+
+            int biggestHeight = 0;
+            foreach (var e in elements.Select((element, i) => new { i, element }))
+            {
+                TextBox text = new TextBox();
+                text.Top = 8;
+                text.Left = gutterWidth + e.i * (columnWidth + gutterWidth);
+                text.Width = columnWidth;
+                text.ReadOnly = true;
+                text.BorderStyle = BorderStyle.FixedSingle;
+                text.Cursor = System.Windows.Forms.Cursors.Hand;
+                text.Click += new EventHandler(text_Click);
+                text.Text = e.element.boiler_plate;
+                text.Height = TextRenderer.MeasureText(text.Text, text.Font, new Size(text.Width, maxHeight), TextFormatFlags.WordBreak).Height;
+                this.Controls.Add(text);
+                biggestHeight = Math.Max(biggestHeight, text.Height);
+            }
+
+            this.Height = biggestHeight + 56;
+        }
+
+        void text_Click(object sender, EventArgs e)
+        {
+            TextBox t = (TextBox)sender;
+            narrative_window.ReplaceKeyword(this.data.EHR_keyword + "/" + t.Text);
+            this.Close();
+            this.Dispose();
         }
 
         private TextDialog LoadContent(string ehr_keyword)

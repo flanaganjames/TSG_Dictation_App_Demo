@@ -291,6 +291,7 @@ namespace EHRNarrative
             InsertEHRText();
             UpdateSLC();
             this.Close();
+            this.Dispose();
         }
     }
 

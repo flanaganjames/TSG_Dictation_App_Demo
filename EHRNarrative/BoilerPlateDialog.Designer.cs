@@ -30,18 +30,20 @@
         {
             this.SuspendLayout();
             // 
-            // TextDialog
+            // BoilerPlateDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(340, 337);
-            this.Name = "TextDialog";
+            this.Name = "BoilerPlateDialog";
             this.Text = "TextDialog";
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+
 
 
     }

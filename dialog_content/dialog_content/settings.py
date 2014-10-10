@@ -37,8 +37,10 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'dialog',
     'complaint',
+    'text_dialog',
     'django.contrib.admin',
     'django_production_server',
+    'south',
 )
 
 MIDDLEWARE_CLASSES = (

@@ -46,7 +46,10 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	req_hpi_t, req_exam_t, assess_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
 	//// data_hpi_t, data_exam_t, // unused - should be removed
-	data_t, dataqual_t,
+	data_t, 
+	dataqual_exam_t, dataqual_pfsh_t, dataqual_ros_t,
+	dataqual_ros2_t,
+	dataqual_t,
 	bill_t, link_t, delete_t, del_t,
 	end_t, end_tt, reset_t, 
 	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
@@ -56,7 +59,10 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"req hpi", "req exam", "assess",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	//// "data hpi", "data exam", // unused - should be removed
-	"data", "dataqual",
+	"data", 
+	"dataqual exam", "dataqual pfsh", "dataqual ros",
+	"dataqual review of systems",
+	"dataqual",
 	"bill", "link", "delete", "del",
 	"end", "end_of_script",	"reset",
 	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
@@ -168,36 +174,12 @@ void addWordsExam(char *s)
 void addWords(list<char *> &in, char *add)
 {
 	char *s, *t;
+	void undecorate(char *, bool);
 
-		// we need to strip the decorations
-		// do this in a quick-and-dirty way by copying
-		// the input string
-		// also ignore digits -- we don't want counts from the ROS reporting
-	char *ss = (char *) malloc(strlen(add)+1);
-	s = ss;
-	for (char *p = add;  p && *p;  p++)
-	{
-			// skip RTF markup: anything beginning with backslash up to a blank
-		if (*p == '\\')
-		{
-			while (*p != ' ' && *p != '\0') { p++; }
-			continue;
-		}
-		if (*p != '['  &&  *p != ']'  &&  *p != '*' &&  !isdigit(*p))
-			*s++ = *p;
-	}
-	*s = 0;
-
-#if 0
-	// casefold the input string
-	for (s = add;  *s;  s++)
-	{
-	 *s = tolower(*s);
-	}
-#endif
-
-	// now add to the array
-	s = ss;
+		// strip out digits -- presumably exam counts
+	undecorate(add, true);
+		// now add to the array
+	s = add;
 	while (s && *s)
 	{
 		int l; 
@@ -224,18 +206,6 @@ void addWords(list<char *> &in, char *add)
 		if (t)  s = ++t;
 		while (s && *s && (*s == ' ' || *s == ',')) s++;
 	}
-
-		// special case:  if this was exam data, recursively 
-		// also add the keywords to the _bill_exam list
-		// also recursively add to the completed exams list
-	const size_t le = strlen("exam ");
-	if (_strnicmp(ss, "exam ", le) == 0)
-	{
-		addWords(_bill_exam, ss+le);
-		addWordsExam(ss+le);
-	}
-
-	free(ss);
 }
 
 
@@ -247,6 +217,33 @@ void chomp(char *s)
 	t = strpbrk(s, "\r\n");
 	if (t)  *t-- = '\0';
 	while (t && *t == ' ')  *t-- = '\0';
+}
+
+	// strip decorations out of the input string in place
+	// (digits is true if we also want to strip out numbers)
+void undecorate(char *in, bool digits)
+{
+	char *t, *s;
+
+		// skip ahead to the first char we want to strip out
+		// (which may short-circuit the whole scan)
+	size_t n = strcspn(in, digits ? "\\[]*0123456789" : "\\[]*");
+	s = in+n;
+	for (t = s;  s && *s;  s++)
+	{
+			// strip RTF -- backslash to a blank
+		if (*s == '\\')
+		{
+			while (*s != ' '  &&  *s != '\0') { s++; }
+			continue;
+		}
+			// strip the decoration around something like [**foo**]
+			// also remove digits, which are exam counts from dialogs
+		if (*s != '['  &&  *s != ']'  &&  *s != '*'
+			&&  (!digits || !isdigit(*s)))
+			*t++ = *s;
+	}
+	*t = '\0';
 }
 
 void convert_blanks(char *s)
@@ -263,14 +260,16 @@ bool no_complaint(void)
 }
 
 
-	// return the length of the command part of the line
-	// (allows us to check if we've only got the subword
-	//  at the beginning of the command -- e.g., data vs dataqual)
-bool lengthOfCommand(char *s, size_t n)
+	// is the command complete?  does the command we've
+	// recognized actually end where we expect?
+	// (prevents us mistaking substring at the beginning of
+	//  the command for a full one -- e.g., data vs dataqual)
+bool completeCommand(char *s, size_t n)
 {
 	return (s[n] == '\0' || s[n] == ' ');
 }
 
+#if 0
 	// parse the substatus of the dataqual keywords
 void addDataQual(char *t)
 {
@@ -280,7 +279,7 @@ void addDataQual(char *t)
 	for (i = 0;  i < qualifier_count; i++ )
 	{
 		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0
-			&& lengthOfCommand(s, strlen(qualifier_names[i])))
+			&& completeCommand(s, strlen(qualifier_names[i])))
 		{
 			s += strlen(qualifier_names[i]); // skip the qualifier text
 			s += strspn(s, " ");  // skip the blanks after qualifier
@@ -312,11 +311,13 @@ void addDataQual(char *t)
 		break;
 	};
 }
+#endif
 
 
 void S_parseStatus(void)
 {
 	char line[MAX_PATH], *s;
+	size_t le, lr;
 
 #ifdef TESTING
 	printf("entering parser...........\n");
@@ -339,6 +340,7 @@ void S_parseStatus(void)
 		int i;
 
 		chomp(s);  // strip the EOL characters
+		undecorate(s, false);
 		
 #ifdef TESTING
 		printf("line: %s\n", line);
@@ -347,7 +349,7 @@ void S_parseStatus(void)
 		for (i = 0;  i < command_count; i++ )
 		{
 			if (_strnicmp(s, command_names[i], strlen(command_names[i])) == 0
-				&& lengthOfCommand(s, strlen(command_names[i])))
+				&& completeCommand(s, strlen(command_names[i])))
 			{
 				s += strlen(command_names[i]); // skip the command
 				s += strspn(s, " ");  // skip the blanks after command
@@ -386,10 +388,42 @@ void S_parseStatus(void)
 			break;
 		case data_t:
 			addWords(_all_complete, s);
+				// special case:  if this was exam data, recursively 
+				// also add the keywords to the _bill_exam list
+				// also recursively add to the completed exams list
+				// though the latter requires a special routine
+			le = strlen("exam ");
+			if (_strnicmp(s, "exam ", le) == 0)
+			{
+				addWords(_bill_exam, s+le);
+				addWordsExam(s+le);
+			}
+				// parallel special case: if this was ROS data,
+				// we may not have gotten the same keywords in
+				// a "dataqual ROS" command, so add the keywords 
+				// to _bill_ros
+			lr = strlen("ROS ");
+			if (_strnicmp(s, "ROS ", lr) == 0)
+			{
+				addWords(_bill_ros, s+lr);
+			}
 			break;
+#if 0
 		case dataqual_t:
 			// for dataqual, we have to further parse the qualifier
 			addDataQual(s);
+			break;
+#endif
+		case dataqual_exam_t:
+			addWords(_bill_exam, s);
+			addWordsExam(s);
+			break;
+		case dataqual_pfsh_t:
+			addWords(_bill_pfsh, s);
+			break;
+		case dataqual_ros_t:
+		case dataqual_ros2_t:
+			addWords(_bill_ros, s);
 			break;
 		case delete_t:
 		case del_t:

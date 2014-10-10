@@ -1,6 +1,6 @@
 ﻿namespace EHRNarrative
 {
-    partial class ExamDialog
+    partial class BoilerPlateDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -30,18 +30,22 @@
         {
             this.SuspendLayout();
             // 
-            // ExamDialog
+            // BoilerPlateDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(340, 337);
-            this.Name = "ExamDialog";
-            this.Text = "ExamDialog";
+            this.Name = "BoilerPlateDialog";
+            this.Text = "TextDialog";
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+
+
+
 
 
     }

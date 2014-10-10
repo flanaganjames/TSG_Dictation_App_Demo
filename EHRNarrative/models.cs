@@ -49,11 +49,22 @@ namespace EHRNarrative
 
     }
 
+    public class TextDialog
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string EHR_keyword { get; set; }
+        public IList<TextElement> TextElements { get; set; }
+    }
+
     public class Group
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public int Dialog_id { get; set; }
+
+        public bool Recommended { get; set; }
+        public bool RecommendedActive = false;
 
         public List<int> Complaints(Collection data)
         {
@@ -131,6 +142,14 @@ namespace EHRNarrative
         }
 
     }
+
+    public class TextElement
+    {
+        public int Id { get; set; }
+        public int TextDialog_id { get; set; }
+        public string boiler_plate { get; set; }
+    }
+
     public class Element
     {
         public int Id { get; set; }
@@ -147,8 +166,11 @@ namespace EHRNarrative
             return data.element_complaint_groups.Where(x => x.Element_id == this.Id).Select(x => x.Complaintgroup_id).ToList();
         }
 
+        public bool Recommended { get; set; }
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
+        public string EHR_replace { get; set; }
+        public string SLC_command { get; set; }
         public bool Is_present_normal { get; set; }
         public bool Default_present { get; set; }
         private string _Present_text;

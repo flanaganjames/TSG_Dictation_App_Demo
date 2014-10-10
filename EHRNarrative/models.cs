@@ -153,6 +153,8 @@ namespace EHRNarrative
         public bool Recommended { get; set; }
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
+        public string EHR_replace { get; set; }
+        public string SLC_command { get; set; }
         public bool Is_present_normal { get; set; }
         public bool Default_present { get; set; }
         private string _Present_text;

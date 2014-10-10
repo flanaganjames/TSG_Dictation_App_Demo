@@ -256,6 +256,14 @@ namespace EHRNarrative
                 narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
                 narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
             }
+
+            foreach (String EHR_text in data.elements
+                .Where(x => x.selected != null && x.EHR_replace != null)
+                .Select(x => x.EHR_replace).Distinct()
+                )
+            {
+                narrative_window.ReplaceKeyword(EHR_text);
+            }
         }
 
         private void UpdateSLC()
@@ -265,7 +273,17 @@ namespace EHRNarrative
             {
                 groupData.Add("dataqual " + data.dialog.Name + " " + group.Name + " " + group.SelectedItemCount(data).ToString());
             }
+
+            foreach (String SLC_command in data.elements
+                .Where(x => x.selected != null && x.SLC_command != null)
+                .Select(x => x.SLC_command).Distinct()
+                )
+            {
+                groupData.Add(SLC_command);
+            }
+
             narrative_window.NotifySLC(String.Join(" ! ", groupData));
+
         }
 
         private void DoneButton_Click(object sender, EventArgs e)

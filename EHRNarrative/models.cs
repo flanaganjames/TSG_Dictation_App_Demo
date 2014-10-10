@@ -54,7 +54,7 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public string EHR_keyword { get; set; }
-        public IEnumerable<TextElement> TextElements { get; set; }
+        public IList<TextElement> TextElements { get; set; }
     }
 
     public class Group

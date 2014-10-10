@@ -52,9 +52,9 @@ class Element(models.Model):
     complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
     complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
 
-    recommended = models.BooleanField(default=False)
-
     all_complaints = models.BooleanField(default=False, help_text='Show for all complaints.')
+
+    recommended = models.BooleanField(default=False)
     
     EHR_keyword = models.CharField(max_length=250, help_text='The keyword to be replaced by this element in the EHR.')
     is_present_normal = models.BooleanField(default=True, help_text='True if marking present is normal, false if marking present is abnormal.')
@@ -70,3 +70,23 @@ class Element(models.Model):
 
     def __unicode__(self):
         return "Element: %s" % self.name
+    
+
+class DialogLinkElement(models.Model):
+    name = models.CharField(max_length=250)
+
+    group = models.ForeignKey('Group')
+    subgroup = models.ForeignKey('Subgroup', null=True, blank=True)
+
+    complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
+    complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
+    all_complaints = models.BooleanField(default=False, help_text='Show for all complaints.')
+
+    linked_dialog = models.ForeignKey('Dialog')
+
+    class Meta:
+        db_table = "dialogelement"
+        unique_together = ('name', 'group')
+
+    def __unicode__(self):
+        return "Dialog Element: %s" % self.name

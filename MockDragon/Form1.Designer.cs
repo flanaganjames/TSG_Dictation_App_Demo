@@ -38,6 +38,7 @@
             this.slcCommandInput = new System.Windows.Forms.TextBox();
             this.sendToSLCButton = new System.Windows.Forms.Button();
             this.customCommandsGroup = new System.Windows.Forms.GroupBox();
+            this.showTextDialogButton = new System.Windows.Forms.Button();
             this.customCommandsGroup.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -129,18 +130,29 @@
             this.customCommandsGroup.Controls.Add(this.sendToSLCButton);
             this.customCommandsGroup.Controls.Add(this.sendToEHRButton);
             this.customCommandsGroup.Controls.Add(this.slcCommandInput);
-            this.customCommandsGroup.Location = new System.Drawing.Point(13, 78);
+            this.customCommandsGroup.Location = new System.Drawing.Point(12, 98);
             this.customCommandsGroup.Name = "customCommandsGroup";
             this.customCommandsGroup.Size = new System.Drawing.Size(234, 160);
             this.customCommandsGroup.TabIndex = 9;
             this.customCommandsGroup.TabStop = false;
             this.customCommandsGroup.Text = "Custom Commands";
             // 
+            // showTextDialogButton
+            // 
+            this.showTextDialogButton.Location = new System.Drawing.Point(12, 69);
+            this.showTextDialogButton.Name = "showTextDialogButton";
+            this.showTextDialogButton.Size = new System.Drawing.Size(235, 23);
+            this.showTextDialogButton.TabIndex = 10;
+            this.showTextDialogButton.Text = "Show Text Dialog (for highlighted text)";
+            this.showTextDialogButton.UseVisualStyleBackColor = true;
+            this.showTextDialogButton.Click += new System.EventHandler(this.showTextDialogButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(264, 252);
+            this.ClientSize = new System.Drawing.Size(264, 269);
+            this.Controls.Add(this.showTextDialogButton);
             this.Controls.Add(this.customCommandsGroup);
             this.Controls.Add(this.cleanTemplateButton);
             this.Controls.Add(this.dialogInput);
@@ -168,6 +180,7 @@
         private System.Windows.Forms.TextBox slcCommandInput;
         private System.Windows.Forms.Button sendToSLCButton;
         private System.Windows.Forms.GroupBox customCommandsGroup;
+        private System.Windows.Forms.Button showTextDialogButton;
 
     }
 }

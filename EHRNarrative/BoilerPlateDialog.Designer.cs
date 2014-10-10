@@ -1,6 +1,6 @@
 ﻿namespace EHRNarrative
 {
-    partial class TextDialog
+    partial class BoilerPlateDialog
     {
         /// <summary>
         /// Required designer variable.

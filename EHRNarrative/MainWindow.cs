@@ -204,7 +204,7 @@ namespace EHRNarrative
                         break;
                     case "TEXT_DIALOG":
                         var ehr_keyword = this.HealthRecordText.SelectedText;
-                        new TextDialog(this, ehr_keyword).Show();
+                        new BoilerPlateDialog(this, ehr_keyword).Show();
                         break;
                     case "CLEAN":
                         CleanCurrentTemplate();

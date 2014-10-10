@@ -13,12 +13,12 @@ using Dapper;
 
 namespace EHRNarrative
 {
-    public partial class TextDialog : Form
+    public partial class BoilerPlateDialog : Form
     {
         TextDialog data;
         EHRNarrative narrative_window;
 
-        public TextDialog(EHRNarrative parent, string ehr_keyword)
+        public BoilerPlateDialog(EHRNarrative parent, string ehr_keyword)
         {
             InitializeComponent();
             narrative_window = parent;
@@ -55,20 +55,23 @@ namespace EHRNarrative
             using (var conn = new SQLiteConnection("Data Source=dialog_content.sqlite3;Version=3;"))
             {
                 conn.Open();
-                var sql = @"SELECT * FROM #textdialog d INNER JOIN #textelement e ON e.TextDialog_id = d.Id WHERE d.EHR_keyword = " + ehr_keyword;
+                var sql = @"SELECT * FROM 'textdialog' d INNER JOIN 'textelement' e ON e.TextDialog_id = d.Id WHERE d.EHR_keyword = @keyword";
 
                 var lookup = new Dictionary<int, TextDialog>();
-                conn.Query<TextDialog, TextElement, TextDialog>(sql, (textdialog, textelement) => {
+                conn.Query<TextDialog, TextElement, TextDialog>(sql, (textdialog, textelement) =>
+                {
                     TextDialog dialog;
-                    if (!lookup.TryGetValue(textdialog.Id, out dialog)){
+                    if (!lookup.TryGetValue(textdialog.Id, out dialog))
+                    {
                         lookup.Add(textdialog.Id, dialog = textdialog);
                     }
-                    if (dialog.TextElements == null){
+                    if (dialog.TextElements == null)
+                    {
                         dialog.TextElements = new List<TextElement>();
                     }
                     dialog.TextElements.Add(textelement);
                     return dialog;
-                });
+                }, new { keyword = ehr_keyword });
 
                 return (TextDialog)lookup.First().Value;
             }

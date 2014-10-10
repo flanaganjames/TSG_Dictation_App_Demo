@@ -55,6 +55,9 @@ namespace EHRNarrative
         public string Name { get; set; }
         public int Dialog_id { get; set; }
 
+        public bool Recommended { get; set; }
+        public bool RecommendedActive = false;
+
         public List<int> Complaints(Collection data)
         {
             return data.group_complaints.Where(x => x.Group_id == this.Id).Select(x => x.Complaint_id).ToList();
@@ -147,6 +150,7 @@ namespace EHRNarrative
             return data.element_complaint_groups.Where(x => x.Element_id == this.Id).Select(x => x.Complaintgroup_id).ToList();
         }
 
+        public bool Recommended { get; set; }
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
         public bool Is_present_normal { get; set; }

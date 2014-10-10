@@ -45,8 +45,22 @@ namespace EHRNarrative
             // draw some item separator
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
 
+
+            if (this.Element.Recommended && this.Element.selected == null)
+            {
+                e.Graphics.DrawImage(Image.FromFile("Assets/exclamation.png"), new Rectangle(e.Bounds.X+1, e.Bounds.Y + 2, 14, 14));
+                textColor = Brushes.DarkRed;
+            }
+            else if (this.Element.Recommended)
+            {
+                e.Graphics.DrawImage(Image.FromFile("Assets/checkmark.png"), new Rectangle(e.Bounds.X+1, e.Bounds.Y + 2, 14, 14));
+
+                textColor = Brushes.DarkSlateBlue;
+            }
+
+
             // calculate bounds for title text drawing
-            Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal,
+            Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
                                                  e.Bounds.Width - margin.Right - margin.Horizontal,
                                                  (int)font.GetHeight() + 2);
@@ -291,8 +305,14 @@ namespace EHRNarrative
                 {
                     this.displayedGroup = group;
 
-                    int left = (this.Bounds.Right + group.Popover.Width) < this.Parent.Width ? this.Bounds.Right : this.Bounds.X - group.Popover.Width;
-                    int top = Math.Max(10, this.Bounds.Top + group.Bounds.Location.Y + group.Bounds.Height / 2 - group.Popover.Height / 2);
+                    Point screenCoords = this.PointToScreen(Point.Empty);
+                    Point absoluteCoords = new Point(screenCoords.X - this.FindForm().Location.X-8, screenCoords.Y - this.FindForm().Location.Y-32);
+
+                    int rightEdge = absoluteCoords.X + this.Width;
+                    int topEdge = absoluteCoords.Y + group.Bounds.Top;
+
+                    int left = (rightEdge + group.Popover.Width) < this.FindForm().Width ? rightEdge : absoluteCoords.X - group.Popover.Width;
+                    int top = Math.Max(10, topEdge + group.Bounds.Height / 2 - group.Popover.Height / 2);
                     if (top + group.Popover.Height > this.FindForm().Height - 10)
                         top = this.FindForm().Height - group.Popover.Height - 10;
 

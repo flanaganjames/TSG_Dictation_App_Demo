@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -77,7 +78,7 @@ namespace EHRNarrative
     public class EHRListBoxGroup
     {
         public bool HasMouse { get; set; }
-        
+
         private EHRListBox _parent;
         public EHRListBox Parent
         {
@@ -151,6 +152,46 @@ namespace EHRNarrative
             e.DrawFocusRectangle();
         }
     }
+        
+    public class EHRListBoxDialogLink
+    {
+        
+        private DialogLinkElement _element;
+        public int DialogId { get { return this._element.Linked_dialog_id; } set { } }
+
+        private Rectangle _bounds;
+        public Rectangle Bounds
+        {
+            get { return this._bounds; }
+            set { }
+        }
+
+        public EHRListBoxDialogLink(DialogLinkElement element)
+        {
+            this._element = element;
+        }
+        public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
+        {
+            this._bounds = e.Bounds;
+            var backcolor = SystemBrushes.Control;
+            e.Graphics.FillRectangle(backcolor, e.Bounds);
+
+            // draw some item separator
+            e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+
+            // calculate bounds for title text drawing
+            Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
+                                                 e.Bounds.Y + margin.Top,
+                                                 e.Bounds.Width - margin.Right - margin.Horizontal,
+                                                 (int)font.GetHeight() * 2);
+
+            // draw the text within the bounds
+            e.Graphics.DrawString(this._element.Name, font, Brushes.DimGray, textBounds, aligment);
+
+            // put some focus rectangle
+            e.DrawFocusRectangle();
+        }
+    }
 
     public partial class EHRListBox : ListBox
     {
@@ -184,6 +225,13 @@ namespace EHRNarrative
             foreach (Element element in elements)
             {
                 this.Items.Add(new EHRListBoxItem(element));
+            }
+        }
+        public void AddElements(IEnumerable<DialogLinkElement> elements)
+        {
+            foreach (DialogLinkElement element in elements)
+            {
+                this.Items.Add(new EHRListBoxDialogLink(element));
             }
         }
         public void AddGroups(IEnumerable<Subgroup> groups, Collection data)
@@ -249,6 +297,11 @@ namespace EHRNarrative
                     EHRListBoxGroup item = (EHRListBoxGroup)this.Items[e.Index];
                     item.drawItem(e, this.Margin, this._font, this._fmt);
                 }
+                else if (this.Items[e.Index] is EHRListBoxDialogLink)
+                {
+                    EHRListBoxDialogLink item = (EHRListBoxDialogLink)this.Items[e.Index];
+                    item.drawItem(e, this.Margin, this._font, this._fmt);
+                }
             }
         }
 
@@ -261,7 +314,18 @@ namespace EHRNarrative
             }
             catch
             {
-                return;
+                EHRListBoxDialogLink linkItem;
+                try
+                {
+                    linkItem = (EHRListBoxDialogLink)this.Items[IndexFromPoint(e.X, e.Y)];
+                    ExamDialog form = (ExamDialog)this.FindForm();
+                    new ExamDialog(form.narrative_window, form.data.dialogs.Where(x => x.Id == linkItem.DialogId).First().Name, form.data.complaint.Name).Show();
+                    return;
+                }
+                catch
+                {
+                    return;
+                }
             }
 
             if (e.Button == System.Windows.Forms.MouseButtons.Left)

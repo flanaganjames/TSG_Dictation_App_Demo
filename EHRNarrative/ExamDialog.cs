@@ -15,8 +15,8 @@ namespace EHRNarrative
 {
     public partial class ExamDialog : Form
     {
-        Collection data;
-        EHRNarrative narrative_window;
+        public Collection data;
+        public EHRNarrative narrative_window;
         private List<AccordianRow> rows;
 
         public List<AccordianRow> Rows
@@ -65,13 +65,17 @@ namespace EHRNarrative
                 conn.Open();
                 var sql = @"
                     SELECT * FROM dialog d WHERE d.name = @Dialog;
+                    SELECT * FROM dialog;
                     SELECT * FROM 'group';
                     SELECT * FROM subgroup;
                     SELECT * FROM element;
+                    SELECT * FROM dialogelement;
                     SELECT * FROM group_complaints;
                     SELECT * FROM group_complaint_groups;
                     SELECT * FROM element_complaints;
                     SELECT * FROM element_complaint_groups;
+                    SELECT * FROM dialogelement_complaints;
+                    SELECT * FROM dialogelement_complaint_groups;
                     SELECT * FROM complaintGroup;
                     SELECT * FROM complaint c WHERE c.name = @Complaint";
                 using (var multi = conn.QueryMultiple(sql, new { Dialog = dialog_name, Complaint = complaint_name }))
@@ -81,13 +85,17 @@ namespace EHRNarrative
                         data = new Collection
                         {
                             dialog = multi.Read<Dialog>().Single(),
+                            dialogs = multi.Read<Dialog>().ToList(),
                             groups = multi.Read<Group>().ToList(),
                             subgroups = multi.Read<Subgroup>().ToList(),
                             elements = multi.Read<Element>().ToList(),
+                            dialoglinkelements = multi.Read<DialogLinkElement>().ToList(),
                             group_complaints = multi.Read<Group_Complaints>().ToList(),
                             group_complaint_groups = multi.Read<Group_Complaint_Groups>().ToList(),
                             element_complaints = multi.Read<Element_Complaints>().ToList(),
                             element_complaint_groups = multi.Read<Element_Complaint_Groups>().ToList(),
+                            dialogelement_complaints = multi.Read<DialogElement_Complaints>().ToList(),
+                            dialogelement_complaint_groups = multi.Read<DialogElement_Complaint_Groups>().ToList(),
                             complaintgroups = multi.Read<ComplaintGroup>().ToList(),
                             complaint = multi.Read<Complaint>().Single()
                         };
@@ -192,8 +200,9 @@ namespace EHRNarrative
             var listbox = new EHRListBox();
             group.SetAllDefaults(data);
             listbox.AddElements(group.ElementsForComplaint(data));
+            listbox.AddElements(group.DialogLinkElementsForComplaint(data));
             listbox.AddGroups(group.Subgroups(data), data);
-            if (group.ElementsAdditional(data).Count() > 0)
+            if (group.ElementsAdditional(data).Count() + group.DialogLinkElementsAdditional(data).Count() > 0)
                 listbox.Items.Add(new EHRListBoxGroup(group.ElementsAdditional(data), listbox));
 
             //draw headings

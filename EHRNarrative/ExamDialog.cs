@@ -313,6 +313,7 @@ namespace EHRNarrative
         private Group _group;
 
         private Label heading;
+        private Label icon;
 
         public string Heading
         {
@@ -331,11 +332,18 @@ namespace EHRNarrative
             this.Width = 200;
             this.BorderStyle = BorderStyle.None;
 
+            icon = new Label();
+            icon.Width = 16;
+            icon.Height = 16;
+            icon.Top = 1;
+            icon.Visible = false;
+            this.Controls.Add(icon);
+
             heading = new Label();
             heading.Width = this.Width;
             heading.Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
             heading.ForeColor = Color.DarkSlateGray;
-
+            heading.AutoEllipsis = true;
             this.Controls.Add(heading);
 
             this._listBox = ListBox;
@@ -379,6 +387,10 @@ namespace EHRNarrative
         public void CheckRecommended()
         {
             if (!this._group.Recommended) return;
+
+
+            heading.Padding = new System.Windows.Forms.Padding(16, 0, 0, 0);
+            icon.Visible = true;
             
             this._group.RecommendedActive = false;
 
@@ -409,9 +421,15 @@ namespace EHRNarrative
 
             //set group coloring if either the group is recommended or any Elements are actively recommended
             if (this._group.Recommended && this._group.RecommendedActive)
+            {
                 heading.ForeColor = Color.FromName("DarkRed");
+                icon.Image = Image.FromFile("Assets/exclamation.png");
+            }
             else if (this._group.Recommended && !this._group.RecommendedActive)
-                heading.ForeColor = Color.FromName("DarkSlateBlue");
+            {
+                heading.ForeColor = Color.FromName("DarkSlateGray");
+                icon.Image = Image.FromFile("Assets/checkmark.png");
+            }
 
             this.Refresh();
         }

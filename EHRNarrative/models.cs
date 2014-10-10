@@ -49,6 +49,14 @@ namespace EHRNarrative
 
     }
 
+    public class TextDialog
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string EHR_keyword { get; set; }
+        public IList<TextElement> TextElements { get; set; }
+    }
+
     public class Group
     {
         public int Id { get; set; }
@@ -134,6 +142,14 @@ namespace EHRNarrative
         }
 
     }
+
+    public class TextElement
+    {
+        public int Id { get; set; }
+        public int TextDialog_id { get; set; }
+        public string boiler_plate { get; set; }
+    }
+
     public class Element
     {
         public int Id { get; set; }

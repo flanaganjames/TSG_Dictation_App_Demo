@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Dialog(models.Model):
     name = models.CharField(max_length=250, unique=True)
     # version (file version? format version?)

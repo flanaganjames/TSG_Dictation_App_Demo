@@ -202,6 +202,10 @@ namespace EHRNarrative
                         var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
                         new ExamDialog(this, dialogName, this.complaint).Show();
                         break;
+                    case "TEXT_DIALOG":
+                        var ehr_keyword = this.HealthRecordText.SelectedText;
+                        new BoilerPlateDialog(this, ehr_keyword).Show();
+                        break;
                     case "CLEAN":
                         CleanCurrentTemplate();
                         break;

@@ -9,11 +9,9 @@ namespace EHRNarrative
     public class Collection
     {
         public Dialog dialog { get; set; }
-        public TextDialog textdialog { get; set; }
         public IEnumerable<Group> groups { get; set; }
         public IEnumerable<Subgroup> subgroups { get; set; }
         public IEnumerable<Element> elements { get; set; }
-        public IEnumerable<TextElement> textelements { get; set; }
         public IEnumerable<ComplaintGroup> complaintgroups { get; set; }
         public Complaint complaint { get; set; }
         public IEnumerable<Group_Complaints> group_complaints { get; set; }
@@ -56,11 +54,7 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public string EHR_keyword { get; set; }
-
-        public IEnumerable<TextElement> Elements(Collection data)
-        {
-            return data.textelements.Where(x => x.TextDialog_id == this.Id);
-        }
+        public IEnumerable<TextElement> TextElements { get; set; }
     }
 
     public class Group

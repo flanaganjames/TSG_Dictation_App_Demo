@@ -28,6 +28,7 @@ namespace EHRNarrative
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public int Next_dialog_id { get; set; }
 
         public IEnumerable<Group> Groups(Collection data)
         {
@@ -49,6 +50,18 @@ namespace EHRNarrative
             IEnumerable<Element> elements = this.Groups(data).SelectMany(x => x.Elements(data));
             elements.Intersect(this.Groups(data).SelectMany(x => x.Subgroups(data)).SelectMany(x => x.Elements(data)));
             return elements.Where(x => x.selected != null);
+        }
+
+        public Dialog NextDialog(Collection data)
+        {
+            try
+            {
+                return data.dialogs.Where(x => x.Id == this.Next_dialog_id).First();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
     }

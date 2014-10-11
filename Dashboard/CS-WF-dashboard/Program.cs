@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -42,7 +43,6 @@ namespace Dashboard
              */
         public WindowsFormsApplication1.Form1 dash; 
         public RichTextBox dashST, dashEM, dashW;
-        public RichTextBox dashButton1, dashButton2;
         public ArrayList dashLinks = new ArrayList();
         private System.Drawing.Size dashOsz, dashTsz, dashWsz;
         private System.Drawing.Point dashWpos;
@@ -52,7 +52,7 @@ namespace Dashboard
                 // dashBht & dashBloc are floats, since they're converted
                 // to pixels from points
         private int dashBwid;   // dash button width within the status panel
-        private float dashRes;  // dashboard resolution
+        private float dashResX, dashResY;  // dashboard resolution
 
         public String dashSTpath = "dashboard.rtf";
         public String dashEMpath = "dashem.rtf";
@@ -73,14 +73,23 @@ namespace Dashboard
  
         public Dashboard()
         {
-                // these are the fixed sizes -- others are calculated from these
-            dashOht = 550;
-            dashOwid = 255;
-            dashWht = 200;
-            dashEMht = 125;
-
                 // create the overall dashboard window 
             dash = new WindowsFormsApplication1.Form1(); // dash = new Form();
+            System.Drawing.Graphics g = dash.CreateGraphics();
+            dashResX = g.DpiX; dashResY = g.DpiY;
+
+                // these are the fixed dimensions -- others are calculated from these
+            dashOht = 565;
+            dashOwid = 255;
+            dashWht = 200;
+            dashEMht = 140;
+                //   but first, we need to normalize these to 96 dpi
+            dashOht = (int) Math.Ceiling((float) dashOht * dashResY / 96f);
+            dashOwid = (int) Math.Ceiling((float) dashOwid * dashResX / 96f);
+            dashWht = (int) Math.Ceiling((float) dashWht * dashResY / 96f);
+            dashEMht = (int) Math.Ceiling((float) dashEMht * dashResY / 96f);
+
+                // now set up the overall dashboard
             dash.Size = dashOsz = new System.Drawing.Size(dashOwid, dashOht);
             // dash.Visible = true; //  this appears to steal focus
             dash.Text = "The Sullivan Group dashboard";
@@ -143,8 +152,9 @@ namespace Dashboard
             doLink(l);
         }
 
-            // we can invoke failnote if we're already running,
-            // though normally we'd just exit
+            // we can invoke failnote if we're already running, for
+            // debugging purposes, though normally we'd just exit
+        [Conditional("DEBUG")]
         public void failnote()
         {
             DASHfail = true;
@@ -154,21 +164,28 @@ namespace Dashboard
             // to window title bar, so we can note how many
             // instances of the program are running, or how
             // many times we've updated
+        [Conditional("DEBUG")]
         public void running(int i)
         {
             dashboards_running = i;
             dash.Text = string.Format("Sullivan Group {0}", i);
         }
 
+        [Conditional("DEBUG")]
+        public void flash()
+        {
+            //  .... for test purposes ....
+            // flash the background so we know the update loop is running
+            this.dash.Refresh();
+            this.dashST.BackColor = Color.LightGray;
+            this.dashST.Clear(); this.dashST.Refresh(); this.dash.Refresh();
+            Thread.Sleep(100);
+            this.dashST.BackColor = Color.White;
+        }
+
         public void refreshDash()
         {
-            ////  .... for test purposes ....
-            //// flash the background so we know the update loop is running
-            //this.dash.Refresh();
-            //this.dashST.BackColor = Color.LightGray;
-            //this.dashST.Clear(); this.dashST.Refresh(); this.dash.Refresh();
-            //Thread.Sleep(100);
-            //this.dashST.BackColor = Color.White;
+            flash();
                 // update with the real contents of the main dashboard
             this.dashST.Rtf = dashSTcontents();
             this.dashST.Refresh();
@@ -187,16 +204,18 @@ namespace Dashboard
         public void refreshDashButtons()
         {
                 // basic parameters
-                    //!!! should actually extract resolution from the control
-            dashRes = 96.0f;
-            dashBht = 24f / 144f * dashRes;
+                    //!!! should actually extract resolution from the control class
+            // dashResY = 96.0f;
+            dashBht = 24f / 144f * dashResY; // 24 half-points for the link height is a constant from SLC
                     //!!! should actually find or calculate the height of the first link
-            dashBloc = 57.0F;
+            dashBloc = 57.0F / 96f * dashResY;   // pixels
 
                 // clear out the old buttons
             foreach (RichTextBox button in dashLinks)
             {
                 this.dash.Controls.Remove(button);
+                    // notice that we're not deleting the event handler from
+                    // the button, just removing the button from the window
             }
             dashLinks.Clear();
 
@@ -209,9 +228,12 @@ namespace Dashboard
                 String v = m.Value;
                 v = v.Substring(v.IndexOf(' ') + 1);
                 v = v.Substring(0, v.Length - 1);
-                String t = @"{\rtf1\ansi";
-                t += @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}";
-                t += @"\ul\f0\fs20\li100 " + v + @"\par}";
+                String t = @"{\rtf1\ansi"
+                    + @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}"
+                    + @"{\colortbl;\red0\green0\blue238;}"
+                    + @"\ul\f0\cf1\fs20\li100 " + v + @"\par}";
+                        // using the HTML5 recommended color for unvisited links;
+                        // wikipedia uses a slightly different one: @"\red6\green69\blue173;"
                     // make a button out of it
                 RichTextBox button = new RichTextBox();
                 dashLinks.Add(button);
@@ -301,7 +323,8 @@ namespace Dashboard
             "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             "Chest_Pain_Resources: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
             "Differential_Diagnosis_Tool: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
-            "RSQ_Assist: www.thesullivangroup.com/RSQAssist/",
+            "RSQ_Assist: http://tsg-demo/rsqassist/",
+            "TAD risk: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/054_bp_ebm/054_002_thoracic_aortic_dissection.html",
             };
 
             // strip off the required syntactic sugar

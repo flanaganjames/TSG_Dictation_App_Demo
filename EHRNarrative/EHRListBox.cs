@@ -140,7 +140,7 @@ namespace EHRNarrative
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
 
             // calculate bounds for title text drawing
-            Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal,
+            Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
                                                  e.Bounds.Width - margin.Right - margin.Horizontal,
                                                  (int)font.GetHeight() * 2);

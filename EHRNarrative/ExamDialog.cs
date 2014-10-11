@@ -52,9 +52,15 @@ namespace EHRNarrative
         }
         new public void Show() {
             if (data == null)
+            {
+                this.Dispose();
                 return;
+            }
             else
+            {
                 base.Show();
+                this.BringToFront();
+            }
         }
 
         private Collection LoadContent(string dialog_name, string complaint_name)

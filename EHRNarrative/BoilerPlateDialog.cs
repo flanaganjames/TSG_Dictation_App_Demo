@@ -45,6 +45,20 @@ namespace EHRNarrative
             Render(data.TextElements);
         }
 
+        new public void Show()
+        {
+            if (data == null)
+            {
+                this.Dispose();
+                return;
+            }
+            else
+            {
+                base.Show();
+                this.BringToFront();
+            }
+        }
+
         private void Render(IList<TextElement> elements)
         {
             int gutterWidth = 20;

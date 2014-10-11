@@ -69,11 +69,6 @@ namespace EHRNarrative
                 this.Activate();
                 dashboard_launched = true;
             }
-            else
-            {
-                SetForegroundWindow(hWnd);
-                this.Activate();
-            }
         }
 
         public int sendCustomMessage(int hWnd, int wParam, string msg)

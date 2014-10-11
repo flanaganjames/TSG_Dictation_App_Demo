@@ -312,24 +312,30 @@ namespace Dashboard
         {
             // this table really needs to be external to the program
             String[] links = {
-            "TSG-chest-pain: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
-            "Chest_Pain_Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
+            "TSG chest pain: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
             "Chest Pain Evaluation: www.thesullivangroup.com/rsqassist/contents/102_dictation/102_11_chest_pain_male_40_and_over_adult.html",
-            "TSG-sore-throat: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
-            "Sore_Throat_Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "TSG sore throat: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
             "Sore Throat Adult: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
-            "Chest_Pain_Resources: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
-            "Differential_Diagnosis_Tool: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
-            "RSQ_Assist: http://tsg-demo/rsqassist/",
-            "TAD risk: file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/054_bp_ebm/054_002_thoracic_aortic_dissection.html",
+            "Sore Throat Evaluation: www.thesullivangroup.com/rsqassist/contents/024_sore_throat_and_toothache/024_009_sore_throat_toothache_adult_resources.html",
+            "Chest Pain Resources: file:001_chest_pain_myocardial_infarction_and_thrombolysis/001_007_chest_pain_resources.html",
+            "Differential Diagnosis Tool: file:001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
+            "RSQ Assist: http://tsg-demo/rsqassist/",
+            "TAD risk: file:054_bp_ebm/054_002_thoracic_aortic_dissection.html",
             };
+            String badLink = "file:oops.html";
+            String localFiles = "file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/";
+            String resolvedLink = "";
 
-            // strip off the required syntactic sugar
+                // strip off the required syntactic sugar
             String[] sugar = { "http://", "http:", "www.", "www" };
             foreach (string ss in sugar)
             {
                 if (link.StartsWith(ss)) link = link.Replace(ss, "");
             }
+                // strip out underscores and dashes
+            link = link.Replace('-', ' ');
+            link = link.Replace('_', ' ');
+            link += ":";  // ensure delimiter for comparision
 
             // find the link in the links list
             foreach (string ss in links)
@@ -337,32 +343,35 @@ namespace Dashboard
                 if (ss.StartsWith(link, StringComparison.CurrentCultureIgnoreCase))
                 {
                     int i = ss.IndexOf(':');
-                    link = ss.Substring(i + 1).Trim();
-                    // Char[] sep = {' ', ':'};
-                    // String[] elements = ss.Split(sep);
-                    //int n = elements.Length;
-                    // link = elements[n-1];
+                    resolvedLink = ss.Substring(i + 1).Trim();
+                    break;
                 }
             }
 
-            if (!(link.StartsWith("http://") || link.StartsWith("https://")
-                || link.StartsWith("file://")))
+            if (resolvedLink.Length == 0)
+                resolvedLink = badLink;
+
+            if (resolvedLink.StartsWith("file:"))
             {
-                link = "http://" + link;
+                int i = resolvedLink.IndexOf(':');
+                resolvedLink = resolvedLink.Substring(i + 1);
+                resolvedLink = localFiles + resolvedLink;
+            }
+
+            if (!(resolvedLink.StartsWith("http://")
+                || resolvedLink.StartsWith("https://")
+                || resolvedLink.StartsWith("file://")))
+            {
+                resolvedLink = "http://" + resolvedLink;
             }
 
             try
             {
-                System.Diagnostics.Process.Start("explorer.exe", link);
+                System.Diagnostics.Process.Start("explorer.exe", resolvedLink);
             }
             catch
             {
-                try
-                {
-                    System.Diagnostics.Process.Start("explorer.exe",
-                        "http://alumnus.caltech.edu/~copeland/oops.html");
-                }
-                catch { throw new NotImplementedException(); }
+                throw new NotImplementedException();
             }
         }
     }

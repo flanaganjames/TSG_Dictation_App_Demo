@@ -48,9 +48,8 @@ namespace Dashboard
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
-        private float dashBht, dashBloc;    // dash button height & y-location
-                // dashBht & dashBloc are floats, since they're converted
-                // to pixels from points
+        private float dashBht;    // dash button height & y-location
+                // dashBht is a float, since it's converted to pixels from points
         private int dashBwid;   // dash button width within the status panel
         private float dashResX, dashResY;  // dashboard resolution
 
@@ -204,11 +203,8 @@ namespace Dashboard
         public void refreshDashButtons()
         {
                 // basic parameters
-                    //!!! should actually extract resolution from the control class
-            // dashResY = 96.0f;
-            dashBht = 24f / 144f * dashResY; // 24 half-points for the link height is a constant from SLC
-                    //!!! should actually find or calculate the height of the first link
-            dashBloc = 57.0F / 96f * dashResY;   // pixels
+                    // height of the link button -- convert to pixels
+            dashBht = 24f / 144f * dashResY; // 24 half-points is a constant from SLC
 
                 // clear out the old buttons
             foreach (RichTextBox button in dashLinks)
@@ -220,25 +216,26 @@ namespace Dashboard
             dashLinks.Clear();
 
                 // find links in the dashboard and add buttons for them
-            Match m = Regex.Match(dashSTrtf, @"\\fldrslt\{.+?\}");
+            Match m = Regex.Match(dashSTrtf, @"HYPERLINK \d+ \}\}\{\\fldrslt\{.+?\}");
             int n = 0;
             while (m.Success)
             {
-                    // isolate the link value
-                String v = m.Value;
-                v = v.Substring(v.IndexOf(' ') + 1);
-                v = v.Substring(0, v.Length - 1);
+                    // isolate the link value -- not very bullet proof
+                Char [] sep = { ' ', '}' };
+                String [] v = m.Value.Split(sep);
+                    // 0: "HYPERLINK", 1: height, 2,3,4: markup, 5: link name
+                int height = Int32.Parse(v[1]);
                 String t = @"{\rtf1\ansi"
                     + @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}"
                     + @"{\colortbl;\red0\green0\blue238;}"
-                    + @"\ul\f0\cf1\fs20\li100 " + v + @"\par}";
+                    + @"\ul\f0\cf1\fs20\li100 " + v[5] + @"\par}";
                         // using the HTML5 recommended color for unvisited links;
                         // wikipedia uses a slightly different one: @"\red6\green69\blue173;"
                     // make a button out of it
                 RichTextBox button = new RichTextBox();
                 dashLinks.Add(button);
                 SizeF ss = new SizeF(dashBwid, dashBht);
-                PointF pp = new PointF(0f, dashBloc + dashBht * n);
+                PointF pp = new PointF(0f, (float)height / 144 * dashResY); 
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
                 button.BackColor = Color.White;
@@ -250,7 +247,7 @@ namespace Dashboard
                 button.Rtf = t;
                 button.Refresh();
                 dashST.Controls.Add(button);
-                button.MouseClick += new MouseEventHandler((sender, e) => button_MouseClick(sender, e, v));
+                button.MouseClick += new MouseEventHandler((sender, e) => button_MouseClick(sender, e, v[5]));
                 n++;
                 m = m.NextMatch();
             }

@@ -52,7 +52,7 @@ enum rgb_t { c_red = 0, c_green, c_blue };
 int rgb_colors[][3] = {
 	{0,0,0}, {0,0,0}, {255, 255, 255}, {192,192,192}, 
 		// c_ignore, c_black, c_white, c_gray,
-	{0,0,255}, {250, 250, 250}, {192,192,192}, 
+	{0,255,0}, {250, 250, 250}, {192,192,192}, 
 		// c_hyperlink, c_highlight_req, c_highlight_comp
 	{0,0,0}, {160, 160, 160}, {241,217,198},
 		// c_foreground_req, c_foreground_comp, c_background
@@ -145,7 +145,7 @@ void D_title(void)
 {
 	fprintf(outf, "{\\pard\\fs%d\n", ps_title);
 	D_icon();
-	fprintf(outf, "{ }\\b RSQ{\\super \\'a9} Guidance\\sa200\\par}");
+	fprintf(outf, "{ }\\b RSQ{\\super \\'ae} Guidance\\sa200\\par}");
 	fprintf(outf, "\\fs%d\n", ps_def);
 }
 
@@ -166,9 +166,20 @@ void D_separator(int color)
 	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void D_hyperlinks(void)
+void D_hyperlinks(int height)
 {
 	char *l;
+	int n = 0;
+		/*
+		 * We need to provide the dashboard with the position of the top
+		 *  of each line of link, so the dashboard can properly position
+		 *  the buttons for the links.  Note that this is the top of the
+		 *  line, not the baseline, and it's in half-points, not pixels,
+		 *  and the position of the first line is supplied by the caller,
+		 *  based on what the caller knows about what's above the links in
+		 *  the panel.  The height of the first link is given by the
+		 *  argument.
+		 */
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
 	{
@@ -186,8 +197,12 @@ void D_hyperlinks(void)
 			// dashboard display program -- yes, that's a little
 			// Rube Goldberg but allows us to use short link names
 		// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
+			// we now use the text of the hyperlink to give us the
+			// vertical position in the window
+		fprintf(outf, "{\\*\\fldinst{HYPERLINK %d }}", height+n*24);
 		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
 			ps_link, c_hyperlink, l);
+		n++;
 	}
 }
 
@@ -487,7 +502,8 @@ void S_generateDash(void)
 	D_line();
 
 		// resource links
-	D_hyperlinks();
+	int height = 58 + 27 * max(1,_complaint.size()); // half-points
+	D_hyperlinks(height);
 	D_line();
 	D_separator(c_sepbar_b);
 

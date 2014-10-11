@@ -243,9 +243,27 @@ namespace EHRNarrative
             DoneButton.Size = new System.Drawing.Size(181, 23);
             DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - 10), 10);
             DoneButton.TabIndex = 2;
-            DoneButton.Text = "Done";
+            DoneButton.Text = "Save and close";
             DoneButton.UseVisualStyleBackColor = true;
             DoneButton.Click += new System.EventHandler(this.DoneButton_Click);
+
+            if (data.dialog.NextDialog(data) != null)
+            {
+                Button NextButton = new Button();
+                NextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+                NextButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                NextButton.Name = "NextButton";
+                NextButton.Size = new System.Drawing.Size(181, 23);
+                NextButton.Location = new System.Drawing.Point((buttonBar.Width - NextButton.Width - 10), 10);
+                NextButton.TabIndex = 3;
+                NextButton.Text = "Save and continue to " + data.dialog.NextDialog(data).Name;
+                NextButton.Tag = data.dialog.NextDialog(data).Name; // TODO: actually subclass the button to have a proper property
+                NextButton.UseVisualStyleBackColor = true;
+                NextButton.Click += new System.EventHandler(this.NextButton_Click);
+
+                DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - NextButton.Width - 20), 10);
+                buttonBar.Controls.Add(NextButton);
+            }
 
             buttonBar.Controls.Add(DoneButton);
 
@@ -301,6 +319,12 @@ namespace EHRNarrative
             UpdateSLC();
             this.Close();
             this.Dispose();
+        }
+        private void NextButton_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            new ExamDialog(this.narrative_window, (string)button.Tag, data.complaint.Name).Show();
+            DoneButton_Click(sender, e);
         }
     }
 

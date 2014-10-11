@@ -163,7 +163,7 @@ namespace EHRNarrative
             string command_str = "";
             ParseReplaceCommand(ref command_str, commandStr.Trim());
 
-            //NotifySLC(command_str);
+            NotifySLC(command_str);
 
             this.HealthRecordText.TextChanged += hrTextChanged;
         }
@@ -195,11 +195,15 @@ namespace EHRNarrative
                         break;
                     case "DIALOG":
                         var dialogName = command.Trim().Split(new char[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
-                        new ExamDialog(this, dialogName, this.complaint).Show();
+                        ExamDialog ed = new ExamDialog(this, dialogName, this.complaint);
+                        int edhWnd = ed.Show();
+                        SetForegroundWindow(edhWnd);
                         break;
                     case "TEXT_DIALOG":
                         var ehr_keyword = this.HealthRecordText.SelectedText;
-                        new BoilerPlateDialog(this, ehr_keyword).Show();
+                        BoilerPlateDialog bpd = new BoilerPlateDialog(this, ehr_keyword);
+                        int bpdhWnd = bpd.Show();
+                        SetForegroundWindow(bpdhWnd);
                         break;
                     case "CLEAN":
                         CleanCurrentTemplate();
@@ -295,25 +299,29 @@ namespace EHRNarrative
                 }
                 else
                 {
-                    if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
-                    {
-                        if (command_str != "")
-                        {
-                            command_str += " ! ";
-                        }
+                    string oldText = HealthRecordText.Rtf;
+                    HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, parts[1]);
 
-                        if (parts[1].Trim() != "")
+                    if (HealthRecordText.Rtf.CompareTo(oldText) != 0)
+                    {
+                        if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
                         {
-                            //Send data command
-                            command_str += "data " + parts[0].Trim();
-                        }
-                        else
-                        {
-                            command_str += "del " + parts[0].Trim();
+                            if (command_str != "")
+                            {
+                                command_str += " ! ";
+                            }
+
+                            if (parts[1].Trim() != "")
+                            {
+                                //Send data command
+                                command_str += "data " + parts[0].Trim();
+                            }
+                            else
+                            {
+                                command_str += "del " + parts[0].Trim();
+                            }
                         }
                     }
-
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, parts[1]);
                 }
             }
             else

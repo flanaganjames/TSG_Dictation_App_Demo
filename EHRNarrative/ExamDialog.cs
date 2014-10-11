@@ -50,16 +50,17 @@ namespace EHRNarrative
 
             RenderDialog(data);
         }
-        new public void Show() {
+        new public int Show() {
             if (data == null)
             {
                 this.Dispose();
-                return;
+                return 0;
             }
             else
             {
                 base.Show();
                 this.BringToFront();
+                return (int)this.Handle;
             }
         }
 

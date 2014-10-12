@@ -51,9 +51,8 @@ int vitalParse(char *s)
 }
 
 	/*
-	 * special case parsing for temperature:
-	 *  as above, but we convert to C, if we've got F
-	 *  and return as a float, not an int
+	 * special case parsing for temperature as a float
+	 * ... works for both C & F
 	 */
 float vitalParseT(char *s)
 {
@@ -62,10 +61,14 @@ float vitalParseT(char *s)
 	if (s == NULL)  return 0;
 	n = strcspn(s, "0123456890.");
 	f = (float) atof(s+n);
+		// doesn't matter whether we're C or F:
+		// the table for normals has both scales
+	/******
 	if (f > 70.0) // assume F, convert to C
 	{
 		f = (f - 32) * 5 / 9;
 	}
+	******/
 	return f;
 }
 
@@ -113,22 +116,12 @@ range RR_dbp[] = {
 const int n_dbp = (sizeof(RR_dbp)/sizeof(range));
 
 rangeF RR_temp[] = {
-	{32, 36, "Temperature low"},
-	{39, 43, "Temperature very high"},
+	{32., 36., "Temperature low"},	// C values
+	{39., 43., "Temperature very high"},
+	{89.6, 96., "Temperature low"},	// F values
+	{102.2, 109.4, "Temperature very high"},
 };
 const int n_temp = (sizeof(RR_temp)/sizeof(rangeF));
-
-#if 0
-enum t_vital {
-	v_low = 0, v_normal, v_high, v_vhigh, v_ignoreh
-};
-	// define the low end of each range
-int R_pulse[]  = {30, 50, 100, 120, -1};
-int R_resp[]   = {4, 8, -1, 25, 99};
-int R_sbp[]    = {40, 85, -1, 155, 290};
-int R_dbp[]    = {-1, 30, -1, 99, 150};
-float R_temp[] = {32., 36., -1., 39., 43.};
-#endif
 
 void validateVital(int vital, range Range[], int nn)
 {

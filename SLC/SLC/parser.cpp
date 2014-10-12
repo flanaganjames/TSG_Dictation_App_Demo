@@ -522,8 +522,11 @@ char *HPI_bill_aliases[] = {
 	"aggravators", "modifiers",
 	"maximum severity", "severity",
 	"current severity", "severity",
+	"radiation", "location",
+	"movement", "location",
+	"progression", "timing",
 };
-const int n_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
+const int n_hpi_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
 const int n_hpi_billing = sizeof(HPI_bill_list) / sizeof(HPI_bill_list[0]);
 
 void sortHPIBilling(char *s)
@@ -534,7 +537,7 @@ void sortHPIBilling(char *s)
 		// we have some elements that need to count only once,
 		// so we set the element name to an alias to store in 
 		// the billing list
-	for (j = 0;  j < n_aliases;  j++)
+	for (j = 0;  j < n_hpi_aliases;  j++)
 	{
 		if (_strnicmp(t, HPI_bill_aliases[j*2], strlen(t)) == 0)
 		{

@@ -203,8 +203,8 @@ namespace Dashboard
         public void refreshDashButtons()
         {
                 // basic parameters
-                    // height of the link button -- convert to pixels
-            dashBht = 24f / 144f * dashResY; // 24 half-points is a constant from SLC
+                    // height of the link button
+            dashBht = 24f; // 24 half-points is a constant from SLC
 
                 // clear out the old buttons
             foreach (RichTextBox button in dashLinks)
@@ -216,7 +216,15 @@ namespace Dashboard
             dashLinks.Clear();
 
                 // find links in the dashboard and add buttons for them
+            bool have_heights = true;
             Match m = Regex.Match(dashSTrtf, @"HYPERLINK \d+ \}\}\{\\fldrslt\{.+?\}");
+            if (!m.Success)
+            {
+                    // this is bullet-proofing in case we lose the heights of
+                    // the links from the dashboard -- we can recalculate them
+                m = Regex.Match(dashSTrtf, @"{\\fldrslt\{.+?\}");
+                have_heights = false;
+            }
             int n = 0;
             while (m.Success)
             {
@@ -224,17 +232,20 @@ namespace Dashboard
                 Char [] sep = { ' ', '}' };
                 String [] v = m.Value.Split(sep);
                     // 0: "HYPERLINK", 1: height, 2,3,4: markup, 5: link name
-                int height = Int32.Parse(v[1]);
+                    // or if missing heights: 0: markup, 1: link name, 2: markup
+                int height = have_heights
+                    ? Int32.Parse(v[1]) : height = 85 + n * (int)dashBht;
+                String link = have_heights ? v[5] : v[1];
                 String t = @"{\rtf1\ansi"
                     + @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}"
                     + @"{\colortbl;\red0\green0\blue238;}"
-                    + @"\ul\f0\cf1\fs20\li100 " + v[5] + @"\par}";
+                    + @"\ul\f0\cf1\fs20\li100 " + link + @"\par}";
                         // using the HTML5 recommended color for unvisited links;
                         // wikipedia uses a slightly different one: @"\red6\green69\blue173;"
                     // make a button out of it
                 RichTextBox button = new RichTextBox();
                 dashLinks.Add(button);
-                SizeF ss = new SizeF(dashBwid, dashBht);
+                SizeF ss = new SizeF(dashBwid, dashBht / 144 * dashResY);
                 PointF pp = new PointF(0f, (float)height / 144 * dashResY); 
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
@@ -247,7 +258,7 @@ namespace Dashboard
                 button.Rtf = t;
                 button.Refresh();
                 dashST.Controls.Add(button);
-                button.MouseClick += new MouseEventHandler((sender, e) => button_MouseClick(sender, e, v[5]));
+                button.MouseClick += new MouseEventHandler((sender, e) => button_MouseClick(sender, e, link));
                 n++;
                 m = m.NextMatch();
             }

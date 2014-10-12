@@ -237,8 +237,8 @@ void undecorate(char *in, bool digits)
 			while (*s != ' '  &&  *s != '\0') { s++; }
 			continue;
 		}
-			// strip the decoration around something like [**foo**]
-			// also remove digits, which are exam counts from dialogs
+			// strip the decoration around something like [**foo**];
+			// if desired, remove digits, which are exam counts from dialogs
 		if (*s != '['  &&  *s != ']'  &&  *s != '*'
 			&&  (!digits || !isdigit(*s)))
 			*t++ = *s;

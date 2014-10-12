@@ -241,8 +241,9 @@ namespace Dashboard
                     + @"{\colortbl;\red0\green0\blue238;}"
                     + @"\ul\f0\cf1\fs20\li100 " + link + @"\par}";
                         // using the HTML5 recommended color for unvisited links;
-                        // wikipedia uses a slightly different one: @"\red6\green69\blue173;"
-                    // make a button out of it
+                        // wikipedia uses a slightly different one: 
+                        //    @"\red6\green69\blue173;"
+                    // make a "button" out of it
                 RichTextBox button = new RichTextBox();
                 dashLinks.Add(button);
                 SizeF ss = new SizeF(dashBwid, dashBht / 144 * dashResY);
@@ -250,8 +251,7 @@ namespace Dashboard
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
                 button.BackColor = Color.White;
-                    //!!! ForeColor doesn't count: need to select color in the RTF, so we need a colormap
-                button.ForeColor = Color.Blue;
+                button.ForeColor = Color.Blue; // ignored, uses color from colormap
                 button.Cursor = Cursors.Hand;
                 button.BorderStyle = BorderStyle.None;
                 button.ReadOnly = true;

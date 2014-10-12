@@ -529,6 +529,17 @@ char *HPI_bill_aliases[] = {
 const int n_hpi_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
 const int n_hpi_billing = sizeof(HPI_bill_list) / sizeof(HPI_bill_list[0]);
 
+/*
+	This routine checks the name of a completed exam against the list
+	of exams that count for HPI credit in the E/M calculation.  There
+	are some exams that actually count against other categories in E/M.
+	(For example, "relievers" and "aggravators" count as an HPI exam
+	for "modifiers".)  That means this routine has a table of aliases
+	so we can rename the given exam to a billable one.  In the end,
+	if the (possibly renamed) exam is in the HPI_bill_list array, we 
+	add it to the _bill_hpi list, where it can count into the HPI line
+	on the E/M panel.
+ */
 void sortHPIBilling(char *s)
 {
 	list<char *>::iterator ii;

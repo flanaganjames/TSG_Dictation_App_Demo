@@ -292,11 +292,18 @@ namespace EHRNarrative
             }
 
             foreach (String EHR_text in data.elements
-                .Where(x => x.selected != null && x.EHR_replace != null)
+                .Where(x => x.selected != null && x.EHR_replace != null && x.EHR_replace != "")
                 .Select(x => x.EHR_replace).Distinct()
                 )
             {
-                narrative_window.ReplaceKeyword(EHR_text);
+                try
+                {
+                    narrative_window.ReplaceKeyword(EHR_text);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error occured while trying to replace text using this command: \"" + EHR_text + "\"\nError Message:\n" + e.Message);
+                }
             }
         }
 
@@ -309,7 +316,7 @@ namespace EHRNarrative
             }
 
             foreach (String SLC_command in data.elements
-                .Where(x => x.selected != null && x.SLC_command != null)
+                .Where(x => x.selected != null && x.SLC_command != null && x.SLC_command != "")
                 .Select(x => x.SLC_command).Distinct()
                 )
             {

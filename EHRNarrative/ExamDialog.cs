@@ -388,6 +388,8 @@ namespace EHRNarrative
 
         public GroupLabel(EHRListBox ListBox, Group group)
         {
+            int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height - 280; // minus window chrome, headings, button bar, allowance for addnl rows
+
             this.Width = 200;
             this.BorderStyle = BorderStyle.None;
 
@@ -409,7 +411,7 @@ namespace EHRNarrative
             this._group = group;
 
             this._listBox.Width = this.Width;
-            this._listBox.Height = Math.Min(this._listBox.Items.Count * this._listBox.ItemHeight, 600);
+            this._listBox.Height = Math.Min(this._listBox.Items.Count * this._listBox.ItemHeight, maxListBoxHeight);
             this._listBox.Top = 45;
 
             //draw select alls

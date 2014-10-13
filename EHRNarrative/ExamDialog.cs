@@ -123,6 +123,10 @@ namespace EHRNarrative
             {
                 data.groups.Where(x => x.Id == group_id).First().Recommended = true;
             }
+            foreach (Element element in data.dialog.AllElements(data))
+            {
+                element.Dialog = data.dialog;
+            }
 
             return data;
         }

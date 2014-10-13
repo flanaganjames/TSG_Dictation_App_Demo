@@ -26,6 +26,7 @@ const int ps_heading = 11*2;
 const int ps_subheading = 9*2+1;
 const int ps_link = 10*2;
 const int ps_warning = 12*2;
+const int ps_warning_link = 11*2;
 
 	// current file to which we're outputting
 	//  it's global to this module for convenience
@@ -166,7 +167,7 @@ void D_separator(int color)
 	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void D_showOneLink(char *l, int height)
+void D_showOneLink(char *l, int size, int height)
 {
 	fprintf(outf, "\\pard\\li%d{\\field", T_space);
 		// fldinst is ignored by .Net's RTF, so we don't output it;
@@ -178,7 +179,7 @@ void D_showOneLink(char *l, int height)
 		// vertical position in the window
 	fprintf(outf, "{\\*\\fldinst{HYPERLINK %d }}", height);
 	fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
-		ps_link, c_hyperlink, l);
+		size, c_hyperlink, l);
 }
 
 void D_hyperlinks(int baseheight)
@@ -206,7 +207,7 @@ void D_hyperlinks(int baseheight)
 		} else {
 			l = *i;
 		}
-		D_showOneLink(l, baseheight+n*24);
+		D_showOneLink(l, ps_link, baseheight+n*24);
 		n++;
 	}
 }
@@ -658,11 +659,14 @@ void S_generateWarnBox(void)
 		D_one_warn_icon(225, 210);
 		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
-		height += 30;
+		height += 32;
 		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)
 		{
-			D_showOneLink("TAD_Risk", height);
-			height += 22;
+			D_showOneLink("TAD_Risk", ps_link, height);
+			height += 23;
+				// comment out the above & uncomment the following for bigger links
+			// D_showOneLink("TAD_Risk", ps_warning_link, height);
+			// height += ps_warning_link;
 		}
 		D_vertspace(2);
 		height += 4;

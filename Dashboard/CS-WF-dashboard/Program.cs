@@ -54,8 +54,8 @@ namespace Dashboard
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
-        private float dashBht;    // dash link button height
-                // dashBht is a float, since it's converted to pixels from points
+        //private float dashBht;    // dash link button height
+        //        // dashBht is a float, since it's converted to pixels from points
         private int dashBwid;   // dash button width within the status panel
         private float dashResX, dashResY;  // dashboard resolution
 
@@ -197,8 +197,8 @@ namespace Dashboard
             dashEM.Rtf = dashEMrtf = dashEMcontents();
             dashEM.Refresh();
                 // update buttons for the links
-                    // the default base height of 85 for the links is empirical
-            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 85);
+                    // the button height of 24 for the status buttons is from SLC
+            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 24.0f);
                 // handle the warning panel
             refreshDashWarn();
                 // now refresh of the whole window
@@ -208,11 +208,9 @@ namespace Dashboard
         }
 
         public void refreshDashButtons(RichTextBox panel, String panelRTF, 
-            ArrayList linkList, Color buttonColor, int indent, int baseHT)
+            ArrayList linkList, Color buttonColor, int indent, float dashBht)
         {
                 // basic parameters
-                    // height of the link button
-            dashBht = 24f; // 24 half-points is a constant from SLC
                     // indent of the link button -- supplied in half-points, need twips
             indent = indent * 10;
                 // clear out the old buttons
@@ -225,30 +223,27 @@ namespace Dashboard
             linkList.Clear();
 
                 // find links in the dashboard and add buttons for them
-            bool have_heights = true;
             Match m = Regex.Match(panelRTF, @"HYPERLINK \d+ \}\}\{\\fldrslt\{.+?\}");
-            if (!m.Success)
-            {
-                    // this is bullet-proofing in case we lose the heights of
-                    // the links from the dashboard -- we can recalculate them
-                m = Regex.Match(panelRTF, @"{\\fldrslt\{.+?\}");
-                have_heights = false;
-            }
+                // We used to have code in here to catch if the heights were missing
+                // in the markup of the links.  However, because we can't approximate
+                // the positions on both the status and warning panels, we pulled it
+                // out.  This means we have to make sure we're using a version of SLC
+                // that includes locations of the links in its markup.
             int n = 0;
             while (m.Success)
             {
                     // isolate the link value -- not very bullet proof
-                Char [] sep = { ' ', '}' };
+                Char [] sep = { ' ', '{', '}' };
                 String [] v = m.Value.Split(sep);
-                    // 0: "HYPERLINK", 1: height, 2,3,4: markup, 5: link name
-                    // or if missing heights: 0: markup, 1: link name, 2: markup
-                int height = have_heights
-                    ? Int32.Parse(v[1]) : height = baseHT + n * (int)dashBht;
-                String link = have_heights ? v[5] : v[1];
+                    // 0: "HYPERLINK", 1: height, 2,3,4: delimiters,
+                    // 5: "\fldrslt", 6: markup, 7: link name
+                int height = Int32.Parse(v[1]);
+                String markup = v[6];
+                String link = v[7];
                 String t = @"{\rtf1\ansi"
                     + @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}"
-                    + @"{\colortbl;\red0\green0\blue238;}"
-                    + @"\ul\f0\cf1\fs20\li" + indent + " " + link + @"\par}";
+                    + @"{\colortbl;\red0\green0\blue238;}\pard" + markup
+                    + @"\f0\cf1\li" + indent + " " + link + @"\par}";
                         // using the HTML5 recommended color for unvisited links;
                         // wikipedia uses a slightly different one: 
                         //    @"\red6\green69\blue173;"
@@ -256,7 +251,7 @@ namespace Dashboard
                 RichTextBox button = new RichTextBox();
                 linkList.Add(button);
                 SizeF ss = new SizeF(dashBwid, dashBht / 144 * dashResY);
-                PointF pp = new PointF(0f, (float)height / 144 * dashResY); 
+                PointF pp = new PointF(0f, (float)height / 144 * dashResY);
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
                 button.BackColor = buttonColor;
@@ -295,7 +290,7 @@ namespace Dashboard
             if (File.Exists(dashWpath))
             {
                 dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
-                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 85);
+                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 28.0f);
                 dashW.Refresh();
             }
         }

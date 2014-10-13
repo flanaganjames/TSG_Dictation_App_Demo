@@ -247,6 +247,7 @@ void S_Validate(void)
 			break;
 		}
 	}
+
 	if (found_TAD)
 	{
 		D_addWarning("Check TAD Risk!");

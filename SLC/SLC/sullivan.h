@@ -8,6 +8,7 @@
 
 // prototypes in SLC
 int S_initStatus(void);
+int S_openStatus(char *);
 int S_addStatus(int, _TCHAR**);
 int S_multiStatus(int, _TCHAR**);
 int S_finishStatus(void);

@@ -330,10 +330,8 @@ void S_parseStatus(void)
 			sb.st_ctime, sb.st_mtime, sb.st_atime);
 #endif
 	
-	if ((status_file = fopen(STATUS_PATH, "r")) == NULL)
-	{
+	if (S_openStatus("r") < 0)
 		return;
-	}
 
 	while ((s = fgets(line, MAX_PATH, status_file)) != NULL)
 	{
@@ -496,6 +494,7 @@ void S_parseStatus(void)
 	}
 
 	fclose(status_file);
+	status_file = NULL;
 }
 
 

@@ -271,6 +271,12 @@ namespace EHRNarrative
                 {
                     //Do Error!
                 }
+
+                try
+                {
+                    HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1]) + parts[1].Length, 0);
+                }
+                catch { }
             }
             else if (parts.Length == 2)
             {
@@ -296,6 +302,12 @@ namespace EHRNarrative
                     }
 
                     HealthRecordText.SelectedText = parts[1];
+
+                    try
+                    {
+                        HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1]) + parts[1].Length, 0);
+                    }
+                    catch { }
                 }
                 else
                 {
@@ -304,6 +316,12 @@ namespace EHRNarrative
 
                     if (HealthRecordText.Rtf.CompareTo(oldText) != 0)
                     {
+                        try
+                        {
+                            HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1]) + parts[1].Length, 0);
+                        }
+                        catch { }
+
                         if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
                         {
                             if (command_str != "")
@@ -527,7 +545,7 @@ namespace EHRNarrative
             }
         }
 
-        private void NextField()
+        public void NextField()
         {
             if (HealthRecordText.Text.Contains('[') && HealthRecordText.Text.Contains(']'))
             {
@@ -551,6 +569,7 @@ namespace EHRNarrative
 
                 HealthRecordText.Select(next, close - next + 1);
             }
+            HealthRecordText.Focus();
         }
 
         private void dashboardTimer_Tick(object sender, EventArgs e)

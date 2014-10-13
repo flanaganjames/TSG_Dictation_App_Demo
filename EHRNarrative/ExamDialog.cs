@@ -298,6 +298,8 @@ namespace EHRNarrative
             {
                 narrative_window.ReplaceKeyword(EHR_text);
             }
+
+            narrative_window.NextField();
         }
 
         private void UpdateSLC()

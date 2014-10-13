@@ -29,6 +29,8 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public int Next_dialog_id { get; set; }
+        public string Default_present_text { get; set; }
+        public string Default_not_present_text { get; set; }
 
         public IEnumerable<Group> Groups(Collection data)
         {
@@ -45,11 +47,13 @@ namespace EHRNarrative
         {
             return this.Groups(data).Except(this.GroupsForComplaint(data));
         }
+        public IEnumerable<Element> AllElements(Collection data)
+        {
+            return this.Groups(data).SelectMany(x => x.AllElements(data));
+        }
         public IEnumerable<Element> AllSelectedElements(Collection data)
         {
-            IEnumerable<Element> elements = this.Groups(data).SelectMany(x => x.Elements(data));
-            elements.Intersect(this.Groups(data).SelectMany(x => x.Subgroups(data)).SelectMany(x => x.Elements(data)));
-            return elements.Where(x => x.selected != null);
+            return this.AllElements(data).Where(x => x.selected != null);
         }
 
         public Dialog NextDialog(Collection data)
@@ -194,6 +198,8 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
 
+        public Dialog Dialog { get; set; }
+
         public int Group_id { get; set; }
         public int Subgroup_id { get; set; }
         public List<int> Complaints(Collection data)
@@ -218,7 +224,7 @@ namespace EHRNarrative
             get
             {
                 if (this._Present_text == null || this._Present_text == "")
-                    return "admits " + this.Name;
+                    return this.Dialog.Default_present_text != null ? this.Dialog.Default_present_text + " " + this.Name : this.Name;
                 else
                     return this._Present_text;
             }
@@ -233,7 +239,7 @@ namespace EHRNarrative
             get
             {
                 if (this._Not_present_text == null || this._Not_present_text == "")
-                    return "denies " + this.Name;
+                    return this.Dialog.Default_not_present_text != null ? this.Dialog.Default_not_present_text + " " + this.Name : "negative " + this.Name;
                 else
                     return this._Not_present_text;
             }
@@ -271,9 +277,9 @@ namespace EHRNarrative
             get
             {
                 if (this.selected == "present")
-                    return this.Present_text;
+                    return this.Present_text.Trim();
                 else if (this.selected == "not present")
-                    return this.Not_present_text;
+                    return this.Not_present_text.Trim();
                 else
                     return "";
             }

@@ -116,10 +116,10 @@ range RR_dbp[] = {
 const int n_dbp = (sizeof(RR_dbp)/sizeof(range));
 
 rangeF RR_temp[] = {
-	{32., 36., "Temperature low"},	// C values
-	{39., 43., "Temperature very high"},
-	{89.6, 96., "Temperature low"},	// F values
-	{102.2, 109.4, "Temperature very high"},
+	{32.F, 36.F, "Temperature low"},	// C values
+	{39.F, 43.F, "Temperature very high"},
+	{89.6F, 96.F, "Temperature low"},	// F values
+	{102.2F, 109.4F, "Temperature very high"},
 };
 const int n_temp = (sizeof(RR_temp)/sizeof(rangeF));
 
@@ -159,7 +159,7 @@ void validateVitalF(float vital, rangeF Range[], int nn)
  *  none of the numeric values we have are outside 
  *  acceptable ranges.
  */
- void vitalSigns(void)
+ void S_checkVitalSigns(void)
 {
 		// convert them
 	_VVS_p = vitalParse(_VS_p);
@@ -221,43 +221,40 @@ void S_Validate(void)
 
 		// special case for TAD Risk
 	list<char *>::iterator i;
+	char *consider = "Consider TAD Risk";
+	bool found_TAD = false;
 	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
 	{
-		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			found_TAD = true;
 			break;
 		}
 	}
 	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
 	{
-		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			found_TAD = true;
 			break;
 		}
 	}
 	for (i = _assess.begin();  i != _assess.end();  i++)
 	{
-		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			found_TAD = true;
 			break;
 		}
 	}
+	if (found_TAD)
+	{
+		D_addWarning("Check TAD Risk!");
+	}
 
 		// check the vital signs
-	vitalSigns();
+	S_checkVitalSigns();
 
-	/**********
-	*********  no longer checking completion of all exam elements
-		// are we missing required elements?
-	if (_comp_req.size() < (_req_exam.size() + _req_hpi.size() + _assess.size()))
-	{
-		D_addWarning("Incomplete required exam & HPI elements!");
-		warning = true;
-	}
-	***********/
-
+		// now yell about problems
 	S_generateWarnBox();
 }

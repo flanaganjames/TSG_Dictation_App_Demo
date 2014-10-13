@@ -43,12 +43,18 @@ namespace Dashboard
              */
         public WindowsFormsApplication1.Form1 dash; 
         public RichTextBox dashST, dashEM, dashW;
+            // we need separate String variables to hold the raw contents
+            // of the RTF files:  the RTF control is too smart and collapses
+            // some of the markup, which means we can't (for example) scan
+            // the RTF contents for hyperlinks if we look at dashST.Rtf
+        public String dashSTrtf, dashEMrtf, dashWrtf;
         public ArrayList dashLinks = new ArrayList();
+        public ArrayList warnLinks = new ArrayList();
         private System.Drawing.Size dashOsz, dashTsz, dashWsz;
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
-        private float dashBht;    // dash button height & y-location
+        private float dashBht;    // dash link button height
                 // dashBht is a float, since it's converted to pixels from points
         private int dashBwid;   // dash button width within the status panel
         private float dashResX, dashResY;  // dashboard resolution
@@ -60,7 +66,6 @@ namespace Dashboard
         public String EMmissing = @"{\rtf1\ansi\pard E/M advice unavailable!\par}";
         public String AlreadyRunning = @"{\rtf1\ansi\pard ALREADY RUNNING!!!\par}";
 
-        public String dashSTrtf, dashEMrtf;
         private bool DASHfail = false;
         private int dashboards_running = 0;
         private int updates = 0;
@@ -147,7 +152,7 @@ namespace Dashboard
 
         public void button_MouseClick(object sender, MouseEventArgs e, String l)
         {
-            string contents = dashSTcontents();
+            // string contents = dashSTcontents();
             doLink(l);
         }
 
@@ -175,54 +180,58 @@ namespace Dashboard
         {
             //  .... for test purposes ....
             // flash the background so we know the update loop is running
-            this.dash.Refresh();
-            this.dashST.BackColor = Color.LightGray;
-            this.dashST.Clear(); this.dashST.Refresh(); this.dash.Refresh();
+            dash.Refresh();
+            dashST.BackColor = Color.LightGray;
+            dashST.Clear(); dashST.Refresh(); dash.Refresh();
             Thread.Sleep(100);
-            this.dashST.BackColor = Color.White;
+            dashST.BackColor = Color.White;
         }
 
         public void refreshDash()
         {
             flash();
                 // update with the real contents of the main dashboard
-            this.dashST.Rtf = dashSTcontents();
-            this.dashST.Refresh();
-            this.dashEM.Rtf = dashEMcontents();
-            this.dashEM.Refresh();
+
+            dashST.Rtf = dashSTrtf = dashSTcontents();
+            dashST.Refresh();
+            dashEM.Rtf = dashEMrtf = dashEMcontents();
+            dashEM.Refresh();
                 // update buttons for the links
-            refreshDashButtons();
+                    // the default base height of 85 for the links is empirical
+            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 85);
                 // handle the warning panel
             refreshDashWarn();
                 // now refresh of the whole window
-            this.dash.Refresh();
+            dash.Refresh();
 
             updates++;  // number of times we've updated
         }
 
-        public void refreshDashButtons()
+        public void refreshDashButtons(RichTextBox panel, String panelRTF, 
+            ArrayList linkList, Color buttonColor, int indent, int baseHT)
         {
                 // basic parameters
                     // height of the link button
             dashBht = 24f; // 24 half-points is a constant from SLC
-
+                    // indent of the link button -- supplied in half-points, need twips
+            indent = indent * 10;
                 // clear out the old buttons
-            foreach (RichTextBox button in dashLinks)
+            foreach (RichTextBox button in linkList)
             {
-                this.dash.Controls.Remove(button);
+                panel.Controls.Remove(button);
                     // notice that we're not deleting the event handler from
                     // the button, just removing the button from the window
             }
-            dashLinks.Clear();
+            linkList.Clear();
 
                 // find links in the dashboard and add buttons for them
             bool have_heights = true;
-            Match m = Regex.Match(dashSTrtf, @"HYPERLINK \d+ \}\}\{\\fldrslt\{.+?\}");
+            Match m = Regex.Match(panelRTF, @"HYPERLINK \d+ \}\}\{\\fldrslt\{.+?\}");
             if (!m.Success)
             {
                     // this is bullet-proofing in case we lose the heights of
                     // the links from the dashboard -- we can recalculate them
-                m = Regex.Match(dashSTrtf, @"{\\fldrslt\{.+?\}");
+                m = Regex.Match(panelRTF, @"{\\fldrslt\{.+?\}");
                 have_heights = false;
             }
             int n = 0;
@@ -234,30 +243,30 @@ namespace Dashboard
                     // 0: "HYPERLINK", 1: height, 2,3,4: markup, 5: link name
                     // or if missing heights: 0: markup, 1: link name, 2: markup
                 int height = have_heights
-                    ? Int32.Parse(v[1]) : height = 85 + n * (int)dashBht;
+                    ? Int32.Parse(v[1]) : height = baseHT + n * (int)dashBht;
                 String link = have_heights ? v[5] : v[1];
                 String t = @"{\rtf1\ansi"
                     + @"{\fonttbl{\f0\fswiss Verdana;}{\f1\froman Times New Roman;}}"
                     + @"{\colortbl;\red0\green0\blue238;}"
-                    + @"\ul\f0\cf1\fs20\li100 " + link + @"\par}";
+                    + @"\ul\f0\cf1\fs20\li" + indent + " " + link + @"\par}";
                         // using the HTML5 recommended color for unvisited links;
                         // wikipedia uses a slightly different one: 
                         //    @"\red6\green69\blue173;"
                     // make a "button" out of it
                 RichTextBox button = new RichTextBox();
-                dashLinks.Add(button);
+                linkList.Add(button);
                 SizeF ss = new SizeF(dashBwid, dashBht / 144 * dashResY);
                 PointF pp = new PointF(0f, (float)height / 144 * dashResY); 
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
-                button.BackColor = Color.White;
+                button.BackColor = buttonColor;
                 button.ForeColor = Color.Blue; // ignored, uses color from colormap
                 button.Cursor = Cursors.Hand;
                 button.BorderStyle = BorderStyle.None;
                 button.ReadOnly = true;
                 button.Rtf = t;
                 button.Refresh();
-                dashST.Controls.Add(button);
+                panel.Controls.Add(button);
                 button.MouseClick += new MouseEventHandler((sender, e) => button_MouseClick(sender, e, link));
                 n++;
                 m = m.NextMatch();
@@ -270,53 +279,52 @@ namespace Dashboard
             if (showing_warning && !File.Exists(dashWpath))
             {
                 // remove warning box and resize the dashboard
-                this.dash.Size = dashOsz;
-                this.dash.Controls.Remove(dashW);
+                dash.Size = dashOsz;
+                dash.Controls.Remove(dashW);
                 showing_warning = false;
             }
             // are we not showing the warning box, but should?
             if (!showing_warning && File.Exists(dashWpath))
             {
                 // expand the dashboard and add the warning box
-                this.dash.Size = dashTsz;
-                this.dash.Controls.Add(dashW);
+                dash.Size = dashTsz;
+                dash.Controls.Add(dashW);
                 showing_warning = true;
             }
             // update the warning box contents if necessary
             if (File.Exists(dashWpath))
             {
-                this.dashW.Rtf = File.ReadAllText(this.dashWpath);
-                this.dashW.Refresh();
+                dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
+                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 85);
+                dashW.Refresh();
             }
         }
 
         public string dashSTcontents()
         {
-            if (File.Exists(this.dashSTpath))  // we should only be reading the file if it's been updated
+            if (DASHfail) return AlreadyRunning;
+            if (File.Exists(dashSTpath))  // we should only be reading the file if it's been updated
             {
-                dashSTrtf = File.ReadAllText(this.dashSTpath);
+                return File.ReadAllText(dashSTpath);
             }
             else
             {
-                dashSTrtf = this.STmissing;
+                return STmissing;
             }
-            if (DASHfail) dashSTrtf = this.AlreadyRunning;
-            return dashSTrtf;
         }
 
         public string dashEMcontents()
         {
-            if (File.Exists(this.dashEMpath))  // we should only be reading the file if it's been updated
+            if (DASHfail) return AlreadyRunning;
+            if (File.Exists(dashEMpath))  // we should only be reading the file if it's been updated
             {
-                dashEMrtf = File.ReadAllText(this.dashEMpath);
+                return File.ReadAllText(dashEMpath);
             }
             else
             {
-                dashEMrtf = this.EMmissing;
+                return EMmissing;
             }
-            if (DASHfail) dashEMrtf = this.AlreadyRunning;
-            return dashEMrtf;
-        }
+         }
 
 
         void doLink(string link)

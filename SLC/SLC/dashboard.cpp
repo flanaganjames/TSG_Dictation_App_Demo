@@ -166,7 +166,22 @@ void D_separator(int color)
 	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void D_hyperlinks(int height)
+void D_showOneLink(char *l, int height)
+{
+	fprintf(outf, "\\pard\\li%d{\\field", T_space);
+		// fldinst is ignored by .Net's RTF, so we don't output it;
+		// the abbreviated link is actually interpreted by the
+		// dashboard display program -- yes, that's a little
+		// Rube Goldberg but allows us to use short link names
+	// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
+		// we now use the text of the hyperlink to give us the
+		// vertical position in the window
+	fprintf(outf, "{\\*\\fldinst{HYPERLINK %d }}", height);
+	fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
+		ps_link, c_hyperlink, l);
+}
+
+void D_hyperlinks(int baseheight)
 {
 	char *l;
 	int n = 0;
@@ -178,7 +193,7 @@ void D_hyperlinks(int height)
 		 *  and the position of the first line is supplied by the caller,
 		 *  based on what the caller knows about what's above the links in
 		 *  the panel.  The height of the first link is given by the
-		 *  argument.
+		 *  argument, and we know each link line is 24hp high.
 		 */
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
@@ -191,17 +206,7 @@ void D_hyperlinks(int height)
 		} else {
 			l = *i;
 		}
-		fprintf(outf, "\\pard\\li%d{\\field", T_space);
-			// fldinst is ignored by .Net's RTF, so we don't output it;
-			// the abbreviated link is actually interpreted by the
-			// dashboard display program -- yes, that's a little
-			// Rube Goldberg but allows us to use short link names
-		// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
-			// we now use the text of the hyperlink to give us the
-			// vertical position in the window
-		fprintf(outf, "{\\*\\fldinst{HYPERLINK %d }}", height+n*24);
-		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
-			ps_link, c_hyperlink, l);
+		D_showOneLink(l, baseheight+n*24);
 		n++;
 	}
 }
@@ -502,7 +507,7 @@ void S_generateDash(void)
 	D_line();
 
 		// resource links
-	int height = 58 + 27 * max(1,_complaint.size()); // half-points
+	int height = 55 + 30 * max(1,_complaint.size()); // half-points
 	D_hyperlinks(height);
 	D_line();
 	D_separator(c_sepbar_b);
@@ -629,6 +634,8 @@ void D_warning_icons(void)
 	// now produce the warning box if we have any warnings in the list
 void S_generateWarnBox(void)
 {
+	int height = 0;  // half-points from top
+
 		// we've got nothing to say
 	if (_warnings.empty())
 	{
@@ -644,17 +651,22 @@ void S_generateWarnBox(void)
 	D_backgroundColor(0,255,255);
 	// D_warning_icons();
 	D_vertspace(5);
+	height += 10;
 	list<char *>::iterator i;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
 		D_one_warn_icon(225, 210);
 		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
+		height += 30;
+		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)
+		{
+			D_showOneLink("TAD_Risk", height);
+			height += 22;
+		}
 		D_vertspace(2);
+		height += 4;
 	}
-	D_vertspace(10);
-	// D_vertspace(21);
-	// D_warning_icons();
 	D_epilog();
 	D_closeoutput();
 	return;

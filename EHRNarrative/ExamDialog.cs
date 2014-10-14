@@ -15,8 +15,15 @@ namespace EHRNarrative
 {
     public partial class ExamDialog : Form
     {
-        Collection data;
-        EHRNarrative narrative_window;
+        public Collection data;
+        public EHRNarrative narrative_window;
+        private List<AccordianRow> rows;
+
+        public List<AccordianRow> Rows
+        {
+            get { return this.rows; }
+            set { }
+        }
 
         public ExamDialog(EHRNarrative parent, string dialog_name, string complaint_name)
         {
@@ -31,8 +38,8 @@ namespace EHRNarrative
                 MessageBox.Show(e.Message);
                 data = null;
                 return;
-            } 
-            catch (BadImageFormatException) 
+            }
+            catch (BadImageFormatException)
             {
                 MessageBox.Show("Missing file: dialog_content.sqlite3");
                 data = null;
@@ -41,13 +48,20 @@ namespace EHRNarrative
 
             this.Text = data.dialog.Name;
 
-            RenderElements(data);
+            RenderDialog(data);
         }
-        new public void Show() {
+        new public int Show() {
             if (data == null)
-                return;
+            {
+                this.Dispose();
+                return 0;
+            }
             else
+            {
                 base.Show();
+                this.BringToFront();
+                return (int)this.Handle;
+            }
         }
 
         private Collection LoadContent(string dialog_name, string complaint_name)
@@ -58,13 +72,17 @@ namespace EHRNarrative
                 conn.Open();
                 var sql = @"
                     SELECT * FROM dialog d WHERE d.name = @Dialog;
+                    SELECT * FROM dialog;
                     SELECT * FROM 'group';
                     SELECT * FROM subgroup;
                     SELECT * FROM element;
+                    SELECT * FROM dialogelement;
                     SELECT * FROM group_complaints;
                     SELECT * FROM group_complaint_groups;
                     SELECT * FROM element_complaints;
                     SELECT * FROM element_complaint_groups;
+                    SELECT * FROM dialogelement_complaints;
+                    SELECT * FROM dialogelement_complaint_groups;
                     SELECT * FROM complaintGroup;
                     SELECT * FROM complaint c WHERE c.name = @Complaint";
                 using (var multi = conn.QueryMultiple(sql, new { Dialog = dialog_name, Complaint = complaint_name }))
@@ -74,13 +92,17 @@ namespace EHRNarrative
                         data = new Collection
                         {
                             dialog = multi.Read<Dialog>().Single(),
+                            dialogs = multi.Read<Dialog>().ToList(),
                             groups = multi.Read<Group>().ToList(),
                             subgroups = multi.Read<Subgroup>().ToList(),
                             elements = multi.Read<Element>().ToList(),
+                            dialoglinkelements = multi.Read<DialogLinkElement>().ToList(),
                             group_complaints = multi.Read<Group_Complaints>().ToList(),
                             group_complaint_groups = multi.Read<Group_Complaint_Groups>().ToList(),
                             element_complaints = multi.Read<Element_Complaints>().ToList(),
                             element_complaint_groups = multi.Read<Element_Complaint_Groups>().ToList(),
+                            dialogelement_complaints = multi.Read<DialogElement_Complaints>().ToList(),
+                            dialogelement_complaint_groups = multi.Read<DialogElement_Complaint_Groups>().ToList(),
                             complaintgroups = multi.Read<ComplaintGroup>().ToList(),
                             complaint = multi.Read<Complaint>().Single()
                         };
@@ -96,70 +118,167 @@ namespace EHRNarrative
                 }
                 conn.Close();
             }
+
+            foreach (int group_id in data.elements.Where(x => x.Recommended).Select(x => x.Group_id).Distinct())
+            {
+                data.groups.Where(x => x.Id == group_id).First().Recommended = true;
+            }
+            foreach (Element element in data.dialog.AllElements(data))
+            {
+                element.Dialog = data.dialog;
+            }
+
             return data;
         }
 
-        private void RenderElements(Collection data) {
+        private void RenderDialog(Collection data) {
             int columnWidth = 200;
             int columnGutter = 20;
-            int itemHeight = 35;
             int columns = data.dialog.GroupsForComplaint(data).Count();
+            int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter-40) / (columnWidth + columnGutter);
 
-            int rows;
-            if ((columns + 1) * (columnWidth + columnGutter) < System.Windows.Forms.Screen.GetWorkingArea(this).Width)
-                rows = 1;
-            else
-                rows = 2;
+            this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
 
-            
-            int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height/rows - 100;
-            int maxListBoxItems = data.dialog.GroupsForComplaint(data).Select(x => x.ItemCount(data)).Max();
-
-            int columnsPerRow = (int)Math.Ceiling((double)columns / (double)rows);
-
-            this.Width = (columnsPerRow + 1) * (columnWidth + columnGutter);
-            this.Height = (85 + Math.Min(maxListBoxItems * itemHeight, maxListBoxHeight)) * rows;
-            this.CenterToScreen();
+            rows = new List<AccordianRow>();
 
             foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
             {
-                //draw headings
-                var heading = new GroupLabel();
-                heading.Text = item.group.Name;
-                heading.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                heading.Top = 4 + this.Height / rows * (int)(item.i / columnsPerRow);
-                this.Controls.Add(heading);
-
-                //draw multiselects
-                var listbox = new EHRListBox();
-                item.group.SetAllDefaults(data);
-                listbox.AddElements(item.group.ElementsForComplaint(data));
-                listbox.AddGroups(item.group.Subgroups(data));
-                if (item.group.ElementsAdditional(data).Count() > 0)
-                    listbox.Items.Add(new EHRListBoxGroup());
-                listbox.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                listbox.Top = 5 + heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                listbox.Width = columnWidth;
-                listbox.Height = Math.Min(listbox.Items.Count * listbox.ItemHeight, maxListBoxHeight);
-                this.Controls.Add(listbox);
-
-                //draw select alls
-                var button = new SelectAllButton(listbox);
-                button.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                button.Left = columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                this.Controls.Add(button);
-                var clearbutton = new ClearAllButton(listbox);
-                clearbutton.Top = heading.Height + this.Height / rows * (int)(item.i / columnsPerRow);
-                clearbutton.Left = 100 + columnGutter + (item.i % columnsPerRow) * (columnWidth + columnGutter);
-                this.Controls.Add(clearbutton);
-
+                RenderGroupListbox(rows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
             }
-            //draw extra group column:
-            foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
+
+            rows[0].Height = rows[0].MaxHeight;
+
+            int lastBottom = 0;
+            foreach (AccordianRow row in rows)
             {
-                AdditionalGroupsList.Items.Add(item.group.Name);
+                row.Width = columnsPerRow * (columnWidth + columnGutter) + columnGutter;
+                row.Dock = DockStyle.Top;
+                lastBottom += row.Height;
+
+                this.Controls.Add(row);
+                this.Controls.SetChildIndex(row, 0);
             }
+
+
+            if (data.dialog.GroupsAdditional(data).Count() > 0)
+            {
+                Label addnlGroupLabel = RenderAddnlLabel(columnGutter);
+                this.Controls.Add(addnlGroupLabel);
+                this.Controls.SetChildIndex(addnlGroupLabel, 0);
+
+                lastBottom += addnlGroupLabel.Height;
+
+                List<AccordianRow> addnlRows = new List<AccordianRow>();
+
+                foreach (var item in data.dialog.GroupsAdditional(data).Select((group, i) => new { i, group }))
+                {
+                    RenderGroupListbox(addnlRows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
+                }
+
+                foreach (AccordianRow row in addnlRows)
+                {
+                    row.Width = columnsPerRow * (columnWidth + columnGutter) + columnGutter;
+                    row.Dock = DockStyle.Top;
+                    lastBottom += row.Height;
+
+                    this.Controls.Add(row);
+                    this.Controls.SetChildIndex(row, 0);
+                }
+                rows.AddRange(addnlRows);
+            }
+
+            RenderButtonBar();
                 
+            this.Height = lastBottom + (rows.Max(x => x.MaxHeight) - rows[0].Height) + 150;
+            this.CenterToScreen();
+        }
+
+        private void RenderGroupListbox(List<AccordianRow> rows, Group group, int i, int columnsPerRow, int columnGutter, int columnWidth) {
+            int row = i / columnsPerRow;
+            AccordianRow currentPanel;
+
+            try
+            {
+                currentPanel = rows[row];
+            }
+            catch
+            {
+                rows.Add(new AccordianRow());
+                currentPanel = rows[row];
+            }
+
+            //create listbox for this group
+            var listbox = new EHRListBox();
+            group.SetAllDefaults(data);
+            listbox.AddElements(group.ElementsForComplaint(data));
+            listbox.AddElements(group.DialogLinkElementsForComplaint(data));
+            listbox.AddGroups(group.Subgroups(data), data);
+            if (group.ElementsAdditional(data).Count() + group.DialogLinkElementsAdditional(data).Count() > 0)
+                listbox.Items.Add(new EHRListBoxGroup(group.ElementsAdditional(data), listbox));
+
+            //draw headings
+            var heading = new GroupLabel(listbox, group);
+            heading.Heading = group.Name;
+            heading.Top = 15;
+            heading.Left = columnGutter + (i % columnsPerRow) * (columnWidth + columnGutter);
+            heading.Height = listbox.Height + listbox.Top + 15;
+            currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
+            currentPanel.Controls.Add(heading);
+        }
+
+        private Label RenderAddnlLabel(int columnGutter)
+        {
+            var addnlGroupLabel = new Label();
+            addnlGroupLabel.Text = "    Additional Groups:";
+            addnlGroupLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            addnlGroupLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            addnlGroupLabel.Height = 50;
+            addnlGroupLabel.TextAlign = ContentAlignment.BottomLeft;
+            addnlGroupLabel.Dock = DockStyle.Top;
+            return addnlGroupLabel;
+        }
+
+        private void RenderButtonBar()
+        {
+            Panel buttonBar = new Panel();
+            buttonBar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            buttonBar.Top = this.ClientSize.Height - 50;
+            buttonBar.Left = 0;
+            buttonBar.Height = 43;
+            buttonBar.Width = this.ClientSize.Width;
+
+            Button DoneButton = new Button();
+            DoneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            DoneButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            DoneButton.Name = "DoneButton";
+            DoneButton.Size = new System.Drawing.Size(181, 23);
+            DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - 10), 10);
+            DoneButton.TabIndex = 2;
+            DoneButton.Text = "Save and close";
+            DoneButton.UseVisualStyleBackColor = true;
+            DoneButton.Click += new System.EventHandler(this.DoneButton_Click);
+
+            if (data.dialog.NextDialog(data) != null)
+            {
+                Button NextButton = new Button();
+                NextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+                NextButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                NextButton.Name = "NextButton";
+                NextButton.Size = new System.Drawing.Size(181, 23);
+                NextButton.Location = new System.Drawing.Point((buttonBar.Width - NextButton.Width - 10), 10);
+                NextButton.TabIndex = 3;
+                NextButton.Text = "Save and continue to " + data.dialog.NextDialog(data).Name;
+                NextButton.Tag = data.dialog.NextDialog(data).Name; // TODO: actually subclass the button to have a proper property
+                NextButton.UseVisualStyleBackColor = true;
+                NextButton.Click += new System.EventHandler(this.NextButton_Click);
+
+                DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - NextButton.Width - 20), 10);
+                buttonBar.Controls.Add(NextButton);
+            }
+
+            buttonBar.Controls.Add(DoneButton);
+
+            this.Controls.Add(buttonBar);
         }
 
         private void InsertEHRText()
@@ -175,7 +294,23 @@ namespace EHRNarrative
                 narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
                 narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
             }
+
+            foreach (String EHR_text in data.elements
+                .Where(x => x.selected != null && x.EHR_replace != null && x.EHR_replace != "")
+                .Select(x => x.EHR_replace).Distinct()
+                )
+            {
+                try
+                {
+                    narrative_window.ReplaceKeyword(EHR_text);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error occured while trying to replace text using this command: \"" + EHR_text + "\"\nError Message:\n" + e.Message);
+                }
+            }
         }
+
         private void UpdateSLC()
         {
             List<String> groupData = new List<String>();
@@ -183,7 +318,17 @@ namespace EHRNarrative
             {
                 groupData.Add("dataqual " + data.dialog.Name + " " + group.Name + " " + group.SelectedItemCount(data).ToString());
             }
+
+            foreach (String SLC_command in data.elements
+                .Where(x => x.selected != null && x.SLC_command != null && x.SLC_command != "")
+                .Select(x => x.SLC_command).Distinct()
+                )
+            {
+                groupData.Add(SLC_command);
+            }
+
             narrative_window.NotifySLC(String.Join(" ! ", groupData));
+
         }
 
         private void DoneButton_Click(object sender, EventArgs e)
@@ -191,19 +336,177 @@ namespace EHRNarrative
             InsertEHRText();
             UpdateSLC();
             this.Close();
+            this.Dispose();
         }
-
-
-    }
-
-    public partial class GroupLabel : Label {
-        public GroupLabel()
+        private void NextButton_Click(object sender, EventArgs e)
         {
-            Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
-            ForeColor = SystemColors.WindowFrame;
-            Width = 200;
+            Button button = (Button)sender;
+            new ExamDialog(this.narrative_window, (string)button.Tag, data.complaint.Name).Show();
+            DoneButton_Click(sender, e);
         }
     }
+
+    public partial class AccordianRow : Panel
+    {
+        public int MaxHeight { get; set; }
+        public int MinHeight = 35;
+        public bool Opened { get; set; }
+
+        public AccordianRow()
+        {
+            this.Opened = false;
+            this.Height = this.MinHeight;
+        }
+
+        public void Open()
+        {
+            ExamDialog d = (ExamDialog)this.Parent;
+
+            foreach (AccordianRow row in d.Rows)
+            {
+                row.Close();
+            }
+
+            this.Height = this.MaxHeight;
+            this.Opened = true;
+        }
+
+        public void Close()
+        {
+            this.Height = MinHeight;
+            this.Opened = false;
+        }
+    }
+
+    public partial class GroupLabel : Panel {
+        private EHRListBox _listBox;
+        private Group _group;
+
+        private Label heading;
+        private Label icon;
+
+        public string Heading
+        {
+            get { return this.heading.Text; }
+            set { this.heading.Text = value; }
+        }
+
+        public EHRListBox ListBox
+        {
+            get { return this._listBox; }
+            set { }
+        }
+
+        public GroupLabel(EHRListBox ListBox, Group group)
+        {
+            int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height - 280; // minus window chrome, headings, button bar, allowance for addnl rows
+
+            this.Width = 200;
+            this.BorderStyle = BorderStyle.None;
+
+            icon = new Label();
+            icon.Width = 16;
+            icon.Height = 16;
+            icon.Top = 1;
+            icon.Visible = false;
+            this.Controls.Add(icon);
+
+            heading = new Label();
+            heading.Width = this.Width;
+            heading.Font = new Font("Microsoft Sans Serif", 11, FontStyle.Bold, GraphicsUnit.Point);
+            heading.ForeColor = Color.DarkSlateGray;
+            heading.AutoEllipsis = true;
+            this.Controls.Add(heading);
+
+            this._listBox = ListBox;
+            this._group = group;
+
+            this._listBox.Width = this.Width;
+            this._listBox.Height = Math.Min(this._listBox.Items.Count * this._listBox.ItemHeight, maxListBoxHeight);
+            this._listBox.Top = 45;
+
+            //draw select alls
+            var button = new SelectAllButton(this._listBox);
+            button.Top = 18;
+            button.Left = 0;
+            this.Controls.Add(button);
+
+            var clearbutton = new ClearAllButton(this._listBox);
+            clearbutton.Top = 18;
+            clearbutton.Left = 100;
+            this.Controls.Add(clearbutton);
+
+            this.heading.Click += new System.EventHandler(this.ClickHeader);
+            this._listBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.checkRecommended);
+            button.Click += new System.EventHandler(this.checkRecommended);
+            clearbutton.Click += new System.EventHandler(this.checkRecommended);
+
+            this.Controls.Add(this._listBox);
+
+            CheckRecommended();
+        }
+
+        private void ClickHeader(object Sender, EventArgs e)
+        {
+            AccordianRow row = (AccordianRow)this.Parent;
+
+            row.Open();
+        }
+
+        private void checkRecommended(object Sender, MouseEventArgs e) { CheckRecommended(); }
+        private void checkRecommended(object Sender, EventArgs e) { CheckRecommended(); }
+
+        public void CheckRecommended()
+        {
+            if (!this._group.Recommended) return;
+
+
+            heading.Padding = new System.Windows.Forms.Padding(16, 0, 0, 0);
+            icon.Visible = true;
+            
+            this._group.RecommendedActive = false;
+
+            List<Element> elements = new List<Element>();
+            foreach (var item in this._listBox.Items)
+            {
+                if (item is EHRListBoxItem)
+                {
+                    EHRListBoxItem itemItem = (EHRListBoxItem)item;
+                    elements.Add(itemItem.Element);
+                }
+            }
+            if (elements.Where(x => x.Recommended).Any())
+            {
+                if (elements.Where(x => x.Recommended && x.selected == null).Any())
+                    this._group.RecommendedActive = true;
+            }
+            else
+            {
+                IEnumerable<String> keywords = elements.Select(x => x.EHR_keyword).Distinct();
+                foreach (string keyword in keywords)
+                {
+                    bool thereAreNoSelectedElementsForThisKeyword = !elements.Where(x => x.EHR_keyword == keyword && x.selected != null).Any();
+                    if (thereAreNoSelectedElementsForThisKeyword)
+                        this._group.RecommendedActive = true;
+                }
+            }
+
+            //set group coloring if either the group is recommended or any Elements are actively recommended
+            if (this._group.Recommended && this._group.RecommendedActive)
+            {
+                heading.ForeColor = Color.FromName("DarkRed");
+                icon.Image = Image.FromFile("Assets/exclamation.png");
+            }
+            else if (this._group.Recommended && !this._group.RecommendedActive)
+            {
+                heading.ForeColor = Color.FromName("DarkSlateGray");
+                icon.Image = Image.FromFile("Assets/checkmark.png");
+            }
+
+            this.Refresh();
+        }
+    }
+
     public partial class SelectAllButton : Button
     {
         private EHRListBox _group;

@@ -76,6 +76,18 @@
     </Compile>
     <Compile Include="models.cs" />
     <Compile Include="SqlMapper.cs" />
+    <Compile Include="SubmenuPopover.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SubmenuPopover.Designer.cs">
+      <DependentUpon>SubmenuPopover.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BoilerPlateDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BoilerPlateDialog.Designer.cs">
+      <DependentUpon>BoilerPlateDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utility.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
@@ -102,6 +114,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="SubmenuPopover.resx">
+      <DependentUpon>SubmenuPopover.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BoilerPlateDialog.resx">
+      <DependentUpon>BoilerPlateDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -114,6 +132,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\checkmark.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\exclamation.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="System.Data.SQLite.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -128,19 +152,11 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(ProjectDir)\..\Dashboard\CS-WF-dashboard\bin\x64\$(ConfigurationName)\Dashboard.exe $(ProjectDir)\$(OutDir)
-
-
 copy $(ProjectDir)\..\MockDragon\bin\x64\$(ConfigurationName)\MockDragon.exe $(ProjectDir)\$(OutDir)
-
-
 copy $(ProjectDir)\..\SLC\$(ConfigurationName)\SLC.exe $(ProjectDir)\$(OutDir)
-
-
-
 IF NOT EXIST $(ProjectDir)\$(OutDir)\Templates MKDIR $(ProjectDir)\$(OutDir)\Templates
-
-
-xcopy /D $(ProjectDir)\..\Templates\* $(ProjectDir)\$(OutDir)\Templates</PostBuildEvent>
+xcopy /D $(ProjectDir)\..\Templates\* $(ProjectDir)\$(OutDir)\Templates
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

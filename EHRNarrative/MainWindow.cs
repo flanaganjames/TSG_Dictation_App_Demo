@@ -55,6 +55,7 @@ namespace EHRNarrative
         #endregion
 
         private List<EHRLine> topLevelLines = null;
+        private List<String> considerLines = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
         private string complaint;
@@ -149,9 +150,11 @@ namespace EHRNarrative
 
             hrTextChanged = new System.EventHandler(this.HealthRecordText_TextChanged);
             topLevelLines = new List<EHRLine>();
+            considerLines = new List<string>();
             dashboard_launched = false;
 
             ParseLabels();
+            ParseConsiderables();
 
             HealthRecordText.TextChanged += hrTextChanged;
         }
@@ -324,6 +327,14 @@ namespace EHRNarrative
                 }
             }
 
+            if (IsAConsiderable(lookup))
+            {
+                //We can't track the difference between deleting the considerable and inputting text. So they will always send data.
+                if (command_str != "")
+                    command_str += " ! ";
+                command_str += "data " + lookup.Trim();
+            }
+
             if (IsAnEHRLine(newText))
             {
                 if (command_str != "")
@@ -349,7 +360,11 @@ namespace EHRNarrative
             }
             else if (newText.Trim().StartsWith("[") && newText.Trim().EndsWith("]"))
             {
-                //TODO: Add new consideration
+                considerLines.Add(newText.Trim());
+
+                if (command_str != "")
+                    command_str += " ! ";
+                command_str += "add " + newText.Trim();
             }
             
             return command_str;
@@ -397,11 +412,25 @@ namespace EHRNarrative
             }
         }
 
+        private void ParseConsiderables()
+        {
+            considerLines.Clear();
+
+            considerLines = FindConsiderables();
+        }
+
         private void ParseLabels()
         {
             topLevelLines.Clear();
 
             topLevelLines = FindEHRLines();
+        }
+
+        private bool IsAConsiderable(string line)
+        {
+            if (considerLines.Contains(line.Trim()))
+                return true;
+            return false;
         }
 
         private bool IsAnEHRLine(string line)
@@ -480,6 +509,19 @@ namespace EHRNarrative
             return list;
         }
 
+        private List<string> FindConsiderables()
+        {
+            List<string> list = new List<string>();
+            foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Text)))
+            {
+                if (line.Trim().StartsWith("[") && line.TrimEnd().EndsWith("]"))
+                {
+                    list.Add(line.Trim());
+                }
+            }
+            return list;
+        }
+
         private List<String> CheckForVitals()
         {
             List<String> commands = new List<String>();
@@ -509,6 +551,24 @@ namespace EHRNarrative
             }
 
             CheckEHRLineStatus();
+            CheckConsiderableLineStatus();
+        }
+
+        private void CheckConsiderableLineStatus()
+        {
+            List<string> command_strings = new List<string>();
+
+            List<string> possibleConsiderables = FindConsiderables();
+
+            foreach (string considerable in considerLines)
+            {
+                if (!possibleConsiderables.Contains(considerable))
+                {
+                    command_strings.Add("data " + considerable);
+                }
+            }
+
+            NotifySLC(command_strings);
         }
 
         private void CheckEHRLineStatus()

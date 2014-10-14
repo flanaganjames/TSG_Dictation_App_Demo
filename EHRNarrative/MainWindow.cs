@@ -271,6 +271,11 @@ namespace EHRNarrative
 
             //Find where our lookup text is
             int lookupPosition = HealthRecordText.Rtf.IndexOf(lookup);
+            if (lookupPosition == -1)
+            {
+                lookup = lookup.Replace("[", "[\\cf2 ").Replace("]", "\\cf1 ]");
+                lookupPosition = HealthRecordText.Rtf.IndexOf(lookup);
+            }
             int lookupLength = lookup.Length;
 
             //There is nothing to do since our lookup doesn't exist, so abort.
@@ -298,14 +303,14 @@ namespace EHRNarrative
             }
 
             //Set cursor position to the end of the inserted text
-            lookup = lookup.Replace("\\par", "\n");
+            lookup = lookup.Replace("\\par", "\n").Replace("\\cf2 ", "").Replace("\\cf1 ", "");
             newText = newText.Replace("\\par", "\n");
             int selectOffset = 0;
-            if (lookup.EndsWith("\n"))
+            if (newText.EndsWith("\n"))
             {
                 selectOffset = 1;
             }
-            HealthRecordText.Select(HealthRecordText.Text.IndexOf(lookup) + lookup.Length - selectOffset, 0);
+            HealthRecordText.Select(HealthRecordText.Text.IndexOf(newText) + newText.Length - selectOffset, 0);
 
             //Notify the SLC of any relevant changes
             if (IsAnEHRLine(lookup))

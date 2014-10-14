@@ -31,7 +31,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	} else {
 			// we used to do special processing for finished & reset here
 			// now we handle those like all other commands
-		S_multiStatus(argc, argv);
+		S_addStatus(argc, argv);
 		S_parseStatus();
 		S_generateDash();
 	}

@@ -237,8 +237,8 @@ void undecorate(char *in, bool digits)
 			while (*s != ' '  &&  *s != '\0') { s++; }
 			continue;
 		}
-			// strip the decoration around something like [**foo**]
-			// also remove digits, which are exam counts from dialogs
+			// strip the decoration around something like [**foo**];
+			// if desired, remove digits, which are exam counts from dialogs
 		if (*s != '['  &&  *s != ']'  &&  *s != '*'
 			&&  (!digits || !isdigit(*s)))
 			*t++ = *s;
@@ -330,10 +330,8 @@ void S_parseStatus(void)
 			sb.st_ctime, sb.st_mtime, sb.st_atime);
 #endif
 	
-	if ((status_file = fopen(STATUS_PATH, "r")) == NULL)
-	{
+	if (S_openStatus("r") < 0)
 		return;
-	}
 
 	while ((s = fgets(line, MAX_PATH, status_file)) != NULL)
 	{
@@ -496,6 +494,7 @@ void S_parseStatus(void)
 	}
 
 	fclose(status_file);
+	status_file = NULL;
 }
 
 
@@ -522,10 +521,24 @@ char *HPI_bill_aliases[] = {
 	"aggravators", "modifiers",
 	"maximum severity", "severity",
 	"current severity", "severity",
+	"radiation", "location",
+	"movement", "location",
+	"progression", "timing",
 };
-const int n_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
+const int n_hpi_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
 const int n_hpi_billing = sizeof(HPI_bill_list) / sizeof(HPI_bill_list[0]);
 
+/*
+	This routine checks the name of a completed exam against the list
+	of exams that count for HPI credit in the E/M calculation.  There
+	are some exams that actually count against other categories in E/M.
+	(For example, "relievers" and "aggravators" count as an HPI exam
+	for "modifiers".)  That means this routine has a table of aliases
+	so we can rename the given exam to a billable one.  In the end,
+	if the (possibly renamed) exam is in the HPI_bill_list array, we 
+	add it to the _bill_hpi list, where it can count into the HPI line
+	on the E/M panel.
+ */
 void sortHPIBilling(char *s)
 {
 	list<char *>::iterator ii;
@@ -534,7 +547,7 @@ void sortHPIBilling(char *s)
 		// we have some elements that need to count only once,
 		// so we set the element name to an alias to store in 
 		// the billing list
-	for (j = 0;  j < n_aliases;  j++)
+	for (j = 0;  j < n_hpi_aliases;  j++)
 	{
 		if (_strnicmp(t, HPI_bill_aliases[j*2], strlen(t)) == 0)
 		{

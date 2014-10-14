@@ -10,84 +10,83 @@
 
 
 /*
-	Initializes the status file.
+	Initializes the status file to empty.
 	In parallel, the DMPE scripts will trigger the Dashboard to open
 	and start watching for updates.
+	If we are called with keepOpen true, we want to leave the file open
+	on completion since we want to continue writing to it.
  */
 int S_initStatus(void)
 {
-	if ((status_file = fopen(STATUS_PATH, "w")) == NULL )
-	{
-		fprintf(stderr, "SLC: can't create status file <%s>\n", STATUS_PATH);
-		return 1;
-	}
-	fclose(status_file);
-
+	if (S_openStatus("w") < 0)
+		return -1;
 	return 0;
 }
 
-
-/*
-	Adds to the status file.
-	This will update the information for the dashboard into a separate
-	file.  When Dashboard.exe sees that this file has been updated, it
-	will update the dashboard window.
-	This means that knowledge about what information appears in the 
-	dashboard has to be encapsulated under this routine.
-	......
-	This is now called by a wrapper with a pointer *into* the argv
-	array.  However, we still assume the chunk we're seeing has 0-based
-	indexing, so we need to call it with **argv pointing to the entry
-	*before* the one we want to record.
- */
-int S_addStatus(int argc, _TCHAR** argv)
+int S_openStatus(char *mode)
 {
-	int i;
-	
-	if (_wcsicmp(argv[1], L"complaint") == 0
-		|| (_wcsicmp(argv[1], L"state") == 0  && no_complaint()) )
+	if (status_file != NULL)
+		fclose(status_file);
+	if ((status_file = fopen(STATUS_PATH, mode)) == NULL)
 	{
-		// reset the status file if we have an initial complaint
-		S_initStatus();
-	}
-	
-	if ((status_file = fopen(STATUS_PATH, "a")) == NULL)
-	{
-		fprintf(stderr, "SLC: can't open status file <%s> for append\n", STATUS_PATH);
+		fprintf(stderr, "SLC: can't open status file <%s> for append\n", 
+			STATUS_PATH);
+		status_file = NULL;
 		return -1;
 	}
-
-	for (i = 1; i < argc; i++)
-	{
-		fprintf(status_file, "%S%c", argv[i], ((i+1) == argc) ? '\n' : ' ');
-	}
-	fclose(status_file);
 	return 0;
 }
 
 
 /*
-	This is the wrapper for a long, multi-entry input line
-	with the entries separated by "!"
+	Add data to the status file from the command line.
+	We can be called with a single set of arguments, e.g.,
+		complaint Chest Pain Over 40
+	or we can be called with stacked arguments separated by "!", e.g.,
+		complaint Chest Pain Over 40 ! req HPI Location, Movement
+	Each set of arguments needs to be written to the status file on
+	a separate line.  That file keeps our state between invocations of
+	the SLC.  Commands "complaint" and "state" are special cases which
+	reset our status and start a new medical record.
  */
-int S_multiStatus(int argc, _TCHAR** argv)
+int S_addStatus(int argc, _TCHAR **argv)
 {
-	int i, f, l;
+	int i;
+	bool first_word = true;  // true at beginning of line and after a "!"
+	_TCHAR *s;
 
-	for( f = i = 1;  i < argc;  i++)
+	for (i = 1;  i < argc;  i++)
 	{
+		s = argv[i];
+			// "state" and "complaint" are special cases
+		if ( first_word && 
+				(_wcsicmp(argv[i], L"complaint") == 0
+					|| (_wcsicmp(argv[i], L"state") == 0  && no_complaint())) )
+		{
+			// reset the status file if we have an initial complaint
+			if (S_initStatus() < 0)
+				return -1;
+		}
+
+		if (status_file == NULL)
+			S_openStatus("a");
+
 		if (wcscmp(argv[i], L"!") == 0)
 		{
-			l = i;
-			S_addStatus((l-f+1), &argv[f-1]);
-			f = i+1;
+			fprintf(status_file, "\n");
+			first_word = true;
+		} else {
+			fprintf(status_file, "%s%S", 
+				first_word ? "" : " ", argv[i]);
+			first_word = false;
 		}
 	}
-	S_addStatus((argc-f+1), &argv[f-1]);
+	fprintf(status_file, "\n");
+
+	fclose(status_file);
+	status_file = NULL;
 	return 0;
 }
-
-
 
 
 /*

@@ -51,9 +51,8 @@ int vitalParse(char *s)
 }
 
 	/*
-	 * special case parsing for temperature:
-	 *  as above, but we convert to C, if we've got F
-	 *  and return as a float, not an int
+	 * special case parsing for temperature as a float
+	 * ... works for both C & F
 	 */
 float vitalParseT(char *s)
 {
@@ -62,10 +61,14 @@ float vitalParseT(char *s)
 	if (s == NULL)  return 0;
 	n = strcspn(s, "0123456890.");
 	f = (float) atof(s+n);
+		// doesn't matter whether we're C or F:
+		// the table for normals has both scales
+	/******
 	if (f > 70.0) // assume F, convert to C
 	{
 		f = (f - 32) * 5 / 9;
 	}
+	******/
 	return f;
 }
 
@@ -113,22 +116,12 @@ range RR_dbp[] = {
 const int n_dbp = (sizeof(RR_dbp)/sizeof(range));
 
 rangeF RR_temp[] = {
-	{32, 36, "Temperature low"},
-	{39, 43, "Temperature very high"},
+	{32.F, 36.F, "Temperature low"},	// C values
+	{39.F, 43.F, "Temperature very high"},
+	{89.6F, 96.F, "Temperature low"},	// F values
+	{102.2F, 109.4F, "Temperature very high"},
 };
 const int n_temp = (sizeof(RR_temp)/sizeof(rangeF));
-
-#if 0
-enum t_vital {
-	v_low = 0, v_normal, v_high, v_vhigh, v_ignoreh
-};
-	// define the low end of each range
-int R_pulse[]  = {30, 50, 100, 120, -1};
-int R_resp[]   = {4, 8, -1, 25, 99};
-int R_sbp[]    = {40, 85, -1, 155, 290};
-int R_dbp[]    = {-1, 30, -1, 99, 150};
-float R_temp[] = {32., 36., -1., 39., 43.};
-#endif
 
 void validateVital(int vital, range Range[], int nn)
 {
@@ -166,7 +159,7 @@ void validateVitalF(float vital, rangeF Range[], int nn)
  *  none of the numeric values we have are outside 
  *  acceptable ranges.
  */
- void vitalSigns(void)
+ void S_checkVitalSigns(void)
 {
 		// convert them
 	_VVS_p = vitalParse(_VS_p);
@@ -228,43 +221,41 @@ void S_Validate(void)
 
 		// special case for TAD Risk
 	list<char *>::iterator i;
+	char *consider = "Consider TAD Risk";
+	bool found_TAD = false;
 	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
 	{
-		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			found_TAD = true;
 			break;
 		}
 	}
 	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
 	{
-		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			found_TAD = true;
 			break;
 		}
 	}
 	for (i = _assess.begin();  i != _assess.end();  i++)
 	{
-		if (_strnicmp(*i, "Consider TAD Risk", strlen(*i)) == 0)
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
 		{
-			D_addWarning("Check TAD Risk!");
+			found_TAD = true;
 			break;
 		}
 	}
 
-		// check the vital signs
-	vitalSigns();
-
-	/**********
-	*********  no longer checking completion of all exam elements
-		// are we missing required elements?
-	if (_comp_req.size() < (_req_exam.size() + _req_hpi.size() + _assess.size()))
+	if (found_TAD)
 	{
-		D_addWarning("Incomplete required exam & HPI elements!");
-		warning = true;
+		D_addWarning("Check TAD Risk!");
 	}
-	***********/
 
+		// check the vital signs
+	S_checkVitalSigns();
+
+		// now yell about problems
 	S_generateWarnBox();
 }

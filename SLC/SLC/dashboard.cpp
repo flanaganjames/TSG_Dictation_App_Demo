@@ -26,6 +26,7 @@ const int ps_heading = 11*2;
 const int ps_subheading = 9*2+1;
 const int ps_link = 10*2;
 const int ps_warning = 12*2;
+const int ps_warning_link = 11*2;
 
 	// current file to which we're outputting
 	//  it's global to this module for convenience
@@ -52,7 +53,7 @@ enum rgb_t { c_red = 0, c_green, c_blue };
 int rgb_colors[][3] = {
 	{0,0,0}, {0,0,0}, {255, 255, 255}, {192,192,192}, 
 		// c_ignore, c_black, c_white, c_gray,
-	{0,0,255}, {250, 250, 250}, {192,192,192}, 
+	{0,255,0}, {250, 250, 250}, {192,192,192}, 
 		// c_hyperlink, c_highlight_req, c_highlight_comp
 	{0,0,0}, {160, 160, 160}, {241,217,198},
 		// c_foreground_req, c_foreground_comp, c_background
@@ -145,7 +146,7 @@ void D_title(void)
 {
 	fprintf(outf, "{\\pard\\fs%d\n", ps_title);
 	D_icon();
-	fprintf(outf, "{ }\\b RSQ{\\super \\'a9} Guidance\\sa200\\par}");
+	fprintf(outf, "{ }\\b RSQ{\\super \\'ae} Guidance\\sa200\\par}");
 	fprintf(outf, "\\fs%d\n", ps_def);
 }
 
@@ -166,9 +167,35 @@ void D_separator(int color)
 	fprintf(outf, "{\\pard\\fs10\\sl20{ }\\par}");
 }
 
-void D_hyperlinks(void)
+void D_showOneLink(char *l, int size, int height)
+{
+	fprintf(outf, "\\pard\\li%d{\\field", T_space);
+		// fldinst is ignored by .Net's RTF, so we don't output it;
+		// the abbreviated link is actually interpreted by the
+		// dashboard display program -- yes, that's a little
+		// Rube Goldberg but allows us to use short link names
+	// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
+		// we now use the text of the hyperlink to give us the
+		// vertical position in the window
+	fprintf(outf, "{\\*\\fldinst{HYPERLINK %d }}", height);
+	fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
+		size, c_hyperlink, l);
+}
+
+void D_hyperlinks(int baseheight)
 {
 	char *l;
+	int n = 0;
+		/*
+		 * We need to provide the dashboard with the position of the top
+		 *  of each line of link, so the dashboard can properly position
+		 *  the buttons for the links.  Note that this is the top of the
+		 *  line, not the baseline, and it's in half-points, not pixels,
+		 *  and the position of the first line is supplied by the caller,
+		 *  based on what the caller knows about what's above the links in
+		 *  the panel.  The height of the first link is given by the
+		 *  argument, and we know each link line is 24hp high.
+		 */
 	list<char *>::iterator i;
 	for (i = _links.begin();  i != _links.end();  i++)
 	{
@@ -180,14 +207,8 @@ void D_hyperlinks(void)
 		} else {
 			l = *i;
 		}
-		fprintf(outf, "\\pard\\li%d{\\field", T_space);
-			// fldinst is ignored by .Net's RTF, so we don't output it;
-			// the abbreviated link is actually interpreted by the
-			// dashboard display program -- yes, that's a little
-			// Rube Goldberg but allows us to use short link names
-		// fprintf(outf, "{\\*\\fldinst{HYPERLINK %s%s}}\n", www, l);
-		fprintf(outf, "{\\fldrslt{\\ul\\fs%d\\cf%d %s}}}\\par\n",
-			ps_link, c_hyperlink, l);
+		D_showOneLink(l, ps_link, baseheight+n*24);
+		n++;
 	}
 }
 
@@ -487,7 +508,8 @@ void S_generateDash(void)
 	D_line();
 
 		// resource links
-	D_hyperlinks();
+	int height = 55 + 30 * max(1,_complaint.size()); // half-points
+	D_hyperlinks(height);
 	D_line();
 	D_separator(c_sepbar_b);
 
@@ -613,6 +635,8 @@ void D_warning_icons(void)
 	// now produce the warning box if we have any warnings in the list
 void S_generateWarnBox(void)
 {
+	int height = 0;  // half-points from top
+
 		// we've got nothing to say
 	if (_warnings.empty())
 	{
@@ -628,17 +652,25 @@ void S_generateWarnBox(void)
 	D_backgroundColor(0,255,255);
 	// D_warning_icons();
 	D_vertspace(5);
+	height += 10;
 	list<char *>::iterator i;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
 		D_one_warn_icon(225, 210);
-		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
+		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
+		height += 32;
+		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)
+		{
+			D_showOneLink("TAD_Risk", ps_link, height);
+			height += 23;
+				// comment out the above & uncomment the following for bigger links
+			// D_showOneLink("TAD_Risk", ps_warning_link, height);
+			// height += ps_warning_link;
+		}
 		D_vertspace(2);
+		height += 4;
 	}
-	D_vertspace(10);
-	// D_vertspace(21);
-	// D_warning_icons();
 	D_epilog();
 	D_closeoutput();
 	return;

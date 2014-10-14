@@ -259,7 +259,7 @@ namespace EHRNarrative
                 else
                 {
                     position = HealthRecordText.Rtf.IndexOf(lookup.Replace(System.Environment.NewLine, "\\par"));
-                    len = lookup.Length;
+                    len = lookup.Replace(System.Environment.NewLine, "\\par").Length;
                 }
 
                 if (parts[2].ToLower().Contains("before"))
@@ -325,7 +325,7 @@ namespace EHRNarrative
                         }
                         catch { }
 
-                        if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]") && HealthRecordText.Rtf.Contains(lookup[0]))
+                        if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]"))
                         {
                             if (command_str != "")
                             {

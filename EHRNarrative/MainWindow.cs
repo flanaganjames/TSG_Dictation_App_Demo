@@ -238,146 +238,115 @@ namespace EHRNarrative
 
         private string ParseReplaceCommand(ref string command_str, String command)
         {
-            char[] separator = new char[] { '/' };
-            String[] parts = command.Replace("\\\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
-            //This next line probably isn't used any more. Templates don't use the *** notation. 
-            //But this does mean that inserted text won't be red like the keyword was. Jim hasn't said anything about it so far...
-            //string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
-            string lookup = parts[0];
+            if (String.IsNullOrEmpty(command))
+            {
+                return command_str;
+            }
 
+            char[] separator = new char[] { '/' };
+            String[] parts = command.Replace("\\\\n", "\\par").Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            string lookup = parts[0];
+            string newText = parts[1];
+            string insert = "over";
+
+            if (lookup.Contains("%SELECTED"))
+            {
+                lookup = HealthRecordText.SelectedText;
+            }
             if (parts.Length == 3)
             {
-                //Do Insert
-                int position = 0;
-                int len = 0;
-
-                if (parts[0].Contains("%SELECTED"))
-                {
-                    position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText.Replace(System.Environment.NewLine, "\\par"));
-                    len = HealthRecordText.SelectedText.Length;
-                }
-                else
-                {
-                    position = HealthRecordText.Rtf.IndexOf(lookup.Replace(System.Environment.NewLine, "\\par"));
-                    len = lookup.Replace(System.Environment.NewLine, "\\par").Length;
-                }
-
                 if (parts[2].ToLower().Contains("before"))
                 {
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position, parts[1].Replace(System.Environment.NewLine, "\\par") + " ");
+                    insert = "before";
                 }
                 else if (parts[2].ToLower().Contains("after"))
                 {
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position + len, " " + parts[1].Replace(System.Environment.NewLine, "\\par"));
+                    insert = "after";
                 }
                 else
                 {
                     //Do Error!
                 }
-
-                try
-                {
-                    HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1].Replace(System.Environment.NewLine, "\n")) + parts[1].Length - 1, 0);
-                }
-                catch { }
             }
-            else if (parts.Length == 2)
+
+            //Find where our lookup text is
+            int lookupPosition = HealthRecordText.Rtf.IndexOf(lookup);
+            int lookupLength = lookup.Length;
+
+            //There is nothing to do since our lookup doesn't exist, so abort.
+            if (lookupPosition == -1)
             {
-                //Do Replace
-                if (parts[0].Contains("%SELECTED"))
-                {
-                    if (HealthRecordText.SelectedText.Trim().StartsWith("[") && HealthRecordText.SelectedText.Trim().EndsWith("]"))
-                    {
-                        if (command_str != "")
-                        {
-                            command_str += " ! ";
-                        }
+                return command_str;
+            }
 
-                        if (parts[1].Trim() != "")
-                        {
-                            //Send data command
-                            command_str += "data " + HealthRecordText.SelectedText.Trim();
-                        }
-                        else
-                        {
-                            command_str += "del " + HealthRecordText.SelectedText.Trim();
-                        }
-                    }
-
-                    HealthRecordText.SelectedText = parts[1];
-
-                    try
-                    {
-                        HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1].Replace(System.Environment.NewLine, "\n")) + parts[1].Length - 1, 0);
-                    }
-                    catch { }
-                }
-                else
-                {
-                    string oldText = HealthRecordText.Rtf;
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup.Replace(System.Environment.NewLine, "\\par"), parts[1].Replace(System.Environment.NewLine, "\\par"));
-
-                    if (HealthRecordText.Rtf.CompareTo(oldText) != 0)
-                    {
-                        try
-                        {
-                            HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1].Replace(System.Environment.NewLine, "\n")) + parts[1].Length - 1, 0);
-                        }
-                        catch { }
-
-                        if (IsNewEHRLine(parts[0].Trim()))
-                        {
-                            if (parts[1].Trim() == "" || parts[0].Trim().Split(':')[0] != parts[1].Trim().Split(':')[0])
-                            {
-                                if (command_str != "")
-                                {
-                                    command_str += " ! ";
-                                }
-
-                                command_str += "delete " + parts[0].Substring(parts[0].IndexOf('['), parts[0].IndexOf(']') - parts[0].IndexOf('[') + 1);
-                            }
-                        }
-
-                        if (IsNewEHRLine(parts[1].Trim()))
-                        {
-                            if (command_str != "")
-                            {
-                                command_str += " ! ";
-                            }
-
-                            command_str += "add " + parts[1].Substring(parts[1].IndexOf('['), parts[1].IndexOf(']') - parts[1].IndexOf('[') + 1);
-                        }
-
-                        //if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]"))
-                        if (IsEHRKeyword(lookup) && !(parts[1].Trim().StartsWith("[") && parts[1].Trim().EndsWith("]")))
-                        {
-
-                            if (command_str != "")
-                            {
-                                command_str += " ! ";
-                            }
-
-                            if (parts[1].Trim() != "")
-                            {
-                                //Send data command
-                                command_str += "data " + parts[0].Trim();
-                            }
-                            else
-                            {
-                                command_str += "del " + parts[0].Trim();
-                            }
-                        }
-                        else if (parts[1].Trim().StartsWith("[") && parts[1].Trim().EndsWith("]"))
-                        {
-                            //TODO: Add new consideration
-                        }
-                    }
-                }
+            //Actually insert the new text in the proper location in the RTF
+            if (insert.Contains("over"))
+            {
+                HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, newText);
+            }
+            else if (insert.Contains("before"))
+            {
+                HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(lookupPosition, newText);
+            }
+            else if (insert.Contains("after"))
+            {
+                HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(lookupPosition + lookupLength, " " + newText);
             }
             else
             {
-                //Do Error!!!
+                //Do Error!
             }
+
+            //Set cursor position to the end of the inserted text
+            lookup = lookup.Replace("\\par", "\n");
+            newText = newText.Replace("\\par", "\n");
+            int selectOffset = 0;
+            if (lookup.EndsWith("\n"))
+            {
+                selectOffset = 1;
+            }
+            HealthRecordText.Select(HealthRecordText.Text.IndexOf(lookup) + lookup.Length - selectOffset, 0);
+
+            //Notify the SLC of any relevant changes
+            if (IsAnEHRLine(lookup))
+            {
+                if (newText.Trim() == "" || lookup.Trim().Split(':')[0] != newText.Trim().Split(':')[0])
+                {
+                    //Either we deleted the line entirely or completel replaced it
+                    if (command_str != "")
+                        command_str += " ! ";
+                    command_str += "delete " + lookup.Substring(lookup.IndexOf('['), lookup.IndexOf(']') - lookup.IndexOf('[') + 1);
+                }
+            }
+
+            if (IsAnEHRLine(newText))
+            {
+                if (command_str != "")
+                    command_str += " ! ";
+                command_str += "add " + newText.Substring(newText.IndexOf('['), newText.IndexOf(']') - newText.IndexOf('[') + 1);
+            }
+
+            if (GetLabelFromKeyword(lookup.Trim()) != null && !(newText.Trim().StartsWith("[") && newText.Trim().EndsWith("]")))
+            {
+                if (command_str != "")
+                {
+                    command_str += " ! ";
+                }
+
+                if (newText.Trim() != "")
+                {
+                    command_str += "data " + lookup.Trim();
+                }
+                else
+                {
+                    command_str += "del " + lookup.Trim();
+                }
+            }
+            else if (newText.Trim().StartsWith("[") && newText.Trim().EndsWith("]"))
+            {
+                //TODO: Add new consideration
+            }
+            
             return command_str;
         }
 
@@ -430,7 +399,7 @@ namespace EHRNarrative
             topLevelLines = FindEHRLines();
         }
 
-        private bool IsNewEHRLine(string line)
+        private bool IsAnEHRLine(string line)
         {
             if (line.Contains(':'))
             {
@@ -446,16 +415,16 @@ namespace EHRNarrative
             return false;
         }
 
-        private bool IsEHRKeyword(string keyword)
+        private String GetLabelFromKeyword(string keyword)
         {
             foreach (EHRLine line in topLevelLines)
             {
                 if (line.keyword.Equals(keyword.Trim()))
                 {
-                    return true;
+                    return line.label;
                 }
             }
-            return false;
+            return null;
         }
 
         private String GetKeywordFromLabel(string label)

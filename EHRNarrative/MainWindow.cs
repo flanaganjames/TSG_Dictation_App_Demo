@@ -325,8 +325,33 @@ namespace EHRNarrative
                         }
                         catch { }
 
-                        if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]"))
+                        if (IsNewEHRLine(parts[0].Trim()))
                         {
+                            if (parts[1].Trim() == "" || parts[0].Trim().Split(':')[0] != parts[1].Trim().Split(':')[0])
+                            {
+                                if (command_str != "")
+                                {
+                                    command_str += " ! ";
+                                }
+
+                                command_str += "delete " + parts[0].Substring(parts[0].IndexOf('['), parts[0].IndexOf(']') - parts[0].IndexOf('[') + 1);
+                            }
+                        }
+
+                        if (IsNewEHRLine(parts[1].Trim()))
+                        {
+                            if (command_str != "")
+                            {
+                                command_str += " ! ";
+                            }
+
+                            command_str += "add " + parts[1].Substring(parts[1].IndexOf('['), parts[1].IndexOf(']') - parts[1].IndexOf('[') + 1);
+                        }
+
+                        //if (lookup.Trim().StartsWith("[") && lookup.Trim().EndsWith("]"))
+                        if (IsEHRKeyword(lookup) && !(parts[1].Trim().StartsWith("[") && parts[1].Trim().EndsWith("]")))
+                        {
+
                             if (command_str != "")
                             {
                                 command_str += " ! ";
@@ -341,6 +366,10 @@ namespace EHRNarrative
                             {
                                 command_str += "del " + parts[0].Trim();
                             }
+                        }
+                        else if (parts[1].Trim().StartsWith("[") && parts[1].Trim().EndsWith("]"))
+                        {
+                            //TODO: Add new consideration
                         }
                     }
                 }
@@ -399,6 +428,34 @@ namespace EHRNarrative
             topLevelLines.Clear();
 
             topLevelLines = FindEHRLines();
+        }
+
+        private bool IsNewEHRLine(string line)
+        {
+            if (line.Contains(':'))
+            {
+                string[] sides = line.Split(':');
+                string pattern = @"(\[[^]]*\])";
+                Regex rgx = new Regex(pattern);
+                Match m = rgx.Match(sides[1]);
+                if (m.Success)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool IsEHRKeyword(string keyword)
+        {
+            foreach (EHRLine line in topLevelLines)
+            {
+                if (line.keyword.Equals(keyword.Trim()))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private String GetKeywordFromLabel(string label)

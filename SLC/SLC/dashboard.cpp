@@ -657,7 +657,7 @@ void S_generateWarnBox(void)
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
 		D_one_warn_icon(225, 210);
-		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\li%d\\ri%d %s\\par}\n",
+		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\ri%d %s\\par}\n",
 			ps_warning, c_warning, T_space*2, T_space*2, *i);
 		height += 32;
 		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)

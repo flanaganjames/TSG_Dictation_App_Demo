@@ -236,6 +236,9 @@ namespace EHRNarrative
             HealthRecordText.Clear();
             HealthRecordText.LoadFile(template);
 
+            ParseLabels();
+            ParseConsiderables();
+
             dashboardTimer.Start();
         }
 

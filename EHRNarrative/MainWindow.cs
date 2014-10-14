@@ -239,8 +239,11 @@ namespace EHRNarrative
         private string ParseReplaceCommand(ref string command_str, String command)
         {
             char[] separator = new char[] { '/' };
-            String[] parts = command.Replace("\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
-            string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
+            String[] parts = command.Replace("\\\\n", "" + System.Environment.NewLine).Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            //This next line probably isn't used any more. Templates don't use the *** notation. 
+            //But this does mean that inserted text won't be red like the keyword was. Jim hasn't said anything about it so far...
+            //string lookup = parts[0].Replace("[***", "[***\\cf2 ").Replace("***]", "\\cf1 ***]");
+            string lookup = parts[0];
 
             if (parts.Length == 3)
             {
@@ -250,22 +253,22 @@ namespace EHRNarrative
 
                 if (parts[0].Contains("%SELECTED"))
                 {
-                    position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText);
+                    position = HealthRecordText.Rtf.IndexOf(HealthRecordText.SelectedText.Replace(System.Environment.NewLine, "\\par"));
                     len = HealthRecordText.SelectedText.Length;
                 }
                 else
                 {
-                    position = HealthRecordText.Rtf.IndexOf(lookup);
+                    position = HealthRecordText.Rtf.IndexOf(lookup.Replace(System.Environment.NewLine, "\\par"));
                     len = lookup.Length;
                 }
 
                 if (parts[2].ToLower().Contains("before"))
                 {
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position, parts[1] + " ");
+                    HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position, parts[1].Replace(System.Environment.NewLine, "\\par") + " ");
                 }
                 else if (parts[2].ToLower().Contains("after"))
                 {
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position + len, " " + parts[1]);
+                    HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(position + len, " " + parts[1].Replace(System.Environment.NewLine, "\\par"));
                 }
                 else
                 {
@@ -274,7 +277,7 @@ namespace EHRNarrative
 
                 try
                 {
-                    HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1]) + parts[1].Length, 0);
+                    HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1].Replace(System.Environment.NewLine, "\n")) + parts[1].Length - 1, 0);
                 }
                 catch { }
             }
@@ -305,20 +308,20 @@ namespace EHRNarrative
 
                     try
                     {
-                        HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1]) + parts[1].Length, 0);
+                        HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1].Replace(System.Environment.NewLine, "\n")) + parts[1].Length - 1, 0);
                     }
                     catch { }
                 }
                 else
                 {
                     string oldText = HealthRecordText.Rtf;
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup, parts[1]);
+                    HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(lookup.Replace(System.Environment.NewLine, "\\par"), parts[1].Replace(System.Environment.NewLine, "\\par"));
 
                     if (HealthRecordText.Rtf.CompareTo(oldText) != 0)
                     {
                         try
                         {
-                            HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1]) + parts[1].Length, 0);
+                            HealthRecordText.Select(HealthRecordText.Text.IndexOf(parts[1].Replace(System.Environment.NewLine, "\n")) + parts[1].Length - 1, 0);
                         }
                         catch { }
 

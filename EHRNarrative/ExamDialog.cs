@@ -309,6 +309,8 @@ namespace EHRNarrative
                     MessageBox.Show("Error occured while trying to replace text using this command: \"" + EHR_text + "\"\nError Message:\n" + e.Message);
                 }
             }
+
+            narrative_window.NextField();
         }
 
         private void UpdateSLC()
@@ -341,8 +343,8 @@ namespace EHRNarrative
         private void NextButton_Click(object sender, EventArgs e)
         {
             Button button = (Button)sender;
-            new ExamDialog(this.narrative_window, (string)button.Tag, data.complaint.Name).Show();
             DoneButton_Click(sender, e);
+            new ExamDialog(this.narrative_window, (string)button.Tag, data.complaint.Name).Show();
         }
     }
 

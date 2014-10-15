@@ -12,7 +12,7 @@ class Dialog(models.Model):
         db_table = "dialog"
 
     def __unicode__(self):
-        return "Dialog: %s" % self.name
+        return self.name
 
 
 class Group(models.Model):
@@ -32,7 +32,7 @@ class Group(models.Model):
         unique_together = ('name', 'dialog')
 
     def __unicode__(self):
-        return "Group: %s" % self.name
+        return self.name
     
 
 class Subgroup(models.Model):
@@ -44,7 +44,7 @@ class Subgroup(models.Model):
         unique_together = ('name', 'group')
 
     def __unicode__(self):
-        return "Subgroup: %s" % self.name
+        return self.name
     
 
 class Element(models.Model):

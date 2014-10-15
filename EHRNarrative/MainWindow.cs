@@ -394,7 +394,7 @@ namespace EHRNarrative
             {
                 try
                 {
-                    //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
                     System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
                 catch
@@ -563,11 +563,12 @@ namespace EHRNarrative
 
             List<string> possibleConsiderables = FindConsiderables();
 
-            foreach (string considerable in considerLines)
+            foreach (string considerable in considerLines.ToList())
             {
                 if (!possibleConsiderables.Contains(considerable))
                 {
                     command_strings.Add("data " + considerable);
+                    considerLines.Remove(considerable);
                 }
             }
 

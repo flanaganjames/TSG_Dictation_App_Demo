@@ -137,7 +137,7 @@ namespace EHRNarrative
             int columns = data.dialog.GroupsForComplaint(data).Count();
             int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter-40) / (columnWidth + columnGutter);
 
-            this.Width = (columnsPerRow) * (columnWidth + columnGutter) + columnGutter*2;
+            this.Width = (Math.Min(columns, columnsPerRow)) * (columnWidth + columnGutter) + columnGutter*2;
 
             rows = new List<AccordianRow>();
 

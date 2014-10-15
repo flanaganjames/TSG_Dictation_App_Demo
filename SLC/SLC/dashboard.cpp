@@ -663,10 +663,10 @@ void S_generateWarnBox(void)
 		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)
 		{
 			D_showOneLink("TAD_Risk", ps_link, height);
-			height += 23;
-				// comment out the above & uncomment the following for bigger links
+				// comment out the above & uncomment the following for
+				// bigger link text
 			// D_showOneLink("TAD_Risk", ps_warning_link, height);
-			// height += ps_warning_link;
+			height += 28;  // reflects height of box on warning panel
 		}
 		D_vertspace(2);
 		height += 4;

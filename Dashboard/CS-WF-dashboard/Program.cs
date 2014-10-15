@@ -54,8 +54,6 @@ namespace Dashboard
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
-        //private float dashBht;    // dash link button height
-        //        // dashBht is a float, since it's converted to pixels from points
         private int dashBwid;   // dash button width within the status panel
         private float dashResX, dashResY;  // dashboard resolution
 

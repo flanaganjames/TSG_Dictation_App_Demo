@@ -47,7 +47,7 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	rec_hpi_t, rec_exam_t, recc_hpi_t, recc_exam_t,
 	//// data_hpi_t, data_exam_t, // unused - should be removed
 	data_t, 
-	dataqual_exam_t, dataqual_pfsh_t, dataqual_ros_t,
+	dataqual_exam_t, dataqual_hpi_t, dataqual_pfsh_t, dataqual_ros_t,
 	dataqual_ros2_t,
 	dataqual_t,
 	bill_t, link_t, delete_t, del_t,
@@ -60,7 +60,7 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"rec hpi", "rec exam", "recc hpi", "recc exam",
 	//// "data hpi", "data exam", // unused - should be removed
 	"data", 
-	"dataqual exam", "dataqual pfsh", "dataqual ros",
+	"dataqual exam", "dataqual hpi", "dataqual pfsh", "dataqual ros",
 	"dataqual review of systems",
 	"dataqual",
 	"bill", "link", "delete", "del",
@@ -69,14 +69,6 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"validate", "ignore",
 };
 const int command_count = (sizeof(command_names)/sizeof(command_names[0]));
-
-enum qualifiers_t {
-	ros_t = 0, ros2_t, pfsh_t, exam_t,
-};
-char *qualifier_names[] = {
-	"review of systems", "ros", "pfsh", "exam",
-};
-const int qualifier_count = (sizeof(qualifier_names)/sizeof(qualifier_names[0]));
 
 	// forward declaration
 void addWords(list<char *> &, char *);
@@ -269,50 +261,6 @@ bool completeCommand(char *s, size_t n)
 	return (s[n] == '\0' || s[n] == ' ');
 }
 
-#if 0
-	// parse the substatus of the dataqual keywords
-void addDataQual(char *t)
-{
-	int i, n;
-	int count = 0;
-	char *s = t;
-	for (i = 0;  i < qualifier_count; i++ )
-	{
-		if (_strnicmp(s, qualifier_names[i], strlen(qualifier_names[i])) == 0
-			&& completeCommand(s, strlen(qualifier_names[i])))
-		{
-			s += strlen(qualifier_names[i]); // skip the qualifier text
-			s += strspn(s, " ");  // skip the blanks after qualifier
-			break;
-		}
-	}
-	if (s == t)
-		return;  // unrecognized qualifier: ignore
-
-		// find a count, if we've got one, then strip it
-	if ((n = strcspn(t, "0123456789")) > 0)
-	{
-		count = atoi(t+n);
-		for (char *q = t+n;  isspace(*q) || isdigit(*q);  q--)
-			*q = '\0';
-	}
-
-	switch(i) {
-	case ros_t:
-	case ros2_t:
-		addWords(_bill_ros, s);
-		break;
-	case pfsh_t:
-		addWords(_bill_pfsh, s);
-		break;
-	case exam_t:
-		addWords(_bill_exam, s);
-		addWordsExam(s);
-		break;
-	};
-}
-#endif
-
 
 void S_parseStatus(void)
 {
@@ -406,15 +354,15 @@ void S_parseStatus(void)
 				addWords(_bill_ros, s+lr);
 			}
 			break;
-#if 0
-		case dataqual_t:
-			// for dataqual, we have to further parse the qualifier
-			addDataQual(s);
-			break;
-#endif
 		case dataqual_exam_t:
 			addWords(_bill_exam, s);
 			addWordsExam(s);
+			break;
+		case dataqual_hpi_t:
+			addWords(_all_complete, s);
+				// we add to the _bill_hpi list under control of the
+				// sortHPIbilling() routine later, because HPI has 
+				// so many special cases for E/M calculations
 			break;
 		case dataqual_pfsh_t:
 			addWords(_bill_pfsh, s);
@@ -523,7 +471,7 @@ char *HPI_bill_aliases[] = {
 	"current severity", "severity",
 	"radiation", "location",
 	"movement", "location",
-	"progression", "timing",
+	"progression", "onset",
 };
 const int n_hpi_aliases = sizeof(HPI_bill_aliases) / sizeof(HPI_bill_aliases[0]) / 2;
 const int n_hpi_billing = sizeof(HPI_bill_list) / sizeof(HPI_bill_list[0]);
@@ -637,6 +585,9 @@ void S_sortStatus(void)
 			_rec_exam.erase(ii);
 			_comp_rec.push_front(scopy(s));
 		}
+			// however, billing for HPI is a special case and
+			// so we examine each item to see if it qualifies
+			// for adding to the HPI billing list
 		sortHPIBilling(s);
 	}
 }

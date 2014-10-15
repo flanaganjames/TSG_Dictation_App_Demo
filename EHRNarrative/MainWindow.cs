@@ -164,7 +164,7 @@ namespace EHRNarrative
             this.HealthRecordText.TextChanged -= hrTextChanged;
 
             string command_str = "";
-            ParseReplaceCommand(ref command_str, commandStr.Trim());
+            command_str = ParseReplaceCommand(commandStr.Trim());
 
             NotifySLC(command_str);
 
@@ -216,7 +216,7 @@ namespace EHRNarrative
                         NotifySLC(slc_command);
                         break;
                     default:
-                        ParseReplaceCommand(ref command_str, command);
+                        command_str = ParseReplaceCommand(command);
                         break;
                 }
             }
@@ -242,12 +242,14 @@ namespace EHRNarrative
             dashboardTimer.Start();
         }
 
-        private string ParseReplaceCommand(ref string command_str, String command)
+        private string ParseReplaceCommand(String command)
         {
             if (String.IsNullOrEmpty(command))
             {
-                return command_str;
+                return "";
             }
+
+            List<String> command_strings = new List<String>();
 
             char[] separator = new char[] { '/' };
             String[] parts = command.Replace("\\\\n", "\\par").Split(separator, StringSplitOptions.RemoveEmptyEntries);
@@ -287,7 +289,7 @@ namespace EHRNarrative
             //There is nothing to do since our lookup doesn't exist, so abort.
             if (lookupPosition == -1)
             {
-                return command_str;
+                return "";
             }
 
             //Actually insert the new text in the proper location in the RTF
@@ -324,52 +326,40 @@ namespace EHRNarrative
                 if (newText.Trim() == "" || lookup.Trim().Split(':')[0] != newText.Trim().Split(':')[0])
                 {
                     //Either we deleted the line entirely or completel replaced it
-                    if (command_str != "")
-                        command_str += " ! ";
-                    command_str += "delete " + lookup.Substring(lookup.IndexOf('['), lookup.IndexOf(']') - lookup.IndexOf('[') + 1);
+                    command_strings.Add("delete " + lookup.Substring(lookup.IndexOf('['), lookup.IndexOf(']') - lookup.IndexOf('[') + 1));
                 }
             }
 
             if (IsAConsiderable(lookup))
             {
                 //We can't track the difference between deleting the considerable and inputting text. So they will always send data.
-                if (command_str != "")
-                    command_str += " ! ";
-                command_str += "data " + lookup.Trim();
+                command_strings.Add("data " + lookup.Trim());
             }
 
             if (IsAnEHRLine(newText))
             {
-                if (command_str != "")
-                    command_str += " ! ";
-                command_str += "add " + newText.Substring(newText.IndexOf('['), newText.IndexOf(']') - newText.IndexOf('[') + 1);
+                command_strings.Add("add " + newText.Substring(newText.IndexOf('['), newText.IndexOf(']') - newText.IndexOf('[') + 1));
             }
 
             if (GetLabelFromKeyword(lookup.Trim()) != null && !(newText.Trim().StartsWith("[") && newText.Trim().EndsWith("]")))
             {
-                if (command_str != "")
-                {
-                    command_str += " ! ";
-                }
-
                 if (newText.Trim() != "")
                 {
-                    command_str += "data " + lookup.Trim();
+                    command_strings.Add("data " + lookup.Trim());
                 }
                 else
                 {
-                    command_str += "del " + lookup.Trim();
+                    command_strings.Add("del " + lookup.Trim());
                 }
             }
             else if (newText.Trim().StartsWith("[") && newText.Trim().EndsWith("]"))
             {
                 considerLines.Add(newText.Trim());
 
-                if (command_str != "")
-                    command_str += " ! ";
-                command_str += "add " + newText.Trim();
+                command_strings.Add("add " + newText.Trim());
             }
-            
+
+            string command_str = String.Join(" ! ", command_strings);
             return command_str;
         }
 

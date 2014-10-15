@@ -380,6 +380,10 @@ namespace EHRNarrative
 
         public void NotifySLC(string command_str)
         {
+            command_str = command_str.Trim();
+            if (command_str.EndsWith("!"))
+                command_str = command_str.Substring(0, command_str.LastIndexOf("!") - 1);
+
             if (command_str != "")
             {
                 try

@@ -54,6 +54,7 @@ namespace Dashboard
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
+        private int dashSTht_min;  // minimum height of the status panel
         private int dashBwid;   // dash button width within the status panel
         private float dashResX, dashResY;  // dashboard resolution
 
@@ -80,16 +81,23 @@ namespace Dashboard
             System.Drawing.Graphics g = dash.CreateGraphics();
             dashResX = g.DpiX; dashResY = g.DpiY;
 
+            calculatePanelSizes();
+            drawPanels();
+            refreshDash();
+        }
+
+        public void calculatePanelSizes()
+        {
                 // these are the fixed dimensions -- others are calculated from these
             dashOht = 565;
             dashOwid = 255;
             dashWht = 200;
             dashEMht = 140;
                 //   but first, we need to normalize these to 96 dpi
-            dashOht = (int) Math.Ceiling((float) dashOht * dashResY / 96f);
-            dashOwid = (int) Math.Ceiling((float) dashOwid * dashResX / 96f);
-            dashWht = (int) Math.Ceiling((float) dashWht * dashResY / 96f);
-            dashEMht = (int) Math.Ceiling((float) dashEMht * dashResY / 96f);
+            dashOht = (int)Math.Ceiling((float)dashOht * dashResY / 96f);
+            dashOwid = (int)Math.Ceiling((float)dashOwid * dashResX / 96f);
+            dashWht = (int)Math.Ceiling((float)dashWht * dashResY / 96f);
+            dashEMht = (int)Math.Ceiling((float)dashEMht * dashResY / 96f);
 
                 // now set up the overall dashboard
             dash.Size = dashOsz = new System.Drawing.Size(dashOwid, dashOht);
@@ -100,19 +108,49 @@ namespace Dashboard
             dashwid = dash.ClientSize.Width;
                     // now calculate the RTF panel sizes & positions
             dashSTht = dashht - dashEMht;
+            dashSTht_min = dashSTht;
                     // need to declare warning panel size & position objects
                     // now, since they're used later, external to the constructor
             dashWpos = new System.Drawing.Point(0, dashht);
             dashWsz = new System.Drawing.Size(dashwid, dashWht);
             dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
+        }
 
-                    // the dashboard status panel
+        public void recalculatePanelSizes(int new_dashSTht)
+        {
+                // if we've got a revised height for the status panel
+                // recalculate all the panel sizes so that we can
+                // repaint the panels
+                // ... we only recalculate things we need to update
+            dashOht = dashOht - dashSTht + new_dashSTht;
+            dashht = dashht - dashSTht + new_dashSTht;
+            dash.Size = new System.Drawing.Size(dashOwid, dashOht);
+            dashSTht = dashht - dashEMht;
+            dashWpos = new System.Drawing.Point(0, dashht);
+            dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
+        }
+
+        public void drawPanels()
+        {
+                // remove the existing instances, since we want to recreate them
+            if (dashST != null)
+                dash.Controls.Remove(dashST);
+            if (dashEM != null)
+                dash.Controls.Remove(dashEM);
+            if (dashW != null)
+            {
+                showing_warning = false;
+                dash.Controls.Remove(dashW);
+            }
+
+                // the dashboard status panel
             dashST = new RichTextBox();
-            dashST.Location = new System.Drawing.Point(0,0);
+            dashST.Location = new System.Drawing.Point(0, 0);
             dashST.Size = new System.Drawing.Size(dashwid, dashSTht);
             dashST.ReadOnly = true;
             dashST.DetectUrls = false;
             dashST.BackColor = Color.White;
+            dashST.ScrollBars = RichTextBoxScrollBars.None;
             dash.Controls.Add(dashST);
             dashBwid = dashST.ClientSize.Width;
             /*
@@ -188,8 +226,24 @@ namespace Dashboard
         public void refreshDash()
         {
             flash();
-                // update with the real contents of the main dashboard
+            updates++;  // number of times we've updated
 
+                // update the panel contents
+            refreshDashContents();
+                // check the size of the status panel
+                // and see if it's increased
+            int dashSTht_wanted = Math.Max(dashST.PreferredSize.Height, dashSTht_min);
+            if (dashSTht != dashSTht_wanted)
+            {
+                recalculatePanelSizes(dashSTht_wanted);
+                drawPanels();
+                    // we repainted the windows -- need to refresh contents
+                refreshDashContents();
+            }
+        }
+
+        public void refreshDashContents()
+        {
             dashST.Rtf = dashSTrtf = dashSTcontents();
             dashST.Refresh();
             dashEM.Rtf = dashEMrtf = dashEMcontents();
@@ -201,9 +255,8 @@ namespace Dashboard
             refreshDashWarn();
                 // now refresh of the whole window
             dash.Refresh();
-
-            updates++;  // number of times we've updated
         }
+
 
         public void refreshDashButtons(RichTextBox panel, String panelRTF, 
             ArrayList linkList, Color buttonColor, int indent, float dashBht)

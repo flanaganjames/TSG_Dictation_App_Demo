@@ -350,9 +350,12 @@ void S_parseStatus(void)
 				// to _bill_ros
 			lr = strlen("ROS ");
 			if (_strnicmp(s, "ROS ", lr) == 0)
-			{
 				addWords(_bill_ros, s+lr);
-			}
+				//
+				// parallel special case for PFSH data
+			lr = strlen("PFSH ");
+			if (_strnicmp(s, "PFSH ", lr) == 0)
+				addWords(_bill_pfsh, s+lr);
 			break;
 		case dataqual_exam_t:
 			addWords(_bill_exam, s);

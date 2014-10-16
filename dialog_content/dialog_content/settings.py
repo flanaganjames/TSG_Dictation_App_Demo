@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django_production_server',
     'south',
+    'adminsortable',
 )
 
 MIDDLEWARE_CLASSES = (

@@ -19,6 +19,7 @@ class Group(models.Model):
     name = models.CharField(max_length=250)
 
     dialog = models.ForeignKey('Dialog')
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     recommended = models.BooleanField(default=False)
 
@@ -29,6 +30,7 @@ class Group(models.Model):
     
     class Meta:
         db_table = "group"
+        ordering = ('order',)
         unique_together = ('name', 'dialog')
 
     def __unicode__(self):
@@ -38,9 +40,11 @@ class Group(models.Model):
 class Subgroup(models.Model):
     name = models.CharField(max_length=250)
     group = models.ForeignKey('Group')
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     class Meta:
         db_table = "subgroup"
+        ordering = ('order',)
         unique_together = ('name', 'group')
 
     def __unicode__(self):
@@ -52,6 +56,7 @@ class Element(models.Model):
 
     group = models.ForeignKey('Group')
     subgroup = models.ForeignKey('Subgroup', null=True, blank=True)
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
     complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
@@ -70,6 +75,7 @@ class Element(models.Model):
 
     class Meta:
         db_table = "element"
+        ordering = ('order',)
         unique_together = ('name', 'group')
 
     def __unicode__(self):
@@ -81,6 +87,7 @@ class DialogLinkElement(models.Model):
 
     group = models.ForeignKey('Group')
     subgroup = models.ForeignKey('Subgroup', null=True, blank=True)
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     complaint_groups = models.ManyToManyField('complaint.ComplaintGroup', null=True, blank=True)
     complaints = models.ManyToManyField('complaint.Complaint', null=True, blank=True)
@@ -90,6 +97,7 @@ class DialogLinkElement(models.Model):
 
     class Meta:
         db_table = "dialogelement"
+        ordering = ('order',)
         unique_together = ('name', 'group')
 
     def __unicode__(self):

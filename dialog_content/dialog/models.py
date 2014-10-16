@@ -5,6 +5,7 @@ class Dialog(models.Model):
     name = models.CharField(max_length=250, unique=True)
     next_dialog = models.ForeignKey('Dialog', null=True, blank=True, help_text='The next dialog in the workflow.')
     # version (file version? format version?)
+    is_text_dialog = models.BooleanField(default=False)
     default_present_text = models.CharField(max_length=250, null=True, blank=True, help_text='e.g. "admits"')
     default_not_present_text = models.CharField(max_length=250, null=True, blank=True, help_text='e.g. "denies"')
 
@@ -102,3 +103,19 @@ class DialogLinkElement(models.Model):
 
     def __unicode__(self):
         return "Dialog Element: %s" % self.name
+
+
+class TextElement(models.Model):
+    title = models.CharField(max_length=250)
+    group = models.ForeignKey('Group')
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
+    EHR_keyword = models.CharField(max_length=250, help_text='The keyword to be replaced by this element in the EHR.')
+
+    content = models.TextField()
+
+    class Meta:
+        db_table = "textelement"
+        ordering = ('order',)
+
+    def __unicode__(self):
+        return "Text Element: %s" % self.title

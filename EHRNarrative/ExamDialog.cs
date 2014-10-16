@@ -284,6 +284,8 @@ namespace EHRNarrative
 
         private void InsertEHRText()
         {
+            bool textInserted = false;
+
             foreach (IEnumerable<Element> keywordGroup in data.elements
                 .Where(x => x.selected != null)
                 .OrderBy(x => x.normal)
@@ -292,8 +294,8 @@ namespace EHRNarrative
             {
                 var keyword = keywordGroup.First().EHR_keyword;
                 var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
-                narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
-                narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
+                if (narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString) || narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString))
+                    textInserted = true;
             }
 
             foreach (String EHR_text in data.elements
@@ -303,7 +305,8 @@ namespace EHRNarrative
             {
                 try
                 {
-                    narrative_window.ReplaceKeyword(EHR_text);
+                    if (narrative_window.ReplaceKeyword(EHR_text))
+                        textInserted = true;
                 }
                 catch (Exception e)
                 {
@@ -311,7 +314,8 @@ namespace EHRNarrative
                 }
             }
 
-            narrative_window.NextField();
+            if (textInserted)
+                narrative_window.NextField();
         }
 
         private void UpdateSLC()

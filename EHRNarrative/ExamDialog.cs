@@ -264,12 +264,13 @@ namespace EHRNarrative
                 NextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
                 NextButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
                 NextButton.Name = "NextButton";
-                NextButton.Size = new System.Drawing.Size(181, 23);
+                NextButton.Text = "Save and continue to " + data.dialog.NextDialog(data).Name;
+                Size textSize = TextRenderer.MeasureText(NextButton.Text, NextButton.Font);
+                NextButton.Size = new System.Drawing.Size(textSize.Width + 30, 23);
                 NextButton.Location = new System.Drawing.Point((buttonBar.Width - NextButton.Width - 10), 10);
                 NextButton.TabIndex = 3;
-                NextButton.Text = "Save and continue to " + data.dialog.NextDialog(data).Name;
-                NextButton.Tag = data.dialog.NextDialog(data).Name; // TODO: actually subclass the button to have a proper property
                 NextButton.UseVisualStyleBackColor = true;
+                NextButton.Tag = data.dialog.NextDialog(data).Name; // TODO: actually subclass the button to have a proper property
                 NextButton.Click += new System.EventHandler(this.NextButton_Click);
 
                 DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - NextButton.Width - 20), 10);

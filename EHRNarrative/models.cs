@@ -212,6 +212,7 @@ namespace EHRNarrative
         }
 
         public bool Recommended { get; set; }
+        public bool RecommendedActive = false;
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
         public string EHR_replace { get; set; }

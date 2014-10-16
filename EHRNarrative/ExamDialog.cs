@@ -429,10 +429,10 @@ namespace EHRNarrative
             this._listBox.Top = 45;
 
             //draw select alls
-            var button = new SelectAllButton(this._listBox);
-            button.Top = 18;
-            button.Left = 0;
-            this.Controls.Add(button);
+            var selectAllButton = new SelectAllButton(this._listBox);
+            selectAllButton.Top = 18;
+            selectAllButton.Left = 0;
+            this.Controls.Add(selectAllButton);
 
             var clearbutton = new ClearAllButton(this._listBox);
             clearbutton.Top = 18;
@@ -441,7 +441,7 @@ namespace EHRNarrative
 
             this.heading.Click += new System.EventHandler(this.ClickHeader);
             this._listBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.checkRecommended);
-            button.Click += new System.EventHandler(this.checkRecommended);
+            selectAllButton.Click += new System.EventHandler(this.checkRecommended);
             clearbutton.Click += new System.EventHandler(this.checkRecommended);
 
             this.Controls.Add(this._listBox);
@@ -462,7 +462,7 @@ namespace EHRNarrative
         public void CheckRecommended()
         {
             if (!this._group.Recommended) return;
-
+            
 
             heading.Padding = new System.Windows.Forms.Padding(16, 0, 0, 0);
             icon.Visible = true;
@@ -481,7 +481,30 @@ namespace EHRNarrative
             if (elements.Where(x => x.Recommended).Any())
             {
                 if (elements.Where(x => x.Recommended && x.selected == null).Any())
-                    this._group.RecommendedActive = true;
+                {
+                    IEnumerable<Element> recommendedElements = elements.Where(x => x.Recommended);
+                    IEnumerable<String> keywords = recommendedElements.Select(x => x.EHR_keyword).Distinct();
+                    foreach (string keyword in keywords)
+                    {
+                        IEnumerable<Element> elementsForKeyword = recommendedElements.Where(x => x.EHR_keyword == keyword);
+                        if (elementsForKeyword.Where(x => x.selected != null).Any())
+                        {
+                            foreach (Element element in elementsForKeyword)
+                            {
+                                element.RecommendedActive = false;
+                            }
+                        }
+                        else
+                        {
+                            this._group.RecommendedActive = true;
+
+                            foreach (Element element in elementsForKeyword)
+                            {
+                                element.RecommendedActive = true;
+                            }
+                        }
+                    }
+                }
             }
             else
             {

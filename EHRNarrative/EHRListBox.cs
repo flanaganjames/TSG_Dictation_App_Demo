@@ -47,7 +47,7 @@ namespace EHRNarrative
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
 
 
-            if (this.Element.Recommended && this.Element.selected == null)
+            if (this.Element.Recommended && this.Element.RecommendedActive == true)
             {
                 e.Graphics.DrawImage(Image.FromFile("Assets/exclamation.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
                 textColor = Brushes.DarkRed;
@@ -63,7 +63,7 @@ namespace EHRNarrative
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
-                                                 e.Bounds.Width - margin.Right - margin.Horizontal,
+                                                 e.Bounds.Width - margin.Right - margin.Horizontal - 10,
                                                  (int)font.GetHeight() * 2);
 
             // draw the text within the bounds
@@ -142,7 +142,7 @@ namespace EHRNarrative
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
-                                                 e.Bounds.Width - margin.Right - margin.Horizontal,
+                                                 e.Bounds.Width - margin.Right - margin.Horizontal - 10,
                                                  (int)font.GetHeight() * 2);
 
             // draw the text within the bounds
@@ -182,7 +182,7 @@ namespace EHRNarrative
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
-                                                 e.Bounds.Width - margin.Right - margin.Horizontal,
+                                                 e.Bounds.Width - margin.Right - margin.Horizontal - 10,
                                                  (int)font.GetHeight() * 2);
 
             // draw the text within the bounds

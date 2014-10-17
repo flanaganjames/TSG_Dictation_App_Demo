@@ -64,6 +64,7 @@ namespace Dashboard
         public String STmissing = @"{\rtf1\ansi\pard No dashboard available!\par}";
         public String EMmissing = @"{\rtf1\ansi\pard E/M advice unavailable!\par}";
         public String AlreadyRunning = @"{\rtf1\ansi\pard ALREADY RUNNING!!!\par}";
+        public DateTime dashUpdateTime = new DateTime(0);
 
         private bool DASHfail = false;
         private int dashboards_running = 0;
@@ -153,13 +154,6 @@ namespace Dashboard
             dashST.ScrollBars = RichTextBoxScrollBars.None;
             dash.Controls.Add(dashST);
             dashBwid = dashST.ClientSize.Width;
-            /*
-             * For future consideration, we could make the status panel dashSTht+dashEMht
-             * high, but not change the position of the E/M panel.  Then we could allow
-             * double-clicking on the E/M panel to hide it in case the status panel had
-             * more information than we could see at a glance.  This would be the 
-             * alternative to scroll bars on the status panel.
-             */
 
                 // the E/M panel
             dashEM = new RichTextBox();
@@ -226,12 +220,23 @@ namespace Dashboard
         public void refreshDash()
         {
             flash();
+                // check if files have changed
+            DateTime filetimes = new DateTime(0);
+            if (File.Exists(dashSTpath)  &&  filetimes < File.GetLastWriteTime(dashSTpath))
+                filetimes = File.GetLastWriteTime(dashSTpath);
+            if (File.Exists(dashEMpath)  &&  filetimes < File.GetLastWriteTime(dashEMpath))
+                filetimes = File.GetLastWriteTime(dashEMpath);
+            if (File.Exists(dashEMpath)  &&  filetimes < File.GetLastWriteTime(dashWpath))
+                filetimes = File.GetLastWriteTime(dashWpath);
+            if (filetimes <= dashUpdateTime)
+                return;
+            dashUpdateTime = filetimes;
             updates++;  // number of times we've updated
 
                 // update the panel contents
             refreshDashContents();
-                // check the size of the status panel
-                // and see if it's increased
+                // check the desired size of the status panel and see if it's
+                // increased, requiring resizing and repainting
             int dashSTht_wanted = Math.Max(dashST.PreferredSize.Height, dashSTht_min);
             if (dashSTht != dashSTht_wanted)
             {

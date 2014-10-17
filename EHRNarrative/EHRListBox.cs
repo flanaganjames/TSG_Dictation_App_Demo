@@ -169,11 +169,8 @@ namespace EHRNarrative
         public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
         {
             this._bounds = e.Bounds;
-            var backcolor = SystemBrushes.Control;
-            if (this.ChildSelected)
-            {
-                backcolor = Brushes.LightSkyBlue;
-            }
+            var textcolor = Brushes.DimGray;
+            Brush backcolor = SystemBrushes.Control;
             if (this.Popover.Visible)
             {
                 backcolor = Brushes.LightGray;
@@ -183,7 +180,15 @@ namespace EHRNarrative
             // draw some item separator
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
 
-            e.Graphics.DrawImage(Image.FromFile("Assets/right-chevron.png"), new Rectangle(e.Bounds.Right - 16, e.Bounds.Y + e.Bounds.Height / 2 - 7, 16, 16));
+            if (this.ChildSelected)
+            {
+                textcolor = Brushes.LightSkyBlue;
+                e.Graphics.DrawImage(Image.FromFile("Assets/right-chevron-blue.png"), new Rectangle(e.Bounds.Right - 16, e.Bounds.Y + e.Bounds.Height / 2 - 7, 16, 16));
+            }
+            else
+            {
+                e.Graphics.DrawImage(Image.FromFile("Assets/right-chevron.png"), new Rectangle(e.Bounds.Right - 16, e.Bounds.Y + e.Bounds.Height / 2 - 7, 16, 16));
+            }
 
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
@@ -192,7 +197,7 @@ namespace EHRNarrative
                                                  (int)font.GetHeight() * 2);
 
             // draw the text within the bounds
-            e.Graphics.DrawString(this.Name, font, Brushes.DimGray, textBounds, aligment);
+            e.Graphics.DrawString(this.Name, font, textcolor, textBounds, aligment);
 
             // put some focus rectangle
             e.DrawFocusRectangle();

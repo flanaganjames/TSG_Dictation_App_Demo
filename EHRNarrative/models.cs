@@ -14,6 +14,7 @@ namespace EHRNarrative
         public IEnumerable<Subgroup> subgroups { get; set; }
         public IEnumerable<Element> elements { get; set; }
         public IEnumerable<DialogLinkElement> dialoglinkelements { get; set; }
+        public IEnumerable<TextElement> textelements { get; set; }
         public IEnumerable<ComplaintGroup> complaintgroups { get; set; }
         public Complaint complaint { get; set; }
         public IEnumerable<Group_Complaints> group_complaints { get; set; }
@@ -29,6 +30,7 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public int Next_dialog_id { get; set; }
+        public bool Is_text_dialog { get; set; }
         public string Default_present_text { get; set; }
         public string Default_not_present_text { get; set; }
 
@@ -97,6 +99,10 @@ namespace EHRNarrative
             return data.group_complaint_groups.Where(x => x.Group_id == this.Id).Select(x => x.Complaintgroup_id).ToList();
         }
 
+        public Dialog Dialog(Collection data)
+        {
+            return data.dialogs.Where(x => x.Id == this.Dialog_id).FirstOrDefault();
+        }
         public IEnumerable<Subgroup> Subgroups(Collection data)
         {
             return data.subgroups.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
@@ -108,6 +114,10 @@ namespace EHRNarrative
         public IEnumerable<DialogLinkElement> DialogLinkElements(Collection data)
         {
             return data.dialoglinkelements.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
+        }
+        public IEnumerable<TextElement> TextElements(Collection data)
+        {
+            return data.textelements.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
         }
         public IEnumerable<Element> AllElements(Collection data)
         {
@@ -191,8 +201,13 @@ namespace EHRNarrative
     public class TextElement
     {
         public int Id { get; set; }
-        public int TextDialog_id { get; set; }
-        public string boiler_plate { get; set; }
+        public int Group_id { get; set; }
+        public int Order { get; set; }
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public string EHR_keyword { get; set; }
+
+        public bool selected { get; set; }
     }
 
     public class Element

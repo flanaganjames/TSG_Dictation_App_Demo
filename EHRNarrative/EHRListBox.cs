@@ -332,7 +332,7 @@ namespace EHRNarrative
             this.BorderStyle = BorderStyle.None;
 
             toolTip = new ToolTip();
-            toolTip.AutoPopDelay = 5000;
+            toolTip.AutoPopDelay = 25000;
             toolTip.InitialDelay = 1000;
             toolTip.ReshowDelay = 500;
             toolTip.ShowAlways = true;
@@ -482,7 +482,7 @@ namespace EHRNarrative
                     if (textItem != this.hoveredTextItem)
                     {
                         this.hoveredTextItem = textItem;
-                        this.toolTip.SetToolTip(this, textItem.Element.Content);
+                        this.toolTip.SetToolTip(this, Utils.FormatStringToWidth(textItem.Element.Content, 100));
                         this.toolTip.Active = true;
                     }
                 }

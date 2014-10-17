@@ -84,7 +84,7 @@ namespace EHRNarrative
                 text.ReadOnly = true;
                 text.BorderStyle = BorderStyle.Fixed3D;
                 text.Cursor = System.Windows.Forms.Cursors.Hand;
-                text.Text = e.element.boiler_plate;
+                //text.Text = e.element.boiler_plate;
                 text.Select(0, 0);
                 text.Height = TextRenderer.MeasureText(text.Text, text.Font, new Size(text.Width, maxHeight), TextFormatFlags.WordBreak).Height;
 

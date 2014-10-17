@@ -75,6 +75,45 @@ namespace EHRNarrative
 
     }
 
+    public class EHRListBoxTextItem
+    {
+        private TextElement _element;
+        public TextElement Element { get { return this._element; } }
+
+        public EHRListBoxTextItem(TextElement element)
+        {
+            this._element = element;
+        }
+
+        public void drawItem(DrawItemEventArgs e, Padding margin, Font font, StringFormat aligment)
+        {
+            Brush textColor = Brushes.Black;
+            if (this.Element.selected)
+            {
+                e.Graphics.FillRectangle(Brushes.LightSkyBlue, e.Bounds);
+            }
+            else
+            {
+                e.Graphics.FillRectangle(SystemBrushes.Control, e.Bounds);
+            }
+
+            // draw some item separator
+            e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+
+            // calculate bounds for title text drawing
+            Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
+                                                 e.Bounds.Y + margin.Top,
+                                                 e.Bounds.Width - margin.Right - margin.Horizontal - 10,
+                                                 (int)font.GetHeight() * 2);
+
+            // draw the text within the bounds
+            e.Graphics.DrawString(this.Element.Title, font, textColor, textBounds, aligment);
+
+            // put some focus rectangle
+            e.DrawFocusRectangle();
+        }
+    }
+
     public class EHRListBoxGroup
     {
         public bool HasMouse { get; set; }
@@ -234,6 +273,13 @@ namespace EHRNarrative
                 this.Items.Add(new EHRListBoxDialogLink(element));
             }
         }
+        public void AddElements(IEnumerable<TextElement> elements)
+        {
+            foreach (TextElement element in elements)
+            {
+                this.Items.Add(new EHRListBoxTextItem(element));
+            }
+        }
         public void AddGroups(IEnumerable<Subgroup> groups, Collection data)
         {
             foreach (Subgroup group in groups)
@@ -302,6 +348,11 @@ namespace EHRNarrative
                     EHRListBoxDialogLink item = (EHRListBoxDialogLink)this.Items[e.Index];
                     item.drawItem(e, this.Margin, this._font, this._fmt);
                 }
+                else if (this.Items[e.Index] is EHRListBoxTextItem)
+                {
+                    EHRListBoxTextItem item = (EHRListBoxTextItem)this.Items[e.Index];
+                    item.drawItem(e, this.Margin, this._font, this._fmt);
+                }
             }
         }
 
@@ -324,7 +375,18 @@ namespace EHRNarrative
                 }
                 catch
                 {
-                    return;
+                    EHRListBoxTextItem textItem;
+                    try
+                    {
+                        textItem = (EHRListBoxTextItem)this.Items[IndexFromPoint(e.X, e.Y)];
+                        textItem.Element.selected = !textItem.Element.selected;
+                        this.Refresh();
+                        return;
+                    }
+                    catch
+                    {
+                        return;
+                    }
                 }
             }
 

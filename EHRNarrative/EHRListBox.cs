@@ -298,6 +298,9 @@ namespace EHRNarrative
                         listItem.Element.selected = "present";
                     else
                         listItem.Element.selected = "not present";
+
+                    if (listItem.Element.Recommended)
+                        listItem.Element.RecommendedActive = false;
                 }
             }
             this.Refresh();

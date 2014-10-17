@@ -259,6 +259,7 @@ namespace EHRNarrative
 
             //draw headings
             var heading = new GroupLabel(listbox, group);
+            heading.HideButtons();
             heading.Heading = group.Name;
             heading.Top = 15;
             heading.Left = columnGutter + (i % columnsPerRow) * (columnWidth + columnGutter);
@@ -456,7 +457,7 @@ namespace EHRNarrative
             get { return this._listBox; }
             set { }
         }
-        
+
         public GroupLabel(EHRListBox ListBox, Group group)
         {
             int maxListBoxHeight = System.Windows.Forms.Screen.GetWorkingArea(this).Height - 280; // minus window chrome, headings, button bar, allowance for addnl rows
@@ -504,6 +505,11 @@ namespace EHRNarrative
             this.Controls.Add(this._listBox);
 
             CheckRecommended();
+        }
+        public void HideButtons()
+        {
+            this.Controls.Remove(this.Controls.Find("SelectAll", false).First());
+            this.Controls.Remove(this.Controls.Find("ClearAll", false).First());
         }
 
         private void ClickHeader(object Sender, EventArgs e)
@@ -597,6 +603,7 @@ namespace EHRNarrative
         {
             _group = group;
             Text = "All Normal";
+            Name = "SelectAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             ForeColor = SystemColors.Highlight;
@@ -606,6 +613,7 @@ namespace EHRNarrative
         }
         public void SelectAll(object sender, EventArgs e)
         {
+
             this._group.SelectAllNL();
         }
     }
@@ -616,6 +624,7 @@ namespace EHRNarrative
         {
             _group = group;
             Text = "Clear All";
+            Name = "ClearAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             ForeColor = SystemColors.Highlight;

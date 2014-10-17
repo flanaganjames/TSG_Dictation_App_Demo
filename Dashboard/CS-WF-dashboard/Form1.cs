@@ -13,6 +13,7 @@ namespace WindowsFormsApplication1
     {
         public Form1()
         {
+            this.DoubleBuffered = true;
             InitializeComponent();
         }
     }

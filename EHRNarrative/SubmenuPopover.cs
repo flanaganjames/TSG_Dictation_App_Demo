@@ -19,6 +19,7 @@ namespace EHRNarrative
             this._parentListItem = parent;
             this._listBox = new EHRListBox();
             this._listBox.AddElements(subgroup.Elements(data));
+            this._listBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.checkSelection);
 
             initialize();
         }
@@ -28,6 +29,7 @@ namespace EHRNarrative
             this._parentListItem = parent;
             this._listBox = new EHRListBox();
             this._listBox.AddElements(elements);
+            this._listBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.checkSelection);
 
             initialize();
         }
@@ -49,6 +51,26 @@ namespace EHRNarrative
             this.BackColor = Color.LightGray;
 
             this.Enabled = true;
+        }
+
+        private void checkSelection(object Sender, MouseEventArgs e) { checkSelection(); }
+        private void checkSelection() { 
+            bool hasSelectedItems = false;
+            foreach (var listitem in this._listBox.Items)
+            {
+                try
+                {
+                    EHRListBoxItem item = (EHRListBoxItem)listitem;
+                    if (item.Element.selected != null)
+                        hasSelectedItems = true;
+                }
+                catch { }
+            }
+            if (hasSelectedItems)
+                this._parentListItem.ChildSelected = true;
+            else
+                this._parentListItem.ChildSelected = false;
+
         }
 
         new public void Hide()

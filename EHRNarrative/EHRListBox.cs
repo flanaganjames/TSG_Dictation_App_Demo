@@ -117,6 +117,7 @@ namespace EHRNarrative
     public class EHRListBoxGroup
     {
         public bool HasMouse { get; set; }
+        public bool ChildSelected { get; set; }
 
         private EHRListBox _parent;
         public EHRListBox Parent
@@ -169,6 +170,10 @@ namespace EHRNarrative
         {
             this._bounds = e.Bounds;
             var backcolor = SystemBrushes.Control;
+            if (this.ChildSelected)
+            {
+                backcolor = Brushes.LightSkyBlue;
+            }
             if (this.Popover.Visible)
             {
                 backcolor = Brushes.LightGray;
@@ -177,6 +182,8 @@ namespace EHRNarrative
 
             // draw some item separator
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.X, e.Bounds.Y, e.Bounds.X + e.Bounds.Width, e.Bounds.Y);
+
+            e.Graphics.DrawImage(Image.FromFile("Assets/right-chevron.png"), new Rectangle(e.Bounds.Right - 16, e.Bounds.Y + e.Bounds.Height / 2 - 7, 16, 16));
 
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,

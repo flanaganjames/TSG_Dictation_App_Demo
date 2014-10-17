@@ -237,6 +237,8 @@ namespace EHRNarrative
         private StringFormat _fmt;
         private Font _font;
         private EHRListBoxGroup displayedGroup;
+        private EHRListBoxTextItem hoveredTextItem;
+        private ToolTip toolTip;
 
         public EHRListBox(Font font, StringAlignment aligment, StringAlignment lineAligment)
         {
@@ -255,7 +257,6 @@ namespace EHRNarrative
             this._fmt.LineAlignment = StringAlignment.Center;
             this._font = new Font(this.Font, FontStyle.Bold);
             this.Cursor = Cursors.Hand;
-            this.displayedGroup = null;
             SetOptions();
         }
 
@@ -329,6 +330,18 @@ namespace EHRNarrative
 
             this.BackColor = SystemColors.Control;
             this.BorderStyle = BorderStyle.None;
+
+            toolTip = new ToolTip();
+            toolTip.AutoPopDelay = 5000;
+            toolTip.InitialDelay = 1000;
+            toolTip.ReshowDelay = 500;
+            toolTip.ShowAlways = true;
+            toolTip.IsBalloon = true;
+
+            toolTip.Active = false;
+
+            this.displayedGroup = null;
+            this.hoveredTextItem = null;
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)
@@ -423,6 +436,8 @@ namespace EHRNarrative
             {
                 group = (EHRListBoxGroup)this.Items[IndexFromPoint(e.X, e.Y)];
                 group.HasMouse = true;
+                this.toolTip.Active = false;
+                this.hoveredTextItem = null;
 
                 if (this.displayedGroup != group && this.displayedGroup != null)
                 {
@@ -459,6 +474,22 @@ namespace EHRNarrative
                 {
                     this.displayedGroup.HasMouse = false;
                     this.displayedGroup.Popover.Hide();
+                }
+
+                try
+                {
+                    EHRListBoxTextItem textItem = (EHRListBoxTextItem)this.Items[IndexFromPoint(e.X, e.Y)];
+                    if (textItem != this.hoveredTextItem)
+                    {
+                        this.hoveredTextItem = textItem;
+                        this.toolTip.SetToolTip(this, textItem.Element.Content);
+                        this.toolTip.Active = true;
+                    }
+                }
+                catch
+                {
+                    this.toolTip.Active = false;
+                    this.hoveredTextItem = null;
                 }
             }
         }

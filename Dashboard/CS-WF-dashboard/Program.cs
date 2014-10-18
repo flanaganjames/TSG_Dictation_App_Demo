@@ -9,8 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-// using System.Windows.Controls;
-// using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
@@ -64,12 +62,14 @@ namespace Dashboard
         public String STmissing = @"{\rtf1\ansi\pard No dashboard available!\par}";
         public String EMmissing = @"{\rtf1\ansi\pard E/M advice unavailable!\par}";
         public String AlreadyRunning = @"{\rtf1\ansi\pard ALREADY RUNNING!!!\par}";
-        public DateTime dashUpdateTime = new DateTime(0);
 
         private bool DASHfail = false;
         private int dashboards_running = 0;
         private int updates = 0;
         private bool showing_warning = false;
+
+        private Thread refThread = null;
+        delegate void refreshCallback();
 
         // Damn .Net:  there are two distinct RichTextBox classes,
         // with subtly different properties and methods.
@@ -82,9 +82,14 @@ namespace Dashboard
             System.Drawing.Graphics g = dash.CreateGraphics();
             dashResX = g.DpiX; dashResY = g.DpiY;
 
-            calculatePanelSizes();
-            drawPanels();
-            refreshDash();
+            this.calculatePanelSizes();
+            this.drawPanels();
+            this.refreshDash();
+
+            System.IO.FileSystemWatcher watcher = new System.IO.FileSystemWatcher(".", "*.rtf");
+            watcher.NotifyFilter = NotifyFilters.LastWrite;
+            watcher.Changed += new System.IO.FileSystemEventHandler((sender, e) => doDashRefresh());
+            watcher.EnableRaisingEvents = true;
         }
 
         public void calculatePanelSizes()
@@ -129,6 +134,7 @@ namespace Dashboard
             dashSTht = dashht - dashEMht;
             dashWpos = new System.Drawing.Point(0, dashht);
             dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
+            dashOsz = new System.Drawing.Size(dashOwid, dashOht);
         }
 
         public void drawPanels()
@@ -217,33 +223,36 @@ namespace Dashboard
             dashST.BackColor = Color.White;
         }
 
+        public void doDashRefresh()
+        {
+            if (this.dash.InvokeRequired)
+            {
+                refreshCallback d = new refreshCallback(refreshDash);
+                this.dash.Invoke(d);
+            }
+            else
+            {
+                this.refreshDash();
+            }
+        }
+
         public void refreshDash()
         {
             flash();
-                // check if files have changed
-            DateTime filetimes = new DateTime(0);
-            if (File.Exists(dashSTpath)  &&  filetimes < File.GetLastWriteTime(dashSTpath))
-                filetimes = File.GetLastWriteTime(dashSTpath);
-            if (File.Exists(dashEMpath)  &&  filetimes < File.GetLastWriteTime(dashEMpath))
-                filetimes = File.GetLastWriteTime(dashEMpath);
-            if (File.Exists(dashEMpath)  &&  filetimes < File.GetLastWriteTime(dashWpath))
-                filetimes = File.GetLastWriteTime(dashWpath);
-            if (filetimes <= dashUpdateTime)
-                return;
-            dashUpdateTime = filetimes;
             updates++;  // number of times we've updated
 
+
                 // update the panel contents
-            refreshDashContents();
+            this.refreshDashContents();
                 // check the desired size of the status panel and see if it's
                 // increased, requiring resizing and repainting
             int dashSTht_wanted = Math.Max(dashST.PreferredSize.Height, dashSTht_min);
             if (dashSTht != dashSTht_wanted)
             {
-                recalculatePanelSizes(dashSTht_wanted);
-                drawPanels();
+                this.recalculatePanelSizes(dashSTht_wanted);
+                this.drawPanels();
                     // we repainted the windows -- need to refresh contents
-                refreshDashContents();
+                this.refreshDashContents();
             }
         }
 
@@ -255,7 +264,7 @@ namespace Dashboard
             dashEM.Refresh();
                 // update buttons for the links
                     // the button height of 24 for the status buttons is from SLC
-            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 24.0f);
+            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 24);
                 // handle the warning panel
             refreshDashWarn();
                 // now refresh of the whole window
@@ -264,7 +273,7 @@ namespace Dashboard
 
 
         public void refreshDashButtons(RichTextBox panel, String panelRTF, 
-            ArrayList linkList, Color buttonColor, int indent, float dashBht)
+            ArrayList linkList, Color buttonColor, int indent, int dashBht)
         {
                 // basic parameters
                     // indent of the link button -- supplied in half-points, need twips
@@ -273,8 +282,7 @@ namespace Dashboard
             foreach (RichTextBox button in linkList)
             {
                 panel.Controls.Remove(button);
-                    // notice that we're not deleting the event handler from
-                    // the button, just removing the button from the window
+                button.Dispose();
             }
             linkList.Clear();
 
@@ -306,7 +314,7 @@ namespace Dashboard
                     // make a "button" out of it
                 RichTextBox button = new RichTextBox();
                 linkList.Add(button);
-                SizeF ss = new SizeF(dashBwid, dashBht / 144 * dashResY);
+                SizeF ss = new SizeF(dashBwid, (float) dashBht / 144 * dashResY);
                 PointF pp = new PointF(0f, (float)height / 144 * dashResY);
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
@@ -345,18 +353,44 @@ namespace Dashboard
             // update the warning box contents if necessary
             if (File.Exists(dashWpath))
             {
-                dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
-                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 28.0f);
+                try
+                {
+                    dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                    try
+                    {
+                        dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
+                    }
+                    catch
+                    {
+                        refreshDashWarn();
+                    }
+                }
+
+                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 28);
                 dashW.Refresh();
+                dash.Size = dashTsz;
             }
+            dash.Refresh();
         }
 
         public string dashSTcontents()
         {
             if (DASHfail) return AlreadyRunning;
-            if (File.Exists(dashSTpath))  // we should only be reading the file if it's been updated
+            if (File.Exists(dashSTpath))
             {
-                return File.ReadAllText(dashSTpath);
+                try
+                {
+                    return File.ReadAllText(dashSTpath);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                    return dashSTcontents();
+                }
             }
             else
             {
@@ -367,9 +401,17 @@ namespace Dashboard
         public string dashEMcontents()
         {
             if (DASHfail) return AlreadyRunning;
-            if (File.Exists(dashEMpath))  // we should only be reading the file if it's been updated
+            if (File.Exists(dashEMpath))
             {
-                return File.ReadAllText(dashEMpath);
+                try
+                {
+                    return File.ReadAllText(dashEMpath);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                    return dashEMcontents();
+                }
             }
             else
             {
@@ -470,13 +512,22 @@ namespace Dashboard
 
                 Dashboard D = new Dashboard();
 
-                    // update timer event
-                    // (like with the RichTextBox class, annoyingly there are
-                    //  three distinct Timer classes, so we fully qualify it)
-                System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-                timer.Enabled = true;
-                timer.Interval = 1000;
-                timer.Tick += new EventHandler((sender, e) => timer_Tick(sender, e, D));
+                /*
+                 * invocation of event handlers is now done in the dashboard constructor
+                 */
+                //// watch for file changes
+                //System.IO.FileSystemWatcher watcher = new System.IO.FileSystemWatcher(".", "*.rtf");
+                //watcher.NotifyFilter = NotifyFilters.LastWrite;
+                //watcher.Changed += new System.IO.FileSystemEventHandler((sender, e) => dashChange(sender, e, D));
+                //watcher.EnableRaisingEvents = true;
+
+                //// update timer event
+                //// (like with the RichTextBox class, annoyingly there are
+                ////  three distinct Timer classes, so we fully qualify it)
+                //System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+                //timer.Enabled = true;
+                //timer.Interval = 1000;
+                //timer.Tick += new EventHandler((sender, e) => dashChange(sender, e, D));
 
                     // normal run
                 D.refreshDash();
@@ -485,9 +536,9 @@ namespace Dashboard
             }
         }
 
-        static void timer_Tick(object sender, EventArgs e, Dashboard D)
+        static void dashChange(object sender, EventArgs e, Dashboard D)
         {
-            D.refreshDash();
+            D.doDashRefresh();
         }
 
             // a simple utility routine

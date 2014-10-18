@@ -433,9 +433,12 @@ namespace Dashboard
             "Differential Diagnosis Tool: file:001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
             "RSQ Assist: http://tsg-demo/rsqassist/",
             "TAD risk: file:054_bp_ebm/054_002_thoracic_aortic_dissection.html",
+            "TAD movement: file:003_chest_pain_thoracic_aortic_dissection/003_007_chest_pain_movement_of_pain.html",
+            "TAD onset: file:003_chest_pain_thoracic_aortic_dissection/003_005_chest_pain_sudden_onset.html",
+            "TAD differential: file:003_chest_pain_thoracic_aortic_dissection/003_010_chest_pain_arm_blood_pressure_differential.html",
             };
             String badLink = "file:oops.html";
-            String localFiles = "file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/";
+            String localFilesRoot = "file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/";
             String resolvedLink = "";
 
                 // strip off the required syntactic sugar
@@ -467,7 +470,7 @@ namespace Dashboard
             {
                 int i = resolvedLink.IndexOf(':');
                 resolvedLink = resolvedLink.Substring(i + 1);
-                resolvedLink = localFiles + resolvedLink;
+                resolvedLink = localFilesRoot + resolvedLink;
             }
 
             if (!(resolvedLink.StartsWith("http://")

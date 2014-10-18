@@ -193,6 +193,7 @@ void validateVitalF(float vital, rangeF Range[], int nn)
  void D_removeWarningBox(void)
  {
 	_unlink(WARN_PATH);
+	_wlinks.clear();
  }
 
  
@@ -219,39 +220,16 @@ void S_Validate(void)
 		// clear previous warnings, if any
 	D_clearWarnings();
 
-		// special case for TAD Risk
+		// all assessments yield warnings
 	list<char *>::iterator i;
-	char *consider = "Consider TAD Risk";
-	bool found_TAD = false;
-	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
-	{
-		if (_strnicmp(*i, consider, strlen(*i)) == 0)
-		{
-			found_TAD = true;
-			break;
-		}
-	}
-	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
-	{
-		if (_strnicmp(*i, consider, strlen(*i)) == 0)
-		{
-			found_TAD = true;
-			break;
-		}
-	}
 	for (i = _assess.begin();  i != _assess.end();  i++)
-	{
-		if (_strnicmp(*i, consider, strlen(*i)) == 0)
-		{
-			found_TAD = true;
-			break;
-		}
-	}
+		D_addWarning(*i);
 
-	if (found_TAD)
-	{
-		D_addWarning("Check TAD Risk!");
-	}
+		// special marker -- put links here
+		// ... really should have separate lists for assess warnings
+		// ... and vital sign warnings, or better a way of tying 
+		// ... warning links to specific assessments
+	D_addWarning("*****");
 
 		// check the vital signs
 	S_checkVitalSigns();

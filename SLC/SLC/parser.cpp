@@ -23,7 +23,7 @@ list<char *> _all_complete, _comp_req, _comp_rec;
 	// billing lists
 list<char *> _bill_hpi, _bill_ros, _bill_pfsh, _bill_exam;
 	// resource links
-list<char *> _links;
+list<char *> _links, _wlinks;
 	// vital signs -- one item per category
 char *_VS_p, *_VS_r, *_VS_sbp, *_VS_dbp, *_VS_t;
 	// vital sign values -- filled in by S_Validate()
@@ -50,7 +50,7 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	dataqual_exam_t, dataqual_hpi_t, dataqual_pfsh_t, dataqual_ros_t,
 	dataqual_ros2_t,
 	dataqual_t,
-	bill_t, link_t, delete_t, del_t,
+	bill_t, link_t, wlink_t, delete_t, del_t,
 	end_t, end_tt, reset_t, 
 	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
 	validate_t, ignore_t,
@@ -63,7 +63,7 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"dataqual exam", "dataqual hpi", "dataqual pfsh", "dataqual ros",
 	"dataqual review of systems",
 	"dataqual",
-	"bill", "link", "delete", "del",
+	"bill", "link", "wlink", "delete", "del",
 	"end", "end_of_script",	"reset",
 	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
 	"validate", "ignore",
@@ -99,6 +99,7 @@ void clobberState(void)
 	_bill_pfsh.clear();
 	_bill_exam.clear();
 	_links.clear();
+	_wlinks.clear();
 	free(_differential);
 	_differential = NULL;
 		// don't bother to check if the warning box exists before
@@ -446,6 +447,10 @@ void S_parseStatus(void)
 			break;
 		case vital_t_t:
 			_VS_t = scopy(s);
+			break;
+		case wlink_t:
+			convert_blanks(s);
+			addWords(_wlinks, s);
 			break;
 		case validate_t:
 		case ignore_t:

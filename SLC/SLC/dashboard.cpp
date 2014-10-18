@@ -641,6 +641,8 @@ void S_generateWarnBox(void)
 	if (_warnings.empty())
 	{
 		D_removeWarningBox();
+			// also clear the warning link list
+		_wlinks.clear();
 		return;
 	}
 
@@ -653,20 +655,25 @@ void S_generateWarnBox(void)
 	// D_warning_icons();
 	D_vertspace(5);
 	height += 10;
-	list<char *>::iterator i;
+	list<char *>::iterator i, ii;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
-		D_one_warn_icon(225, 210);
-		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\ri%d %s\\par}\n",
-			ps_warning, c_warning, T_space*2, T_space*2, *i);
-		height += 32;
-		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)
+		if (strncmp(*i, "*****", 5) == 0)
 		{
-			D_showOneLink("TAD_Risk", ps_link, height);
-				// comment out the above & uncomment the following for
-				// bigger link text
-			// D_showOneLink("TAD_Risk", ps_warning_link, height);
-			height += 28;  // reflects height of box on warning panel
+				// special place to drop warnings
+			for (ii = _wlinks.begin();  ii != _wlinks.end();  ii++)
+			{
+				D_showOneLink(*ii, ps_link, height);
+				height += 28;
+			}
+			D_vertspace(4);
+			height += 8;
+		} else {
+				// we want to put the links here
+			D_one_warn_icon(225, 210);
+			fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\fi%d\\ri%d %s\\par}\n",
+				ps_warning, c_warning, T_space*6, -T_space*4, T_space*2, *i);
+			height += 32;
 		}
 		D_vertspace(2);
 		height += 4;

@@ -13,7 +13,7 @@ extern list<char *> _rec_hpi, _rec_exam;
 	// items completed
 extern list<char *> _all_complete, _comp_req, _comp_rec;
 	// resource links
-extern list<char *> _links;
+extern list<char *> _links, _wlinks;
 	// billing lists
 extern list<char *> _bill_hpi, _bill_ros, _bill_pfsh, _bill_exam;
 extern int _max_exam_level;

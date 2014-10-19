@@ -588,6 +588,7 @@ void S_generateDash(void)
 
 	// list of warnings for the dashboard
 list<char *> _warnings;
+int _warnings_from_assessments = 0;
 
 	// clear the warnings list
 void D_clearWarnings(void)
@@ -596,9 +597,10 @@ void D_clearWarnings(void)
 }
 
 	// add a warning to the list to be displayed in the warning box
-void D_addWarning(char *s)
+void D_addWarning(char *s, bool assessment)
 {
 	_warnings.push_back(scopy(s));
+	if (assessment)  _warnings_from_assessments++;
 }
 
 
@@ -641,8 +643,6 @@ void S_generateWarnBox(void)
 	if (_warnings.empty())
 	{
 		D_removeWarningBox();
-			// also clear the warning link list
-		_wlinks.clear();
 		return;
 	}
 
@@ -656,27 +656,29 @@ void S_generateWarnBox(void)
 	D_vertspace(5);
 	height += 10;
 	list<char *>::iterator i, ii;
+	int warnings_seen = 0;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
-		if (strncmp(*i, "*****", 5) == 0)
+
+
+		D_one_warn_icon(225, 210);
+		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\fi%d\\ri%d %s\\par}\n",
+			ps_warning, c_warning, T_space*6, -T_space*4, T_space*2, *i);
+		height += 32;
+		D_vertspace(2);
+		height += 4;
+
+		if (++warnings_seen == _warnings_from_assessments)
 		{
-				// special place to drop warnings
+				// drop warning links after the assessment warnings
 			for (ii = _wlinks.begin();  ii != _wlinks.end();  ii++)
 			{
 				D_showOneLink(*ii, ps_link, height);
 				height += 28;
 			}
-			D_vertspace(4);
-			height += 8;
-		} else {
-				// we want to put the links here
-			D_one_warn_icon(225, 210);
-			fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\fi%d\\ri%d %s\\par}\n",
-				ps_warning, c_warning, T_space*6, -T_space*4, T_space*2, *i);
-			height += 32;
+			D_vertspace(6);
+			height += 12;
 		}
-		D_vertspace(2);
-		height += 4;
 	}
 	D_epilog();
 	D_closeoutput();

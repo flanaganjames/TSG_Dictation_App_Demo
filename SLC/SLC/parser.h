@@ -27,5 +27,5 @@ extern char *_differential;
 
 char *scopy(const char *);
 void D_clearWarnings(void);
-void D_addWarning(char *);
+void D_addWarning(char *, bool);
 void D_removeWarningBox(void);

@@ -69,7 +69,10 @@ int S_addStatus(int argc, _TCHAR **argv)
 		}
 
 		if (status_file == NULL)
-			S_openStatus("a");
+		{
+			if (S_openStatus("a") < 0)
+				return -1;
+		}
 
 		if (wcscmp(argv[i], L"!") == 0)
 		{

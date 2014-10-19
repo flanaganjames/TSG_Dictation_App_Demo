@@ -132,7 +132,7 @@ void validateVital(int vital, range Range[], int nn)
 			|| (vital >= Range[i].low  &&  vital < Range[i].high)
 			|| (vital >= Range[i].low  &&  Range[i].high < 0))
 		{
-				D_addWarning(Range[i].warning);
+				D_addWarning(Range[i].warning, false);
 				break;
 		}
 	}
@@ -147,7 +147,7 @@ void validateVitalF(float vital, rangeF Range[], int nn)
 			|| (vital >= Range[i].low  &&  vital < Range[i].high)
 			|| (vital >= Range[i].low  &&  Range[i].high < 0.))
 		{
-				D_addWarning(Range[i].warning);
+				D_addWarning(Range[i].warning, false);
 				break;
 		}
 	}
@@ -193,6 +193,18 @@ void validateVitalF(float vital, rangeF Range[], int nn)
  void D_removeWarningBox(void)
  {
 	_unlink(WARN_PATH);
+	if (! _wlinks.empty()) {
+		// we had links for the warning panel, but all the warnings
+		// were cleared -- therefore we need to remember to clear
+		// the warning links the next time we generate the dashboard,
+		// otherwise we'll have links associated with previous warnings
+		if (S_openStatus("a") == 0)
+		{
+			fprintf(status_file, "wlink_clear\n");
+			fclose(status_file);
+			status_file = NULL;
+		}
+	}
 	_wlinks.clear();
  }
 
@@ -221,15 +233,40 @@ void S_Validate(void)
 	D_clearWarnings();
 
 		// all assessments yield warnings
+		//  but TAD risk has a special case for the warning text
 	list<char *>::iterator i;
+	char *consider = "Consider TAD Risk";
+#if 0
+	bool found_TAD = false;
+#endif
 	for (i = _assess.begin();  i != _assess.end();  i++)
-		D_addWarning(*i);
+	{
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
+			D_addWarning("Check TAD Risk!", true);  // found_TAD = true;			
+		else
+			D_addWarning(*i, true);
+	}
+#if 0
+	for (i = _req_hpi.begin();  i != _req_hpi.end();  i++)
+	{
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
+		{
+			found_TAD = true;
+			break;
+		}
+	}
+	for (i = _req_exam.begin();  i != _req_exam.end();  i++)
+	{
+		if (_strnicmp(*i, consider, strlen(*i)) == 0)
+		{
+			found_TAD = true;
+			break;
+		}
+	}
 
-		// special marker -- put links here
-		// ... really should have separate lists for assess warnings
-		// ... and vital sign warnings, or better a way of tying 
-		// ... warning links to specific assessments
-	D_addWarning("*****");
+	if (found_TAD)
+		D_addWarning("Check TAD Risk!");
+#endif
 
 		// check the vital signs
 	S_checkVitalSigns();

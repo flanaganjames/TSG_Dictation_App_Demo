@@ -50,7 +50,8 @@ enum commands_t {complaint_t = 0, state_t, diff_t, add_t,
 	dataqual_exam_t, dataqual_hpi_t, dataqual_pfsh_t, dataqual_ros_t,
 	dataqual_ros2_t,
 	dataqual_t,
-	bill_t, link_t, wlink_t, delete_t, del_t,
+	bill_t, link_t, wlink_t, wlink_clear_t,
+	delete_t, del_t,
 	end_t, end_tt, reset_t, 
 	vital_p_t, vital_r_t, vital_sbp_t, vital_dbp_t, vital_t_t,
 	validate_t, ignore_t,
@@ -63,7 +64,8 @@ char *command_names[] = { "complaint", "state", "diff", "add",
 	"dataqual exam", "dataqual hpi", "dataqual pfsh", "dataqual ros",
 	"dataqual review of systems",
 	"dataqual",
-	"bill", "link", "wlink", "delete", "del",
+	"bill", "link", "wlink", "wlink_clear",
+	"delete", "del",
 	"end", "end_of_script",	"reset",
 	"VS p", "VS r", "VS sbp", "VS dbp", "VS t",
 	"validate", "ignore",
@@ -451,6 +453,9 @@ void S_parseStatus(void)
 		case wlink_t:
 			convert_blanks(s);
 			addWords(_wlinks, s);
+			break;
+		case wlink_clear_t:
+			_wlinks.clear();
 			break;
 		case validate_t:
 		case ignore_t:

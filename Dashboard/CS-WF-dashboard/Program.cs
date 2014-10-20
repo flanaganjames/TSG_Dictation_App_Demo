@@ -438,7 +438,7 @@ namespace Dashboard
             "TAD differential: file:003_chest_pain_thoracic_aortic_dissection/003_010_chest_pain_arm_blood_pressure_differential.html",
             };
             String badLink = "file:oops.html";
-            String localFilesRoot = "file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/";
+            String localFilesRoot = "RSQ_Files_05.06.2014/";
             String resolvedLink = "";
 
                 // strip off the required syntactic sugar
@@ -470,7 +470,9 @@ namespace Dashboard
             {
                 int i = resolvedLink.IndexOf(':');
                 resolvedLink = resolvedLink.Substring(i + 1);
-                resolvedLink = localFilesRoot + resolvedLink;
+                // resolvedLink = localFilesRoot + resolvedLink;
+                resolvedLink = "file:///" 
+                    + System.IO.Path.GetFullPath(localFilesRoot + resolvedLink);
             }
 
             if (!(resolvedLink.StartsWith("http://")

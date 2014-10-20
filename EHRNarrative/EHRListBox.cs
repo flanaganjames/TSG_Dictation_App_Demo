@@ -310,9 +310,9 @@ namespace EHRNarrative
                     if (listItem.Element.Is_present_normal)
                         listItem.Element.selected = "present";
                     else
-                        listItem.Element.selected = "not present";
+                        listItem.Element.selected = null;
 
-                    if (listItem.Element.Recommended)
+                    if (listItem.Element.Recommended && listItem.Element.selected != null)
                         listItem.Element.RecommendedActive = false;
                 }
             }
@@ -330,7 +330,6 @@ namespace EHRNarrative
             }
             this.Refresh();
         }
-
         private void SetOptions()
         {
             this.SelectionMode = System.Windows.Forms.SelectionMode.None;

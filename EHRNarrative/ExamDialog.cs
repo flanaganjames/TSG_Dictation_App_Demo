@@ -321,6 +321,27 @@ namespace EHRNarrative
 
             buttonBar.Controls.Add(DoneButton);
 
+            if (data.dialog.GroupsForComplaint(data).Count() > 2)
+            {
+                Button AllNormalButton = new Button();
+                AllNormalButton.Text = "All Normal";
+                AllNormalButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+                AllNormalButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                AllNormalButton.Size = new System.Drawing.Size(130, 23);
+                AllNormalButton.Location = new System.Drawing.Point(10, 10);
+                AllNormalButton.Click += new System.EventHandler(this.AllNormalButton_Click);
+                buttonBar.Controls.Add(AllNormalButton);
+
+                Button ClearAllButton = new Button();
+                ClearAllButton.Text = "Clear All";
+                ClearAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+                ClearAllButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                ClearAllButton.Size = new System.Drawing.Size(130, 23);
+                ClearAllButton.Location = new System.Drawing.Point(10 + AllNormalButton.Width + 10, 10);
+                ClearAllButton.Click += new System.EventHandler(this.ClearAllButton_Click);
+                buttonBar.Controls.Add(ClearAllButton);
+            }
+
             this.Controls.Add(buttonBar);
         }
 
@@ -392,6 +413,53 @@ namespace EHRNarrative
 
         }
 
+        private void AllNormalButton_Click(object sender, EventArgs e)
+        {
+            foreach (Group group in data.dialog.GroupsForComplaint(data))
+            {
+                foreach (Element element in group.ElementsForComplaint(data))
+                {
+                    if (element.Is_present_normal)
+                    {
+                        element.selected = "present";
+
+                        if (element.Recommended && element.selected != null)
+                            element.RecommendedActive = false;
+                    }
+                }
+            }
+            CheckAllRecommended();
+            this.Refresh();
+        }
+        private void ClearAllButton_Click(object sender, EventArgs e)
+        {
+            foreach (Group group in data.dialog.GroupsForComplaint(data))
+            {
+                foreach (Element element in group.ElementsForComplaint(data))
+                {
+                    element.selected = null;
+
+                    if (element.Recommended)
+                        element.RecommendedActive = true;
+                }
+            }
+            CheckAllRecommended();
+            this.Refresh();
+        }
+        private void CheckAllRecommended()
+        {
+            foreach (var control in this.Controls)
+            {
+                if (control is AccordianRow)
+                {
+                    AccordianRow row = (AccordianRow)control;
+                    foreach (GroupLabel group in row.Controls)
+                    {
+                        group.CheckRecommended();
+                    }
+                }
+            }
+        }
         private void DoneButton_Click(object sender, EventArgs e)
         {
             InsertEHRText();
@@ -602,7 +670,7 @@ namespace EHRNarrative
         public SelectAllButton(EHRListBox group)
         {
             _group = group;
-            Text = "All Normal";
+            Text = "Normal";
             Name = "SelectAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;

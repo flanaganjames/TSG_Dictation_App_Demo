@@ -382,24 +382,13 @@ namespace EHRNarrative
 
         private void CleanCurrentTemplate()
         {
-            List<EHRLine> lines = FindEHRLines();
-            foreach (EHRLine line in lines)
-            {
-                if (String.IsNullOrWhiteSpace(line.text))
-                {
-                    int start = HealthRecordText.Rtf.IndexOf(line.label);
-                    int end = HealthRecordText.Rtf.IndexOf("\\par", start) + 4;
-                    HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
-                }
-            }
-
-            List<String> considerables = FindConsiderables();
-            foreach (String considerable in considerables)
-            {
-                int start = HealthRecordText.Rtf.IndexOf(considerable);
-                int end = HealthRecordText.Rtf.IndexOf("\\par", start) + 4;
-                HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
-            }
+      Regex rgx = new Regex(@".*\[.*\].*");
+      HealthRecordText.Rtf = rgx.Replace(HealthRecordText.Rtf, "");
+            //foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Rtf)))
+            //{
+            //    if (line.Contains("[") && line.Contains("]"))
+            //        HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(line, "");
+            //}
         }
 
         public void NotifySLC(string command_str)

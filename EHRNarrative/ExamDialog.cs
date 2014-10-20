@@ -77,6 +77,7 @@ namespace EHRNarrative
                     SELECT * FROM subgroup;
                     SELECT * FROM element;
                     SELECT * FROM dialogelement;
+                    SELECT * FROM textelement;
                     SELECT * FROM group_complaints;
                     SELECT * FROM group_complaint_groups;
                     SELECT * FROM element_complaints;
@@ -97,6 +98,7 @@ namespace EHRNarrative
                             subgroups = multi.Read<Subgroup>().ToList(),
                             elements = multi.Read<Element>().ToList(),
                             dialoglinkelements = multi.Read<DialogLinkElement>().ToList(),
+                            textelements = multi.Read<TextElement>().ToList(),
                             group_complaints = multi.Read<Group_Complaints>().ToList(),
                             group_complaint_groups = multi.Read<Group_Complaint_Groups>().ToList(),
                             element_complaints = multi.Read<Element_Complaints>().ToList(),
@@ -134,16 +136,26 @@ namespace EHRNarrative
         private void RenderDialog(Collection data) {
             int columnWidth = 200;
             int columnGutter = 20;
-            int columns = data.dialog.GroupsForComplaint(data).Count();
+            int columns = data.dialog.Is_text_dialog ? data.dialog.Groups(data).Count() : data.dialog.GroupsForComplaint(data).Count();
             int columnsPerRow = (System.Windows.Forms.Screen.GetWorkingArea(this).Width - columnGutter-40) / (columnWidth + columnGutter);
 
             this.Width = (Math.Min(columns, columnsPerRow)) * (columnWidth + columnGutter) + columnGutter*2;
 
             rows = new List<AccordianRow>();
 
-            foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
+            if (data.dialog.Is_text_dialog)
             {
-                RenderGroupListbox(rows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
+                foreach (var item in data.dialog.Groups(data).Select((group, i) => new { i, group }))
+                {
+                    RenderTextGroupListbox(rows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
+                }
+            }
+            else
+            {
+                foreach (var item in data.dialog.GroupsForComplaint(data).Select((group, i) => new { i, group }))
+                {
+                    RenderGroupListbox(rows, item.group, item.i, columnsPerRow, columnGutter, columnWidth);
+                }
             }
 
             rows[0].Height = rows[0].MaxHeight;
@@ -160,7 +172,7 @@ namespace EHRNarrative
             }
 
 
-            if (data.dialog.GroupsAdditional(data).Count() > 0)
+            if (!data.dialog.Is_text_dialog && data.dialog.GroupsAdditional(data).Count() > 0)
             {
                 Label addnlGroupLabel = RenderAddnlLabel(columnGutter);
                 this.Controls.Add(addnlGroupLabel);
@@ -226,6 +238,36 @@ namespace EHRNarrative
             currentPanel.Controls.Add(heading);
         }
 
+        private void RenderTextGroupListbox(List<AccordianRow> rows, Group group, int i, int columnsPerRow, int columnGutter, int columnWidth)
+        {
+            int row = i / columnsPerRow;
+            AccordianRow currentPanel;
+
+            try
+            {
+                currentPanel = rows[row];
+            }
+            catch
+            {
+                rows.Add(new AccordianRow());
+                currentPanel = rows[row];
+            }
+
+            //create listbox for this group
+            var listbox = new EHRListBox();
+            listbox.AddElements(group.TextElements(data));
+
+            //draw headings
+            var heading = new GroupLabel(listbox, group);
+            heading.HideButtons();
+            heading.Heading = group.Name;
+            heading.Top = 15;
+            heading.Left = columnGutter + (i % columnsPerRow) * (columnWidth + columnGutter);
+            heading.Height = listbox.Height + listbox.Top + 15;
+            currentPanel.MaxHeight = Math.Max(currentPanel.MaxHeight, heading.Height);
+            currentPanel.Controls.Add(heading);
+        }
+
         private Label RenderAddnlLabel(int columnGutter)
         {
             var addnlGroupLabel = new Label();
@@ -264,12 +306,13 @@ namespace EHRNarrative
                 NextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
                 NextButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
                 NextButton.Name = "NextButton";
-                NextButton.Size = new System.Drawing.Size(181, 23);
+                NextButton.Text = "Save and continue to " + data.dialog.NextDialog(data).Name;
+                Size textSize = TextRenderer.MeasureText(NextButton.Text, NextButton.Font);
+                NextButton.Size = new System.Drawing.Size(textSize.Width + 30, 23);
                 NextButton.Location = new System.Drawing.Point((buttonBar.Width - NextButton.Width - 10), 10);
                 NextButton.TabIndex = 3;
-                NextButton.Text = "Save and continue to " + data.dialog.NextDialog(data).Name;
-                NextButton.Tag = data.dialog.NextDialog(data).Name; // TODO: actually subclass the button to have a proper property
                 NextButton.UseVisualStyleBackColor = true;
+                NextButton.Tag = data.dialog.NextDialog(data).Name; // TODO: actually subclass the button to have a proper property
                 NextButton.Click += new System.EventHandler(this.NextButton_Click);
 
                 DoneButton.Location = new System.Drawing.Point((buttonBar.Width - DoneButton.Width - NextButton.Width - 20), 10);
@@ -283,6 +326,8 @@ namespace EHRNarrative
 
         private void InsertEHRText()
         {
+            bool textInserted = false;
+
             foreach (IEnumerable<Element> keywordGroup in data.elements
                 .Where(x => x.selected != null)
                 .OrderBy(x => x.normal)
@@ -291,8 +336,8 @@ namespace EHRNarrative
             {
                 var keyword = keywordGroup.First().EHR_keyword;
                 var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
-                narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString);
-                narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString);
+                if (narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString) || narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString))
+                    textInserted = true;
             }
 
             foreach (String EHR_text in data.elements
@@ -302,7 +347,8 @@ namespace EHRNarrative
             {
                 try
                 {
-                    narrative_window.ReplaceKeyword(EHR_text);
+                    if (narrative_window.ReplaceKeyword(EHR_text))
+                        textInserted = true;
                 }
                 catch (Exception e)
                 {
@@ -310,7 +356,20 @@ namespace EHRNarrative
                 }
             }
 
-            narrative_window.NextField();
+            foreach (IEnumerable<TextElement> keywordGroup in data.textelements
+                .Where(x => x.selected)
+                .OrderBy(x => x.Order)
+                .GroupBy(x => x.EHR_keyword)
+                )
+            {
+                var keyword = keywordGroup.First().EHR_keyword;
+                var EHRString = String.Join("  \\n", keywordGroup.Select(x => x.Content).ToList());
+                if (narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString) || narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString))
+                    textInserted = true;
+            }
+
+            if (textInserted)
+                narrative_window.NextField();
         }
 
         private void UpdateSLC()
@@ -428,10 +487,10 @@ namespace EHRNarrative
             this._listBox.Top = 45;
 
             //draw select alls
-            var button = new SelectAllButton(this._listBox);
-            button.Top = 18;
-            button.Left = 0;
-            this.Controls.Add(button);
+            var selectAllButton = new SelectAllButton(this._listBox);
+            selectAllButton.Top = 18;
+            selectAllButton.Left = 0;
+            this.Controls.Add(selectAllButton);
 
             var clearbutton = new ClearAllButton(this._listBox);
             clearbutton.Top = 18;
@@ -440,12 +499,17 @@ namespace EHRNarrative
 
             this.heading.Click += new System.EventHandler(this.ClickHeader);
             this._listBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.checkRecommended);
-            button.Click += new System.EventHandler(this.checkRecommended);
+            selectAllButton.Click += new System.EventHandler(this.checkRecommended);
             clearbutton.Click += new System.EventHandler(this.checkRecommended);
 
             this.Controls.Add(this._listBox);
 
             CheckRecommended();
+        }
+        public void HideButtons()
+        {
+            this.Controls.Remove(this.Controls.Find("SelectAll", false).First());
+            this.Controls.Remove(this.Controls.Find("ClearAll", false).First());
         }
 
         private void ClickHeader(object Sender, EventArgs e)
@@ -461,7 +525,7 @@ namespace EHRNarrative
         public void CheckRecommended()
         {
             if (!this._group.Recommended) return;
-
+            
 
             heading.Padding = new System.Windows.Forms.Padding(16, 0, 0, 0);
             icon.Visible = true;
@@ -480,7 +544,30 @@ namespace EHRNarrative
             if (elements.Where(x => x.Recommended).Any())
             {
                 if (elements.Where(x => x.Recommended && x.selected == null).Any())
-                    this._group.RecommendedActive = true;
+                {
+                    IEnumerable<Element> recommendedElements = elements.Where(x => x.Recommended);
+                    IEnumerable<String> keywords = recommendedElements.Select(x => x.EHR_keyword).Distinct();
+                    foreach (string keyword in keywords)
+                    {
+                        IEnumerable<Element> elementsForKeyword = recommendedElements.Where(x => x.EHR_keyword == keyword);
+                        if (elementsForKeyword.Where(x => x.selected != null).Any())
+                        {
+                            foreach (Element element in elementsForKeyword)
+                            {
+                                element.RecommendedActive = false;
+                            }
+                        }
+                        else
+                        {
+                            this._group.RecommendedActive = true;
+
+                            foreach (Element element in elementsForKeyword)
+                            {
+                                element.RecommendedActive = true;
+                            }
+                        }
+                    }
+                }
             }
             else
             {
@@ -516,6 +603,7 @@ namespace EHRNarrative
         {
             _group = group;
             Text = "All Normal";
+            Name = "SelectAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             ForeColor = SystemColors.Highlight;
@@ -525,6 +613,7 @@ namespace EHRNarrative
         }
         public void SelectAll(object sender, EventArgs e)
         {
+
             this._group.SelectAllNL();
         }
     }
@@ -535,6 +624,7 @@ namespace EHRNarrative
         {
             _group = group;
             Text = "Clear All";
+            Name = "ClearAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             ForeColor = SystemColors.Highlight;

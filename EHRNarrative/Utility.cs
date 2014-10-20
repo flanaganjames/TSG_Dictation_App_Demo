@@ -113,4 +113,21 @@ namespace EHRNarrative
             children = new List<EHRLine>();
         }
     }
+    public static class Utils
+    {
+        public static String FormatStringToWidth(String input, int width)
+        {
+            string formattedContent = "";
+            string remainingContent = input;
+            while (remainingContent.Length >= width)
+            {
+                string line = remainingContent.Substring(0, width);
+                int lastSpace = line.LastIndexOf(" ");
+                formattedContent += remainingContent.Substring(0, lastSpace) + Environment.NewLine;
+                remainingContent = remainingContent.Substring(lastSpace+1);
+            }
+            formattedContent += remainingContent;
+            return formattedContent;
+        }
+    }
 }

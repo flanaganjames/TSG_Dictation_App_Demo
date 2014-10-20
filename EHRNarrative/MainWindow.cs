@@ -56,6 +56,7 @@ namespace EHRNarrative
 
         private List<EHRLine> topLevelLines = null;
         private List<String> considerLines = null;
+        private List<String> insertedConsiderables = null;
         private System.EventHandler hrTextChanged = null;
         private bool dashboard_launched = false;
         private string complaint;
@@ -151,6 +152,7 @@ namespace EHRNarrative
             hrTextChanged = new System.EventHandler(this.HealthRecordText_TextChanged);
             topLevelLines = new List<EHRLine>();
             considerLines = new List<string>();
+            insertedConsiderables = new List<string>();
             dashboard_launched = false;
 
             ParseLabels();
@@ -159,7 +161,7 @@ namespace EHRNarrative
             HealthRecordText.TextChanged += hrTextChanged;
         }
 
-        public void ReplaceKeyword(String commandStr)
+        public bool ReplaceKeyword(String commandStr)
         {
             this.HealthRecordText.TextChanged -= hrTextChanged;
 
@@ -169,6 +171,10 @@ namespace EHRNarrative
             NotifySLC(command_str);
 
             this.HealthRecordText.TextChanged += hrTextChanged;
+
+            if (string.IsNullOrEmpty(command_str))
+                return false;
+            return true;
         }
 
         private void ParseVBACommand(String commandStr)
@@ -256,6 +262,16 @@ namespace EHRNarrative
             string lookup = parts[0];
             string newText = parts[1];
             string insert = "over";
+
+            //Check if the text to be inserted is a considerable line
+            string considerTest = newText.Replace("\\par", "\n").Trim();
+            if (considerTest.StartsWith("[") && considerTest.EndsWith("]"))
+            {
+                if (insertedConsiderables.Contains(considerTest))
+                {
+                    return "";
+                }
+            }
 
             if (lookup.Contains("%SELECTED"))
             {
@@ -355,6 +371,7 @@ namespace EHRNarrative
             else if (newText.Trim().StartsWith("[") && newText.Trim().EndsWith("]"))
             {
                 considerLines.Add(newText.Trim());
+                insertedConsiderables.Add(newText.Trim());
 
                 command_strings.Add("add " + newText.Trim());
             }
@@ -412,8 +429,10 @@ namespace EHRNarrative
         private void ParseConsiderables()
         {
             considerLines.Clear();
+            insertedConsiderables.Clear();
 
             considerLines = FindConsiderables();
+            insertedConsiderables = considerLines.ToList();
         }
 
         private void ParseLabels()

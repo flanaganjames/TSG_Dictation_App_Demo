@@ -130,9 +130,8 @@ namespace TestWindowsMessage
 
         private void chestPainButton_Click(object sender, EventArgs e)
         {
-            NotifySLC("state Chest Pain Over Forty ! req HPI [Onset], [Movement], [TAD Risk Factors], [CAD Risk Factors], [***PE Risk Factors***] ! req Exam [Constitutional Exam], [Cardiovascular Exam], [Upper Extremity BP Equality Exam], [Chest Exam], [Calf Exam] ! link TSG-chest-pain ");
+            NotifySLC("state Chest pain over 40 ! req HPI [Onset], [Movement], [TAD Risk Factors], [CAD Risk Factors], [***PE Risk Factors***] ! req Exam [Constitutional Exam], [Cardiovascular Exam], [Cardiovascular Upper Extremity Exam], [Chest Exam], [Calf Exam] ! link Chest Pain Resources ! link Differential Diagnosis Tool ! link RSQ Assist");
             System.Threading.Thread.Sleep(250);
-            //System.Diagnostics.Process.Start("Dashboard.exe");
 
             sendCustomMessage(getEHRWindow(), 0, ":%cLOAD_TEMPLATE Chest pain over 40:%cSTART");
         }

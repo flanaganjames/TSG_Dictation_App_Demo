@@ -14,6 +14,7 @@ namespace EHRNarrative
         public IEnumerable<Subgroup> subgroups { get; set; }
         public IEnumerable<Element> elements { get; set; }
         public IEnumerable<DialogLinkElement> dialoglinkelements { get; set; }
+        public IEnumerable<TextElement> textelements { get; set; }
         public IEnumerable<ComplaintGroup> complaintgroups { get; set; }
         public Complaint complaint { get; set; }
         public IEnumerable<Group_Complaints> group_complaints { get; set; }
@@ -29,12 +30,13 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public int Next_dialog_id { get; set; }
+        public bool Is_text_dialog { get; set; }
         public string Default_present_text { get; set; }
         public string Default_not_present_text { get; set; }
 
         public IEnumerable<Group> Groups(Collection data)
         {
-            return data.groups.Where(x => x.Dialog_id == this.Id);
+            return data.groups.Where(x => x.Dialog_id == this.Id).OrderBy(x => x.Order);
         }
         public IEnumerable<Group> GroupsForComplaint(Collection data)
         {
@@ -49,11 +51,11 @@ namespace EHRNarrative
         }
         public IEnumerable<Element> AllElements(Collection data)
         {
-            return this.Groups(data).SelectMany(x => x.AllElements(data));
+            return this.Groups(data).SelectMany(x => x.AllElements(data)).OrderBy(x => x.Order);
         }
         public IEnumerable<Element> AllSelectedElements(Collection data)
         {
-            return this.AllElements(data).Where(x => x.selected != null);
+            return this.AllElements(data).Where(x => x.selected != null).OrderBy(x => x.Order);
         }
 
         public Dialog NextDialog(Collection data)
@@ -83,6 +85,7 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public int Dialog_id { get; set; }
+        public int Order { get; set; }
 
         public bool Recommended { get; set; }
         public bool RecommendedActive = false;
@@ -96,17 +99,25 @@ namespace EHRNarrative
             return data.group_complaint_groups.Where(x => x.Group_id == this.Id).Select(x => x.Complaintgroup_id).ToList();
         }
 
+        public Dialog Dialog(Collection data)
+        {
+            return data.dialogs.Where(x => x.Id == this.Dialog_id).FirstOrDefault();
+        }
         public IEnumerable<Subgroup> Subgroups(Collection data)
         {
-            return data.subgroups.Where(x => x.Group_id == this.Id);
+            return data.subgroups.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
         }
         public IEnumerable<Element> Elements(Collection data)
         {
-            return data.elements.Where(x => x.Group_id == this.Id);
+            return data.elements.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
         }
         public IEnumerable<DialogLinkElement> DialogLinkElements(Collection data)
         {
-            return data.dialoglinkelements.Where(x => x.Group_id == this.Id);
+            return data.dialoglinkelements.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
+        }
+        public IEnumerable<TextElement> TextElements(Collection data)
+        {
+            return data.textelements.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
         }
         public IEnumerable<Element> AllElements(Collection data)
         {
@@ -115,7 +126,7 @@ namespace EHRNarrative
             {
                 elements = elements.Union(subgroup.Elements(data));
             }
-            return elements;
+            return elements.OrderBy(x => x.Order);
         }
 
         public bool All_complaints { get; set; }
@@ -174,29 +185,36 @@ namespace EHRNarrative
         public int Id { get; set; }
         public string Name { get; set; }
         public int Group_id { get; set; }
+        public int Order { get; set; }
 
         public IEnumerable<Element> Elements(Collection data)
         {
-            return data.elements.Where(x => x.Subgroup_id == this.Id);
+            return data.elements.Where(x => x.Subgroup_id == this.Id).OrderBy(x => x.Order);
         }
 
         public IEnumerable<DialogLinkElement> DialogLinkElements(Collection data)
         {
-            return data.dialoglinkelements.Where(x => x.Group_id == this.Id);
+            return data.dialoglinkelements.Where(x => x.Group_id == this.Id).OrderBy(x => x.Order);
         }
     }
 
     public class TextElement
     {
         public int Id { get; set; }
-        public int TextDialog_id { get; set; }
-        public string boiler_plate { get; set; }
+        public int Group_id { get; set; }
+        public int Order { get; set; }
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public string EHR_keyword { get; set; }
+
+        public bool selected { get; set; }
     }
 
     public class Element
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public int Order { get; set; }
 
         public Dialog Dialog { get; set; }
 
@@ -212,6 +230,7 @@ namespace EHRNarrative
         }
 
         public bool Recommended { get; set; }
+        public bool RecommendedActive = false;
         public bool All_complaints { get; set; }
         public string EHR_keyword { get; set; }
         public string EHR_replace { get; set; }
@@ -290,6 +309,7 @@ namespace EHRNarrative
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public int Order { get; set; }
 
         public int Group_id { get; set; }
         public int Subgroup_id { get; set; }

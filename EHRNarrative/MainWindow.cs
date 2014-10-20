@@ -388,7 +388,7 @@ namespace EHRNarrative
                 if (String.IsNullOrWhiteSpace(line.text))
                 {
                     int start = HealthRecordText.Rtf.IndexOf(line.label);
-                    int end = HealthRecordText.Rtf.IndexOf(System.Environment.NewLine, start);
+                    int end = HealthRecordText.Rtf.IndexOf("\\par", start) + 4;
                     HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
                 }
             }
@@ -397,7 +397,7 @@ namespace EHRNarrative
             foreach (String considerable in considerables)
             {
                 int start = HealthRecordText.Rtf.IndexOf(considerable);
-                int end = HealthRecordText.Rtf.IndexOf(System.Environment.NewLine, start);
+                int end = HealthRecordText.Rtf.IndexOf("\\par", start) + 4;
                 HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
             }
         }

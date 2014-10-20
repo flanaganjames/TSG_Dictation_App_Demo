@@ -588,6 +588,7 @@ void S_generateDash(void)
 
 	// list of warnings for the dashboard
 list<char *> _warnings;
+int _warnings_from_assessments = 0;
 
 	// clear the warnings list
 void D_clearWarnings(void)
@@ -596,9 +597,10 @@ void D_clearWarnings(void)
 }
 
 	// add a warning to the list to be displayed in the warning box
-void D_addWarning(char *s)
+void D_addWarning(char *s, bool assessment)
 {
 	_warnings.push_back(scopy(s));
+	if (assessment)  _warnings_from_assessments++;
 }
 
 
@@ -653,23 +655,30 @@ void S_generateWarnBox(void)
 	// D_warning_icons();
 	D_vertspace(5);
 	height += 10;
-	list<char *>::iterator i;
+	list<char *>::iterator i, ii;
+	int warnings_seen = 0;
 	for (i = _warnings.begin();  i != _warnings.end();  i++)
 	{
+
+
 		D_one_warn_icon(225, 210);
-		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\ri%d %s\\par}\n",
-			ps_warning, c_warning, T_space*2, T_space*2, *i);
+		fprintf(outf, "{  }{\\pard\\fs%d\\cf%d\\b\\li%d\\fi%d\\ri%d %s\\par}\n",
+			ps_warning, c_warning, T_space*6, -T_space*4, T_space*2, *i);
 		height += 32;
-		if (_strnicmp(*i, "Check TAD Risk!", strlen(*i)) == 0)
-		{
-			D_showOneLink("TAD_Risk", ps_link, height);
-				// comment out the above & uncomment the following for
-				// bigger link text
-			// D_showOneLink("TAD_Risk", ps_warning_link, height);
-			height += 28;  // reflects height of box on warning panel
-		}
 		D_vertspace(2);
 		height += 4;
+
+		if (++warnings_seen == _warnings_from_assessments)
+		{
+				// drop warning links after the assessment warnings
+			for (ii = _wlinks.begin();  ii != _wlinks.end();  ii++)
+			{
+				D_showOneLink(*ii, ps_link, height);
+				height += 28;
+			}
+			D_vertspace(6);
+			height += 12;
+		}
 	}
 	D_epilog();
 	D_closeoutput();

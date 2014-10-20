@@ -383,7 +383,6 @@ namespace EHRNarrative
         private void CleanCurrentTemplate()
         {
             List<EHRLine> lines = FindEHRLines();
-
             foreach (EHRLine line in lines)
             {
                 if (String.IsNullOrWhiteSpace(line.text))
@@ -392,6 +391,14 @@ namespace EHRNarrative
                     int end = HealthRecordText.Rtf.IndexOf(System.Environment.NewLine, start);
                     HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
                 }
+            }
+
+            List<String> considerables = FindConsiderables();
+            foreach (String considerable in considerables)
+            {
+                int start = HealthRecordText.Rtf.IndexOf(considerable);
+                int end = HealthRecordText.Rtf.IndexOf(System.Environment.NewLine, start);
+                HealthRecordText.Rtf = HealthRecordText.Rtf.Remove(start, end - start);
             }
         }
 

@@ -608,6 +608,14 @@ namespace EHRNarrative
                     EHRListBoxItem itemItem = (EHRListBoxItem)item;
                     elements.Add(itemItem.Element);
                 }
+                else if (item is EHRListBoxGroup)
+                {
+                    EHRListBoxGroup itemGroup = (EHRListBoxGroup)item;
+                    foreach (EHRListBoxItem itemItem in itemGroup.Popover.Listbox.Items)
+                    {
+                        elements.Add(itemItem.Element);
+                    }
+                }
             }
             if (elements.Where(x => x.Recommended).Any())
             {

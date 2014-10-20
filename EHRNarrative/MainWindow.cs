@@ -382,13 +382,8 @@ namespace EHRNarrative
 
         private void CleanCurrentTemplate()
         {
-      Regex rgx = new Regex(@".*\[.*\].*");
-      HealthRecordText.Rtf = rgx.Replace(HealthRecordText.Rtf, "");
-            //foreach (String line in new LineReader(() => new StringReader(HealthRecordText.Rtf)))
-            //{
-            //    if (line.Contains("[") && line.Contains("]"))
-            //        HealthRecordText.Rtf = HealthRecordText.Rtf.Replace(line, "");
-            //}
+            Regex rgx = new Regex(@".*\[.*\].*");
+            HealthRecordText.Rtf = rgx.Replace(HealthRecordText.Rtf, "");
         }
 
         public void NotifySLC(string command_str)

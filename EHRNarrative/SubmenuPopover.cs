@@ -12,6 +12,7 @@ namespace EHRNarrative
     public partial class SubmenuPopover : UserControl
     {
         private EHRListBox _listBox;
+        public EHRListBox Listbox { get { return this._listBox; } }
         private EHRListBoxGroup _parentListItem;
         public SubmenuPopover(EHRListBoxGroup parent, Subgroup subgroup, Collection data)
         {
@@ -70,6 +71,10 @@ namespace EHRNarrative
                 this._parentListItem.ChildSelected = true;
             else
                 this._parentListItem.ChildSelected = false;
+
+            GroupLabel grouplabel = (GroupLabel)this._parentListItem.Parent.Parent;
+            grouplabel.CheckRecommended();
+            this.Refresh();
 
         }
 

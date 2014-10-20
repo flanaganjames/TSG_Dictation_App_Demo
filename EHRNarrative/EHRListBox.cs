@@ -127,6 +127,10 @@ namespace EHRNarrative
         }
 
         private Subgroup _group;
+        public Subgroup Subgroup
+        {
+            get { return this._group; }
+        }
 
         private SubmenuPopover _popover;
         public SubmenuPopover Popover
@@ -193,9 +197,18 @@ namespace EHRNarrative
             // calculate bounds for title text drawing
             Rectangle textBounds = new Rectangle(e.Bounds.X + margin.Horizontal + 10,
                                                  e.Bounds.Y + margin.Top,
-                                                 e.Bounds.Width - margin.Right - margin.Horizontal - 10,
+                                                 e.Bounds.Width - margin.Right - margin.Horizontal - 20,
                                                  (int)font.GetHeight() * 2);
 
+            if (this._group != null && this._group.Recommended && this._group.RecommendedActive == true)
+            {
+                e.Graphics.DrawImage(Image.FromFile("Assets/exclamation.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
+                textcolor = Brushes.DarkRed;
+            }
+            else if (this._group != null && this._group.Recommended)
+            {
+                e.Graphics.DrawImage(Image.FromFile("Assets/checkmark.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
+            }
             // draw the text within the bounds
             e.Graphics.DrawString(this.Name, font, textcolor, textBounds, aligment);
 

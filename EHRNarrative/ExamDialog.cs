@@ -125,6 +125,10 @@ namespace EHRNarrative
             {
                 data.groups.Where(x => x.Id == group_id).First().Recommended = true;
             }
+            foreach (int subgroup_id in data.elements.Where(x => x.Recommended && x.Subgroup_id > 0).Select(x => x.Subgroup_id).Distinct())
+            {
+                data.subgroups.Where(x => x.Id == subgroup_id).First().Recommended = true;
+            }
             foreach (Element element in data.dialog.AllElements(data))
             {
                 element.Dialog = data.dialog;
@@ -601,6 +605,7 @@ namespace EHRNarrative
             this._group.RecommendedActive = false;
 
             List<Element> elements = new List<Element>();
+            List<EHRListBoxGroup> subgroups = new List<EHRListBoxGroup>();
             foreach (var item in this._listBox.Items)
             {
                 if (item is EHRListBoxItem)
@@ -611,6 +616,12 @@ namespace EHRNarrative
                 else if (item is EHRListBoxGroup)
                 {
                     EHRListBoxGroup itemGroup = (EHRListBoxGroup)item;
+                    subgroups.Add(itemGroup);
+                    try
+                    {
+                        itemGroup.Subgroup.RecommendedActive = false;
+                    }
+                    catch { }
                     foreach (EHRListBoxItem itemItem in itemGroup.Popover.Listbox.Items)
                     {
                         elements.Add(itemItem.Element);
@@ -640,6 +651,11 @@ namespace EHRNarrative
                             foreach (Element element in elementsForKeyword)
                             {
                                 element.RecommendedActive = true;
+                                try
+                                {
+                                    subgroups.Where(x => x.Subgroup.Id == element.Subgroup_id).FirstOrDefault().Subgroup.RecommendedActive = true;
+                                }
+                                catch { }
                             }
                         }
                     }

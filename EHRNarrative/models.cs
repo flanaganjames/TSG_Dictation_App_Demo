@@ -187,6 +187,9 @@ namespace EHRNarrative
         public int Group_id { get; set; }
         public int Order { get; set; }
 
+        public bool Recommended { get; set; }
+        public bool RecommendedActive = false;
+
         public IEnumerable<Element> Elements(Collection data)
         {
             return data.elements.Where(x => x.Subgroup_id == this.Id).OrderBy(x => x.Order);

@@ -674,7 +674,7 @@ namespace EHRNarrative
             Name = "SelectAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
-            ForeColor = SystemColors.Highlight;
+            ForeColor = Color.CornflowerBlue;
             TextAlign = ContentAlignment.BottomLeft;
             Width = 100;
             Click += new System.EventHandler(this.SelectAll);
@@ -695,7 +695,7 @@ namespace EHRNarrative
             Name = "ClearAll";
             FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
-            ForeColor = SystemColors.Highlight;
+            ForeColor = Color.CornflowerBlue;
             TextAlign = ContentAlignment.BottomLeft;
             Width = 100;
             Click += new System.EventHandler(this.ClearAll);

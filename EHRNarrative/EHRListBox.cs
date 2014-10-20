@@ -182,7 +182,7 @@ namespace EHRNarrative
 
             if (this.ChildSelected)
             {
-                textcolor = Brushes.LightSkyBlue;
+                textcolor = Brushes.CornflowerBlue;
                 e.Graphics.DrawImage(Image.FromFile("Assets/right-chevron-blue.png"), new Rectangle(e.Bounds.Right - 16, e.Bounds.Y + e.Bounds.Height / 2 - 7, 16, 16));
             }
             else

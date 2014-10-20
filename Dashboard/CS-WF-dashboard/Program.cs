@@ -9,8 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-// using System.Windows.Controls;
-// using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
@@ -54,6 +52,7 @@ namespace Dashboard
         private System.Drawing.Point dashWpos;
         private int dashOht, dashOwid, dashht, dashwid;
         private int dashSTht, dashEMht, dashWht;
+        private int dashSTht_min;  // minimum height of the status panel
         private int dashBwid;   // dash button width within the status panel
         private float dashResX, dashResY;  // dashboard resolution
 
@@ -69,6 +68,9 @@ namespace Dashboard
         private int updates = 0;
         private bool showing_warning = false;
 
+        private Thread refThread = null;
+        delegate void refreshCallback();
+
         // Damn .Net:  there are two distinct RichTextBox classes,
         // with subtly different properties and methods.
         //  We're using System.Windows.Forms.RichTextBox
@@ -80,16 +82,28 @@ namespace Dashboard
             System.Drawing.Graphics g = dash.CreateGraphics();
             dashResX = g.DpiX; dashResY = g.DpiY;
 
+            this.calculatePanelSizes();
+            this.drawPanels();
+            this.refreshDash();
+
+            System.IO.FileSystemWatcher watcher = new System.IO.FileSystemWatcher(".", "*.rtf");
+            watcher.NotifyFilter = NotifyFilters.LastWrite;
+            watcher.Changed += new System.IO.FileSystemEventHandler((sender, e) => doDashRefresh());
+            watcher.EnableRaisingEvents = true;
+        }
+
+        public void calculatePanelSizes()
+        {
                 // these are the fixed dimensions -- others are calculated from these
             dashOht = 565;
             dashOwid = 255;
             dashWht = 200;
             dashEMht = 140;
                 //   but first, we need to normalize these to 96 dpi
-            dashOht = (int) Math.Ceiling((float) dashOht * dashResY / 96f);
-            dashOwid = (int) Math.Ceiling((float) dashOwid * dashResX / 96f);
-            dashWht = (int) Math.Ceiling((float) dashWht * dashResY / 96f);
-            dashEMht = (int) Math.Ceiling((float) dashEMht * dashResY / 96f);
+            dashOht = (int)Math.Ceiling((float)dashOht * dashResY / 96f);
+            dashOwid = (int)Math.Ceiling((float)dashOwid * dashResX / 96f);
+            dashWht = (int)Math.Ceiling((float)dashWht * dashResY / 96f);
+            dashEMht = (int)Math.Ceiling((float)dashEMht * dashResY / 96f);
 
                 // now set up the overall dashboard
             dash.Size = dashOsz = new System.Drawing.Size(dashOwid, dashOht);
@@ -100,28 +114,52 @@ namespace Dashboard
             dashwid = dash.ClientSize.Width;
                     // now calculate the RTF panel sizes & positions
             dashSTht = dashht - dashEMht;
+            dashSTht_min = dashSTht;
                     // need to declare warning panel size & position objects
                     // now, since they're used later, external to the constructor
             dashWpos = new System.Drawing.Point(0, dashht);
             dashWsz = new System.Drawing.Size(dashwid, dashWht);
             dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
+        }
 
-                    // the dashboard status panel
+        public void recalculatePanelSizes(int new_dashSTht)
+        {
+                // if we've got a revised height for the status panel
+                // recalculate all the panel sizes so that we can
+                // repaint the panels
+                // ... we only recalculate things we need to update
+            dashOht = dashOht - dashSTht + new_dashSTht;
+            dashht = dashht - dashSTht + new_dashSTht;
+            dash.Size = new System.Drawing.Size(dashOwid, dashOht);
+            dashSTht = dashht - dashEMht;
+            dashWpos = new System.Drawing.Point(0, dashht);
+            dashTsz = new System.Drawing.Size(dashOwid, dashOht + dashWht);
+            dashOsz = new System.Drawing.Size(dashOwid, dashOht);
+        }
+
+        public void drawPanels()
+        {
+                // remove the existing instances, since we want to recreate them
+            if (dashST != null)
+                dash.Controls.Remove(dashST);
+            if (dashEM != null)
+                dash.Controls.Remove(dashEM);
+            if (dashW != null)
+            {
+                showing_warning = false;
+                dash.Controls.Remove(dashW);
+            }
+
+                // the dashboard status panel
             dashST = new RichTextBox();
-            dashST.Location = new System.Drawing.Point(0,0);
+            dashST.Location = new System.Drawing.Point(0, 0);
             dashST.Size = new System.Drawing.Size(dashwid, dashSTht);
             dashST.ReadOnly = true;
             dashST.DetectUrls = false;
             dashST.BackColor = Color.White;
+            dashST.ScrollBars = RichTextBoxScrollBars.None;
             dash.Controls.Add(dashST);
             dashBwid = dashST.ClientSize.Width;
-            /*
-             * For future consideration, we could make the status panel dashSTht+dashEMht
-             * high, but not change the position of the E/M panel.  Then we could allow
-             * double-clicking on the E/M panel to hide it in case the status panel had
-             * more information than we could see at a glance.  This would be the 
-             * alternative to scroll bars on the status panel.
-             */
 
                 // the E/M panel
             dashEM = new RichTextBox();
@@ -185,28 +223,57 @@ namespace Dashboard
             dashST.BackColor = Color.White;
         }
 
+        public void doDashRefresh()
+        {
+            if (this.dash.InvokeRequired)
+            {
+                refreshCallback d = new refreshCallback(refreshDash);
+                this.dash.Invoke(d);
+            }
+            else
+            {
+                this.refreshDash();
+            }
+        }
+
         public void refreshDash()
         {
             flash();
-                // update with the real contents of the main dashboard
+            updates++;  // number of times we've updated
 
+
+                // update the panel contents
+            this.refreshDashContents();
+                // check the desired size of the status panel and see if it's
+                // increased, requiring resizing and repainting
+            int dashSTht_wanted = Math.Max(dashST.PreferredSize.Height, dashSTht_min);
+            if (dashSTht != dashSTht_wanted)
+            {
+                this.recalculatePanelSizes(dashSTht_wanted);
+                this.drawPanels();
+                    // we repainted the windows -- need to refresh contents
+                this.refreshDashContents();
+            }
+        }
+
+        public void refreshDashContents()
+        {
             dashST.Rtf = dashSTrtf = dashSTcontents();
             dashST.Refresh();
             dashEM.Rtf = dashEMrtf = dashEMcontents();
             dashEM.Refresh();
                 // update buttons for the links
                     // the button height of 24 for the status buttons is from SLC
-            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 24.0f);
+            refreshDashButtons(dashST, dashSTrtf, dashLinks, Color.White, 10, 24);
                 // handle the warning panel
             refreshDashWarn();
                 // now refresh of the whole window
             dash.Refresh();
-
-            updates++;  // number of times we've updated
         }
 
+
         public void refreshDashButtons(RichTextBox panel, String panelRTF, 
-            ArrayList linkList, Color buttonColor, int indent, float dashBht)
+            ArrayList linkList, Color buttonColor, int indent, int dashBht)
         {
                 // basic parameters
                     // indent of the link button -- supplied in half-points, need twips
@@ -215,8 +282,7 @@ namespace Dashboard
             foreach (RichTextBox button in linkList)
             {
                 panel.Controls.Remove(button);
-                    // notice that we're not deleting the event handler from
-                    // the button, just removing the button from the window
+                button.Dispose();
             }
             linkList.Clear();
 
@@ -248,7 +314,7 @@ namespace Dashboard
                     // make a "button" out of it
                 RichTextBox button = new RichTextBox();
                 linkList.Add(button);
-                SizeF ss = new SizeF(dashBwid, dashBht / 144 * dashResY);
+                SizeF ss = new SizeF(dashBwid, (float) dashBht / 144 * dashResY);
                 PointF pp = new PointF(0f, (float)height / 144 * dashResY);
                 button.Size = System.Drawing.Size.Round(ss);
                 button.Location = System.Drawing.Point.Round(pp);
@@ -287,18 +353,44 @@ namespace Dashboard
             // update the warning box contents if necessary
             if (File.Exists(dashWpath))
             {
-                dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
-                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 28.0f);
+                try
+                {
+                    dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                    try
+                    {
+                        dashW.Rtf = dashWrtf = File.ReadAllText(dashWpath);
+                    }
+                    catch
+                    {
+                        refreshDashWarn();
+                    }
+                }
+
+                refreshDashButtons(dashW, dashWrtf, warnLinks, Color.Yellow, 50, 28);
                 dashW.Refresh();
+                dash.Size = dashTsz;
             }
+            dash.Refresh();
         }
 
         public string dashSTcontents()
         {
             if (DASHfail) return AlreadyRunning;
-            if (File.Exists(dashSTpath))  // we should only be reading the file if it's been updated
+            if (File.Exists(dashSTpath))
             {
-                return File.ReadAllText(dashSTpath);
+                try
+                {
+                    return File.ReadAllText(dashSTpath);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                    return dashSTcontents();
+                }
             }
             else
             {
@@ -309,9 +401,17 @@ namespace Dashboard
         public string dashEMcontents()
         {
             if (DASHfail) return AlreadyRunning;
-            if (File.Exists(dashEMpath))  // we should only be reading the file if it's been updated
+            if (File.Exists(dashEMpath))
             {
-                return File.ReadAllText(dashEMpath);
+                try
+                {
+                    return File.ReadAllText(dashEMpath);
+                }
+                catch
+                {
+                    Thread.Sleep(100);
+                    return dashEMcontents();
+                }
             }
             else
             {
@@ -333,9 +433,12 @@ namespace Dashboard
             "Differential Diagnosis Tool: file:001_chest_pain_myocardial_infarction_and_thrombolysis/001_006_chest_pain_interactive_differential_diagnosis.html",
             "RSQ Assist: http://tsg-demo/rsqassist/",
             "TAD risk: file:054_bp_ebm/054_002_thoracic_aortic_dissection.html",
+            "TAD movement: file:003_chest_pain_thoracic_aortic_dissection/003_007_chest_pain_movement_of_pain.html",
+            "TAD onset: file:003_chest_pain_thoracic_aortic_dissection/003_005_chest_pain_sudden_onset.html",
+            "TAD differential: file:003_chest_pain_thoracic_aortic_dissection/003_010_chest_pain_arm_blood_pressure_differential.html",
             };
             String badLink = "file:oops.html";
-            String localFiles = "file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/";
+            String localFilesRoot = "file:///C:/TEMP/Sullivan/RSQ_Files_05.06.2014/";
             String resolvedLink = "";
 
                 // strip off the required syntactic sugar
@@ -367,7 +470,7 @@ namespace Dashboard
             {
                 int i = resolvedLink.IndexOf(':');
                 resolvedLink = resolvedLink.Substring(i + 1);
-                resolvedLink = localFiles + resolvedLink;
+                resolvedLink = localFilesRoot + resolvedLink;
             }
 
             if (!(resolvedLink.StartsWith("http://")
@@ -412,13 +515,22 @@ namespace Dashboard
 
                 Dashboard D = new Dashboard();
 
-                    // update timer event
-                    // (like with the RichTextBox class, annoyingly there are
-                    //  three distinct Timer classes, so we fully qualify it)
-                System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-                timer.Enabled = true;
-                timer.Interval = 1000;
-                timer.Tick += new EventHandler((sender, e) => timer_Tick(sender, e, D));
+                /*
+                 * invocation of event handlers is now done in the dashboard constructor
+                 */
+                //// watch for file changes
+                //System.IO.FileSystemWatcher watcher = new System.IO.FileSystemWatcher(".", "*.rtf");
+                //watcher.NotifyFilter = NotifyFilters.LastWrite;
+                //watcher.Changed += new System.IO.FileSystemEventHandler((sender, e) => dashChange(sender, e, D));
+                //watcher.EnableRaisingEvents = true;
+
+                //// update timer event
+                //// (like with the RichTextBox class, annoyingly there are
+                ////  three distinct Timer classes, so we fully qualify it)
+                //System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+                //timer.Enabled = true;
+                //timer.Interval = 1000;
+                //timer.Tick += new EventHandler((sender, e) => dashChange(sender, e, D));
 
                     // normal run
                 D.refreshDash();
@@ -427,9 +539,9 @@ namespace Dashboard
             }
         }
 
-        static void timer_Tick(object sender, EventArgs e, Dashboard D)
+        static void dashChange(object sender, EventArgs e, Dashboard D)
         {
-            D.refreshDash();
+            D.doDashRefresh();
         }
 
             // a simple utility routine

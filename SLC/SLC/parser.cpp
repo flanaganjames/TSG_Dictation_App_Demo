@@ -238,11 +238,24 @@ void undecorate(char *in, bool digits)
 	*t = '\0';
 }
 
+	// this cleans up the link names to prevent blanks
+	// (this may be redundant now)
 void convert_blanks(char *s)
 {
 	char *t = s;
 	while (t = strchr(s, ' '))
 		*t = '_';
+			// don't be too aggressive about stripping blanks
+			// if we've got multiple links in one command, e.g.,
+			// "link foo bar, baz bar" should convert to "foo_bar"
+			// and "baz_bar", not "_baz_bar"
+			// [don't need to worry about multiple __, since the
+			// way we process the command line ensures single blanks
+			// between arguments]
+	for (t = s;  *t;  t++)
+	{
+		if (*t == ',' &&  t[1] == '_')  t[1] = ' ';
+	}
 }
 
 

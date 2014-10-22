@@ -54,7 +54,8 @@ namespace EHRNarrative
             }
             else if (this.Element.Recommended)
             {
-                e.Graphics.DrawImage(Image.FromFile("Assets/checkmark.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
+                if (this.Element.selected != null)
+                    e.Graphics.DrawImage(Image.FromFile("Assets/checkmark.png"), new Rectangle(e.Bounds.X + 2, e.Bounds.Y + e.Bounds.Height / 2 - 7, 14, 14));
 
                 textColor = Brushes.DarkSlateBlue;
             }

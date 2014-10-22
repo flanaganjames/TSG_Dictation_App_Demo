@@ -480,10 +480,12 @@ namespace EHRNarrative
                     int rightEdge = absoluteCoords.X + this.Width;
                     int topEdge = absoluteCoords.Y + group.Bounds.Top;
 
+                    group.Popover.Height = Math.Min(group.Popover.Height, this.FindForm().Height - 60);
+
                     int left = (rightEdge + group.Popover.Width) < this.FindForm().Width ? rightEdge : absoluteCoords.X - group.Popover.Width;
                     int top = Math.Max(10, topEdge + group.Bounds.Height / 2 - group.Popover.Height / 2);
-                    if (top + group.Popover.Height > this.FindForm().Height - 10)
-                        top = this.FindForm().Height - group.Popover.Height - 10;
+                    if (top + group.Popover.Height > this.FindForm().Height - 50)
+                        top = this.FindForm().Height - group.Popover.Height - 50;
 
                     group.Popover.Location = new System.Drawing.Point(left, top);
                     this.FindForm().Controls.Add(group.Popover);

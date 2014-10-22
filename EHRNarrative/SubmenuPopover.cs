@@ -14,6 +14,7 @@ namespace EHRNarrative
         private EHRListBox _listBox;
         public EHRListBox Listbox { get { return this._listBox; } }
         private EHRListBoxGroup _parentListItem;
+
         public SubmenuPopover(EHRListBoxGroup parent, Subgroup subgroup, Collection data)
         {
             InitializeComponent();
@@ -52,6 +53,13 @@ namespace EHRNarrative
             this.BackColor = Color.LightGray;
 
             this.Enabled = true;
+
+            this.SizeChanged += new EventHandler(SubmenuPopover_SizeChanged);
+        }
+
+        void SubmenuPopover_SizeChanged(object sender, EventArgs e)
+        {
+            this._listBox.Height = this.Height - 10;
         }
 
         private void checkSelection(object Sender, MouseEventArgs e) { checkSelection(); }

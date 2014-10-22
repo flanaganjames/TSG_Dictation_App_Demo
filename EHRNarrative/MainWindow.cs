@@ -297,8 +297,16 @@ namespace EHRNarrative
             int lookupPosition = HealthRecordText.Rtf.IndexOf(lookup);
             if (lookupPosition == -1)
             {
-                lookup = lookup.Replace("[", "[\\cf2 ").Replace("]", "\\cf1 ]");
-                lookupPosition = HealthRecordText.Rtf.IndexOf(lookup);
+                if (lookup.Contains("[") && lookup.Contains("]"))
+                {
+                    Match match = new Regex(@"\[(\\cf\d+ )?" + lookup.Replace("[", "").Replace("]", "") + @"(\\cf\d+ )?\]")
+                                            .Match(HealthRecordText.Rtf);
+                    if (match.Success)
+                    {
+                        lookup = match.Value;
+                        lookupPosition = match.Index;
+                    }
+                }
             }
             int lookupLength = lookup.Length;
 

@@ -361,7 +361,7 @@ namespace EHRNarrative
             {
                 var keyword = keywordGroup.First().EHR_keyword;
                 var EHRString = String.Join("; ", keywordGroup.Select(x => x.EHRString).ToList());
-                if (narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString) || narrative_window.ReplaceKeyword("[\\cf2 " + keyword + "\\cf1 ]/" + EHRString))
+                if (narrative_window.ReplaceKeyword("[" + keyword + "]/" + EHRString))
                     textInserted = true;
             }
 

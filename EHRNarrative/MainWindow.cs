@@ -335,7 +335,7 @@ namespace EHRNarrative
             }
 
             //Set cursor position to the end of the inserted text
-            lookup = lookup.Replace("\\par", "\n").Replace("\\cf2 ", "").Replace("\\cf1 ", "");
+            lookup = parts[0].Replace("\\par", "\n").Replace("\\cf2 ", "").Replace("\\cf1 ", "");
             newText = newText.Replace("\\par", "\n");
             int selectOffset = 0;
             if (newText.EndsWith("\n"))
@@ -404,7 +404,7 @@ namespace EHRNarrative
             {
                 try
                 {
-                    //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
                     System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
                 catch

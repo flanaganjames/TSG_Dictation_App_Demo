@@ -276,6 +276,7 @@ namespace EHRNarrative
             if (lookup.Contains("%SELECTED"))
             {
                 lookup = HealthRecordText.SelectedText;
+                insert = "cursor";
             }
             if (parts.Length == 3)
             {
@@ -311,7 +312,7 @@ namespace EHRNarrative
             int lookupLength = lookup.Length;
 
             //There is nothing to do since our lookup doesn't exist, so abort.
-            if (lookupPosition == -1)
+            if (lookupPosition == -1 && !insert.Contains("cursor"))
             {
                 return "";
             }
@@ -329,21 +330,27 @@ namespace EHRNarrative
             {
                 HealthRecordText.Rtf = HealthRecordText.Rtf.Insert(lookupPosition + lookupLength, " " + newText);
             }
+            else if (insert.Contains("cursor"))
+            {
+                HealthRecordText.SelectedText = newText;
+            }
             else
             {
                 //Do Error!
             }
 
             //Set cursor position to the end of the inserted text
-            lookup = parts[0].Replace("\\par", "\n").Replace("\\cf2 ", "").Replace("\\cf1 ", "");
-            newText = newText.Replace("\\par", "\n");
-            int selectOffset = 0;
-            if (newText.EndsWith("\n"))
+            if (!insert.Contains("cursor"))
             {
-                selectOffset = 1;
+                lookup = parts[0].Replace("\\par", "\n").Replace("\\cf2 ", "").Replace("\\cf1 ", "");
+                newText = newText.Replace("\\par", "\n");
+                int selectOffset = 0;
+                if (newText.EndsWith("\n"))
+                {
+                    selectOffset = 1;
+                }
+                HealthRecordText.Select(HealthRecordText.Text.IndexOf(newText) + newText.Length - selectOffset, 0);
             }
-            HealthRecordText.Select(HealthRecordText.Text.IndexOf(newText) + newText.Length - selectOffset, 0);
-
             //Notify the SLC of any relevant changes
             if (IsAnEHRLine(lookup))
             {
@@ -384,6 +391,8 @@ namespace EHRNarrative
                 command_strings.Add("add " + newText.Trim());
             }
 
+            command_strings.AddRange(CheckForVitals());
+
             string command_str = String.Join(" ! ", command_strings);
             return command_str;
         }
@@ -404,7 +413,7 @@ namespace EHRNarrative
             {
                 try
                 {
-                    System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
+                    //System.Diagnostics.Process.Start("SLC.MOCK.exe", command_str);
                     System.Diagnostics.Process.Start("SLC.exe", command_str);
                 }
                 catch

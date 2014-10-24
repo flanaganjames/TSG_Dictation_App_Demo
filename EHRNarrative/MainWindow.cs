@@ -399,7 +399,9 @@ namespace EHRNarrative
 
         private void CleanCurrentTemplate()
         {
-            Regex rgx = new Regex(@".*\[.*\].*");
+            Regex rgx1 = new Regex(@"(?<=(\\[\w\d\\]+ )).+(?=(\\[\w\d\\]+ ))(?=.*\[.*\])");
+            Regex rgx = new Regex(@"((?<!(\\[\w\\d\\]+)).)*\[.*\](\\par|(?!(\\[\w\\d\\]+)).)*");
+            HealthRecordText.Rtf = rgx1.Replace(HealthRecordText.Rtf, "");
             HealthRecordText.Rtf = rgx.Replace(HealthRecordText.Rtf, "");
         }
 

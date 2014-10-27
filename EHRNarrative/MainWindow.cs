@@ -332,7 +332,7 @@ namespace EHRNarrative
             }
             else if (insert.Contains("cursor"))
             {
-                HealthRecordText.SelectedText = newText;
+                HealthRecordText.SelectedText = newText.Replace("\\par", "\n");
             }
             else
             {
@@ -400,7 +400,7 @@ namespace EHRNarrative
         private void CleanCurrentTemplate()
         {
             Regex rgx1 = new Regex(@"(?<=(\\[\w\d\\]+ )).+(?=(\\[\w\d\\]+ ))(?=.*\[.*\])");
-            Regex rgx = new Regex(@"((?<!(\\[\w\\d\\]+)).)*\[.*\](\\par|(?!(\\[\w\\d\\]+)).)*");
+            Regex rgx = new Regex(@"((?<!(\\[\w\d\\]+)).)*\[.*\](\\par|(?!(\\[\w\d\\]+)).)*");
             HealthRecordText.Rtf = rgx1.Replace(HealthRecordText.Rtf, "");
             HealthRecordText.Rtf = rgx.Replace(HealthRecordText.Rtf, "");
         }
